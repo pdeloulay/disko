@@ -1,8 +1,8 @@
-# Disko Board Design Document
+# Disko Design Document
 
 ## Overview
 
-Disko Board is a web-based project management tool that allows solopreneurs to share their work progress with customers through public boards. The system features a dual-role architecture with Admin (solopreneur) and Public (customer) access levels, real-time feedback capabilities, and an intuitive drag-and-drop interface for managing ideas across different workflow stages.
+Disko is a web-based project management tool that allows solopreneurs to share their work progress with customers through public boards. The system features a dual-role architecture with Admin (solopreneur) and Public (customer) access levels, real-time feedback capabilities, and an intuitive drag-and-drop interface for managing ideas across different workflow stages.
 
 ## Architecture
 
@@ -10,7 +10,7 @@ Disko Board is a web-based project management tool that allows solopreneurs to s
 
 The application follows a modern web architecture pattern:
 
-- **Frontend**: Single Page Application (SPA) using React with TypeScript
+- **Frontend**: Single Page Application (SPA) using Go templating and JS
 - **Backend**: RESTful API using Go backend
 - **Database**: MongoDB Atlas with use of MongoDB 2.0 drivers (Go())
 - **Real-time Communication**: WebSocket connections for live updates

@@ -2,7 +2,7 @@
 
 ## Introduction
 
-Disko in a simple app for entrepreneur to share with their customers what they are currently working on. We call it a Disko Board.
+Disko in a simple app for entrepreneur to share with their customers what they are currently working on. We call it a Disko.
 
 ### Roles
 

@@ -1,0 +1,82 @@
+{{template "base.html" .}}
+
+{{define "content"}}
+<div class="dashboard">
+    <header class="dashboard-header">
+        <div class="container">
+            <div class="dashboard-header-content">
+                <div class="dashboard-logo">
+                    <img src="/static/images/logo.png" alt="Disko" class="logo-image">
+                    <h1>Dashboard</h1>
+                </div>
+                <div class="user-menu">
+                <span id="user-name"></span>
+                <button id="sign-out-btn" class="btn btn-secondary">Sign Out</button>
+            </div>
+        </div>
+    </header>
+
+    <main class="dashboard-main">
+        <div class="container">
+            <div class="dashboard-actions">
+                <button id="create-board-btn" class="btn btn-primary">Create New Board</button>
+            </div>
+
+            <section class="boards-section">
+                <h2>Your Boards</h2>
+                <div id="boards-list" class="boards-grid">
+                    <!-- Boards will be loaded here -->
+                    <div class="loading">Loading your boards...</div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <!-- Create Board Modal -->
+    <div id="create-board-modal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Create New Board</h3>
+                <button class="modal-close">&times;</button>
+            </div>
+            <form id="create-board-form">
+                <div class="form-group">
+                    <label for="board-title">Board Title *</label>
+                    <input type="text" id="board-title" name="title" required maxlength="100" placeholder="Enter board title">
+                </div>
+                <div class="form-group">
+                    <label for="board-description">Description</label>
+                    <textarea id="board-description" name="description" rows="3" maxlength="500" placeholder="Optional description for your board"></textarea>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeCreateBoardModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Create Board</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Delete Board Confirmation Modal -->
+    <div id="delete-board-modal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Delete Board</h3>
+                <button class="modal-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete the board "<strong id="delete-board-name"></strong>"?</p>
+                <p class="warning-text">This action cannot be undone. All ideas in this board will also be deleted.</p>
+            </div>
+            <div class="form-actions">
+                <button type="button" class="btn btn-secondary" onclick="closeDeleteBoardModal()">Cancel</button>
+                <button type="button" class="btn btn-danger" id="confirm-delete-btn" onclick="deleteBoard()">Delete Board</button>
+            </div>
+        </div>
+    </div>
+</div>
+{{end}}
+
+{{define "scripts"}}
+<script src="/static/js/dashboard.js"></script>
+<script src="/static/js/idea-management.js"></script>
+{{end}}

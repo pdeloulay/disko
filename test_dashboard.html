@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Test</title>
+    <link rel="stylesheet" href="static/css/main.css">
+</head>
+<body>
+    <div class="dashboard">
+        <header class="dashboard-header">
+            <div class="container">
+                <h1>Dashboard</h1>
+                <div class="user-menu">
+                    <span id="user-name">Test User</span>
+                    <button id="sign-out-btn" class="btn btn-secondary">Sign Out</button>
+                </div>
+            </div>
+        </header>
+
+        <main class="dashboard-main">
+            <div class="container">
+                <div class="dashboard-actions">
+                    <button id="create-board-btn" class="btn btn-primary">Create New Board</button>
+                </div>
+
+                <section class="boards-section">
+                    <h2>Your Boards</h2>
+                    <div id="boards-list" class="boards-grid">
+                        <!-- Test board cards -->
+                        <div class="board-card" data-board-id="test1">
+                            <div class="board-card-header">
+                                <h3>My First Board</h3>
+                                <div class="board-card-menu">
+                                    <button class="btn-menu" onclick="toggleBoardMenu('test1')">⋮</button>
+                                    <div class="board-menu" id="menu-test1" style="display: none;">
+                                        <button onclick="editBoard('test1')">Edit</button>
+                                        <button onclick="copyPublicLink('http://localhost:8080/board/test-link')">Copy Public Link</button>
+                                        <button onclick="confirmDeleteBoard('test1', 'My First Board')">Delete</button>
+                                    </div>
+                                </div>
+                            </div>
+                            <p class="board-description">This is a test board for development</p>
+                            <div class="board-meta">
+                                <span class="board-date">Created Jan 15, 2025</span>
+                                <span class="board-columns">6 columns</span>
+                            </div>
+                            <div class="board-actions">
+                                <button class="btn btn-primary" onclick="viewBoard('test1')">Open Board</button>
+                                <button class="btn btn-secondary" onclick="copyPublicLink('http://localhost:8080/board/test-link')">Share</button>
+                            </div>
+                        </div>
+
+                        <div class="board-card" data-board-id="test2">
+                            <div class="board-card-header">
+                                <h3>Product Roadmap</h3>
+                                <div class="board-card-menu">
+                                    <button class="btn-menu" onclick="toggleBoardMenu('test2')">⋮</button>
+                                    <div class="board-menu" id="menu-test2" style="display: none;">
+                                        <button onclick="editBoard('test2')">Edit</button>
+                                        <button onclick="copyPublicLink('http://localhost:8080/board/test-link-2')">Copy Public Link</button>
+                                        <button onclick="confirmDeleteBoard('test2', 'Product Roadmap')">Delete</button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="board-meta">
+                                <span class="board-date">Created Jan 10, 2025</span>
+                                <span class="board-columns">4 columns</span>
+                            </div>
+                            <div class="board-actions">
+                                <button class="btn btn-primary" onclick="viewBoard('test2')">Open Board</button>
+                                <button class="btn btn-secondary" onclick="copyPublicLink('http://localhost:8080/board/test-link-2')">Share</button>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </main>
+
+        <!-- Create Board Modal -->
+        <div id="create-board-modal" class="modal" style="display: none;">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>Create New Board</h3>
+                    <button class="modal-close">&times;</button>
+                </div>
+                <form id="create-board-form">
+                    <div class="form-group">
+                        <label for="board-title">Board Title *</label>
+                        <input type="text" id="board-title" name="title" required maxlength="100" placeholder="Enter board title">
+                    </div>
+                    <div class="form-group">
+                        <label for="board-description">Description</label>
+                        <textarea id="board-description" name="description" rows="3" maxlength="500" placeholder="Optional description for your board"></textarea>
+                    </div>
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-secondary" onclick="closeCreateBoardModal()">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Create Board</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Delete Board Confirmation Modal -->
+        <div id="delete-board-modal" class="modal" style="display: none;">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>Delete Board</h3>
+                    <button class="modal-close">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <p>Are you sure you want to delete the board "<strong id="delete-board-name"></strong>"?</p>
+                    <p class="warning-text">This action cannot be undone. All ideas in this board will also be deleted.</p>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeDeleteBoardModal()">Cancel</button>
+                    <button type="button" class="btn btn-danger" id="confirm-delete-btn" onclick="deleteBoard()">Delete Board</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Mock API and auth objects for testing
+        window.api = {
+            get: (url) => Promise.resolve({ data: { boards: [], count: 0 } }),
+            post: (url, data) => Promise.resolve({ data: { id: 'test', name: data.name } }),
+            delete: (url) => Promise.resolve({ data: { message: 'Deleted' } })
+        };
+        
+        window.auth = {
+            waitForReady: () => Promise.resolve()
+        };
+        
+        window.userContext = {
+            getDisplayName: () => 'Test User',
+            addListener: (callback) => callback({ name: 'Test User' })
+        };
+
+        // Test functions
+        function openCreateBoardModal() {
+            document.getElementById('create-board-modal').style.display = 'flex';
+        }
+
+        function closeCreateBoardModal() {
+            document.getElementById('create-board-modal').style.display = 'none';
+        }
+
+        function toggleBoardMenu(boardId) {
+            const menu = document.getElementById(`menu-${boardId}`);
+            const allMenus = document.querySelectorAll('.board-menu');
+            
+            allMenus.forEach(m => {
+                if (m.id !== `menu-${boardId}`) {
+                    m.style.display = 'none';
+                }
+            });
+            
+            menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
+        }
+
+        function copyPublicLink(url) {
+            alert('Link copied: ' + url);
+        }
+
+        function confirmDeleteBoard(boardId, boardName) {
+            document.getElementById('delete-board-name').textContent = boardName;
+            document.getElementById('delete-board-modal').style.display = 'flex';
+        }
+
+        function closeDeleteBoardModal() {
+            document.getElementById('delete-board-modal').style.display = 'none';
+        }
+
+        function deleteBoard() {
+            alert('Board deleted!');
+            closeDeleteBoardModal();
+        }
+
+        function viewBoard(boardId) {
+            alert('Opening board: ' + boardId);
+        }
+
+        function editBoard(boardId) {
+            alert('Editing board: ' + boardId);
+        }
+
+        // Event listeners
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('create-board-btn').addEventListener('click', openCreateBoardModal);
+            
+            document.querySelectorAll('.modal-close').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.target.closest('.modal').style.display = 'none';
+                });
+            });
+
+            document.querySelectorAll('.modal').forEach(modal => {
+                modal.addEventListener('click', (e) => {
+                    if (e.target === modal) {
+                        modal.style.display = 'none';
+                    }
+                });
+            });
+        });
+
+        // Close menus when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.board-card-menu')) {
+                document.querySelectorAll('.board-menu').forEach(menu => {
+                    menu.style.display = 'none';
+                });
+            }
+        });
+    </script>
+</body>
+</html>

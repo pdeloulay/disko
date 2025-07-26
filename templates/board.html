@@ -1,0 +1,55 @@
+{{template "base.html" .}}
+
+{{define "content"}}
+<div class="board-view">
+    <header class="board-header">
+        <div class="container">
+            <div class="board-header-content">
+                <div class="board-logo">
+                    <img src="/static/images/logo.png" alt="Disko" class="logo-image">
+                </div>
+                <div class="board-info">
+                    <h1 id="board-title">Loading...</h1>
+                    <p id="board-description"></p>
+                </div>
+            </div>
+            <div class="board-actions">
+                {{if .isAdmin}}
+                <button id="create-idea-btn" class="btn btn-primary create-idea-btn">Create Idea</button>
+                {{end}}
+                <button id="refresh-btn" class="btn btn-secondary">Refresh</button>
+            </div>
+        </div>
+    </header>
+
+    <main class="board-main">
+        <div class="container">
+            <div class="board-container">
+                <div class="board-header-info">
+                    <h2>Board</h2>
+                    <span id="ideas-count" class="ideas-count">Loading...</span>
+                </div>
+                <div id="drag-drop-board" class="drag-drop-board">
+                    <!-- Column layout will be loaded here -->
+                    <div class="board-loading">Loading board...</div>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<script>
+    // Pass data to JavaScript
+    window.boardData = {
+        publicLink: "{{.publicLink}}",
+        boardId: "{{.boardId}}",
+        isAdmin: {{.isAdmin}}
+    };
+</script>
+{{end}}
+
+{{define "scripts"}}
+<script src="/static/js/board.js"></script>
+<script src="/static/js/idea-management.js"></script>
+<script src="/static/js/drag-drop-board.js"></script>
+{{end}}

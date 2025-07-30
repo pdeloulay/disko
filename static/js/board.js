@@ -7,14 +7,20 @@ class BoardView {
         this.publicLink = this.boardData.publicLink;
         this.searchBar = null;
         this.originalIdeas = null; // Store original ideas for search filtering
+        
+        console.log('[BoardView] Constructor called - BoardID:', this.boardId, 'IsAdmin:', this.isAdmin, 'PublicLink:', this.publicLink);
+        console.log('[BoardView] Board data:', this.boardData);
+        
         this.init();
     }
 
     init() {
+        console.log('[BoardView] Initializing board view...');
         this.bindEvents();
         this.setupIdeaManager();
         this.setupWebSocket();
         this.setupSearchBar();
+        console.log('[BoardView] Board view initialization complete');
     }
 
     bindEvents() {
@@ -50,13 +56,17 @@ class BoardView {
     }
 
     setupIdeaManager() {
+        console.log('[BoardView] Setting up idea manager...');
         // Set board ID for idea manager when it's available
         if (window.ideaManager) {
+            console.log('[BoardView] Idea manager available, setting board ID');
             window.ideaManager.setBoardId(this.boardId);
         } else {
+            console.log('[BoardView] Idea manager not available, waiting...');
             // Wait for idea manager to load
             const checkIdeaManager = setInterval(() => {
                 if (window.ideaManager) {
+                    console.log('[BoardView] Idea manager now available, setting board ID');
                     window.ideaManager.setBoardId(this.boardId);
                     clearInterval(checkIdeaManager);
                 }
@@ -65,8 +75,10 @@ class BoardView {
     }
 
     setupWebSocket() {
+        console.log('[BoardView] Setting up WebSocket...');
         // Initialize WebSocket connection for real-time updates (both admin and public)
         if (this.boardId && window.WebSocketManager) {
+            console.log('[BoardView] WebSocket manager available, initializing connection');
             this.wsManager = new WebSocketManager(this.boardId);
             // Expose globally for retry functionality
             window.wsManager = this.wsManager;
@@ -81,72 +93,109 @@ class BoardView {
             document.addEventListener('ideaUpdated', (event) => {
                 this.handleIdeaUpdate(event.detail);
             });
+            console.log('[BoardView] WebSocket setup complete');
+        } else {
+            console.log('[BoardView] WebSocket setup skipped - BoardID:', this.boardId, 'WebSocketManager available:', !!window.WebSocketManager);
         }
     }
 
     handleFeedbackUpdate(detail) {
         // Refresh the specific idea or the entire board
-        console.log('Feedback updated for idea:', detail.ideaId);
+        console.log('[BoardView] Feedback updated for idea:', detail.ideaId);
         
         // If drag-drop board is available, refresh it
         if (window.dragDropBoard) {
+            console.log('[BoardView] Refreshing drag-drop board for feedback update');
             window.dragDropBoard.loadBoardData();
         } else {
+            console.log('[BoardView] Refreshing board for feedback update');
             this.refreshBoard();
         }
     }
 
     handleIdeaUpdate(detail) {
         // Handle real-time idea updates
-        console.log('Idea updated:', detail);
+        console.log('[BoardView] Idea updated:', detail);
         
         // Refresh the board to show updates
         if (window.dragDropBoard) {
+            console.log('[BoardView] Refreshing drag-drop board for idea update');
             window.dragDropBoard.loadBoardData();
         } else {
+            console.log('[BoardView] Refreshing board for idea update');
             this.refreshBoard();
         }
     }
 
     async refreshBoard() {
+        console.log('[BoardView] Refreshing board...');
         if (window.dragDropBoard) {
+            console.log('[BoardView] Using drag-drop board to refresh');
             await window.dragDropBoard.loadBoard();
+        } else {
+            console.log('[BoardView] No drag-drop board available for refresh');
+        }
+        console.log('[BoardView] Board refresh complete');
+    }
+
+    // Method to check if drag-drop board is available
+    checkDragDropBoard() {
+        if (window.dragDropBoard) {
+            console.log('[BoardView] Drag-drop board is available');
+            return true;
+        } else {
+            console.log('[BoardView] Drag-drop board is not available');
+            return false;
         }
     }
 
     // Method to refresh ideas (called by idea manager)
     async refreshIdeas() {
+        console.log('[BoardView] Refreshing ideas...');
         if (window.dragDropBoard) {
+            console.log('[BoardView] Using drag-drop board to refresh ideas');
             await window.dragDropBoard.refreshBoard();
+        } else {
+            console.log('[BoardView] No drag-drop board available for idea refresh');
         }
+        console.log('[BoardView] Ideas refresh complete');
     }
 
     setupSearchBar() {
+        console.log('[BoardView] Setting up search bar...');
         // Only setup search bar for admin users
         if (!this.isAdmin || !this.boardId) {
+            console.log('[BoardView] Skipping search bar setup - IsAdmin:', this.isAdmin, 'BoardID:', this.boardId);
             return;
         }
 
+        console.log('[BoardView] Initializing search bar for admin user');
         // Initialize search bar with callback for handling search results
         this.searchBar = new SearchBar(this.boardId, (searchResults, searchInfo) => {
             this.handleSearchResults(searchResults, searchInfo);
         });
+        console.log('[BoardView] Search bar setup complete');
     }
 
     handleSearchResults(searchResults, searchInfo) {
+        console.log('[BoardView] Handling search results:', searchResults?.length || 0, 'ideas, SearchInfo:', searchInfo);
+        
         // Update the drag-drop board with filtered results
         if (window.dragDropBoard) {
             // Store original ideas if not already stored
             if (!this.originalIdeas && !searchInfo.query && !this.hasActiveFilters(searchInfo)) {
+                console.log('[BoardView] Storing original ideas for search restoration');
                 this.originalIdeas = window.dragDropBoard.ideas;
             }
 
             // Apply search results to the board
             if (searchInfo.query || this.hasActiveFilters(searchInfo)) {
+                console.log('[BoardView] Applying search results to board');
                 // Show search results
                 window.dragDropBoard.updateIdeasWithSearch(searchResults, searchInfo);
                 this.highlightSearchResults(searchInfo.query);
             } else {
+                console.log('[BoardView] Restoring original ideas from search');
                 // Restore original ideas when search is cleared
                 if (this.originalIdeas) {
                     window.dragDropBoard.updateIdeasWithSearch(this.originalIdeas, null);
@@ -154,6 +203,8 @@ class BoardView {
                 }
                 this.clearSearchHighlights();
             }
+        } else {
+            console.log('[BoardView] No drag-drop board available for search results');
         }
     }
 
@@ -224,5 +275,7 @@ class BoardView {
 
 // Initialize board view
 document.addEventListener('DOMContentLoaded', () => {
+    console.log('[BoardView] DOM loaded, initializing board view...');
     window.boardView = new BoardView();
+    console.log('[BoardView] Board view initialized and available as window.boardView');
 });

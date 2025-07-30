@@ -2,6 +2,7 @@
 class PublicBoardView {
     constructor() {
         this.boardData = window.boardData || {};
+        this.boardId = this.boardData.boardId;
         this.publicLink = this.boardData.publicLink;
         this.board = null;
         this.ideas = [];
@@ -66,7 +67,7 @@ class PublicBoardView {
         if (ideaCard) {
             try {
                 // Re-fetch the idea data and update feedback display
-                const response = await fetch(`/api/boards/${this.publicLink}/ideas/public`);
+                const response = await fetch(`/api/boards/${this.boardId}/ideas`);
                 if (response.ok) {
                     const data = await response.json();
                     const updatedIdea = data.ideas.find(idea => idea.id === ideaId);
@@ -125,7 +126,7 @@ class PublicBoardView {
     }
 
     async fetchPublicBoard() {
-        const response = await fetch(`/api/boards/${this.publicLink}/public`);
+        const response = await fetch(`/api/boards/${this.boardId}`);
         
         if (!response.ok) {
             const errorData = await response.json();
@@ -136,7 +137,7 @@ class PublicBoardView {
     }
 
     async fetchPublicBoardIdeas() {
-        const response = await fetch(`/api/boards/${this.publicLink}/ideas/public`);
+        const response = await fetch(`/api/boards/${this.boardId}/ideas`);
         
         if (!response.ok) {
             const errorData = await response.json();

@@ -152,13 +152,7 @@ func main() {
 	router.Static("/static", "./static")
 
 	// Health check endpoint
-	router.GET("/health", func(c *gin.Context) {
-		log.Printf("[Health] Health check from IP: %s", c.ClientIP())
-		c.JSON(http.StatusOK, gin.H{
-			"status":    "healthy",
-			"timestamp": time.Now().UTC(),
-		})
-	})
+	router.GET("/health", handlers.HealthCheck)
 
 	// Test modal endpoint
 	router.GET("/test-modal", func(c *gin.Context) {
@@ -224,6 +218,7 @@ func main() {
 
 		log.Printf("[Template] Private Board route accessed - BoardID: %s, IP: %s, UserAgent: %s, Referer: %s, AcceptLanguage: %s",
 			boardID, c.ClientIP(), userAgent, referer, acceptLanguage)
+		log.Printf("[Template] Private Board - Authorization header: %s", c.GetHeader("Authorization"))
 
 		// Get authenticated user ID (required by AuthMiddleware)
 		userID, err := middleware.GetUserID(c)
@@ -353,168 +348,46 @@ func main() {
 	api := router.Group("/api")
 	{
 		// Public endpoints
-		api.GET("/ping", func(c *gin.Context) {
-			log.Printf("[API] Health check from IP: %s", c.ClientIP())
-			c.JSON(http.StatusOK, gin.H{
-				"message": "pong",
-			})
-		})
+		api.GET("/ping", handlers.Ping)
 
 		// Public board access endpoint
-		api.GET("/boards/:id/public", func(c *gin.Context) {
-			boardID := c.Param("id")
-			log.Printf("[API] GetPublicBoard called - BoardID: %s, IP: %s, UserAgent: %s", boardID, c.ClientIP(), c.GetHeader("User-Agent"))
-			handlers.GetPublicBoard(c)
-		})
-		api.GET("/boards/:id/ideas/public", func(c *gin.Context) {
-			boardID := c.Param("id")
-			log.Printf("[API] GetPublicBoardIdeas called - BoardID: %s, IP: %s, UserAgent: %s", boardID, c.ClientIP(), c.GetHeader("User-Agent"))
-			handlers.GetPublicBoardIdeas(c)
-		})
-		api.GET("/boards/:id/release/public", func(c *gin.Context) {
-			boardID := c.Param("id")
-			log.Printf("[API] GetReleasedIdeas (public) called - BoardID: %s, IP: %s, UserAgent: %s", boardID, c.ClientIP(), c.GetHeader("User-Agent"))
-			c.Header("X-Public-Access", "true")
-			handlers.GetReleasedIdeas(c)
-		})
+		api.GET("/boards/:id/public", handlers.GetPublicBoard)
+		api.GET("/boards/:id/ideas/public", handlers.GetPublicBoardIdeas)
+		api.GET("/boards/:id/release/public", handlers.GetPublicReleasedIdeas)
 
 		// Public feedback endpoints
-		api.POST("/ideas/:id/thumbsup", func(c *gin.Context) {
-			ideaID := c.Param("id")
-			log.Printf("[API] AddThumbsUp called - IdeaID: %s, IP: %s, UserAgent: %s", ideaID, c.ClientIP(), c.GetHeader("User-Agent"))
-			handlers.AddThumbsUp(c)
-		})
-		api.POST("/ideas/:id/emoji", func(c *gin.Context) {
-			ideaID := c.Param("id")
-			log.Printf("[API] AddEmojiReaction called - IdeaID: %s, IP: %s, UserAgent: %s", ideaID, c.ClientIP(), c.GetHeader("User-Agent"))
-			handlers.AddEmojiReaction(c)
-		})
+		api.POST("/ideas/:id/thumbsup", handlers.AddThumbsUp)
+		api.POST("/ideas/:id/emoji", handlers.AddEmojiReaction)
 
 		// WebSocket endpoint for real-time updates
-		api.GET("/ws/boards/:boardId", func(c *gin.Context) {
-			boardID := c.Param("boardId")
-			log.Printf("[WebSocket] HandleWebSocket called - BoardID: %s, IP: %s, UserAgent: %s", boardID, c.ClientIP(), c.GetHeader("User-Agent"))
-			utils.HandleWebSocket(c)
-		})
+		api.GET("/ws/boards/:boardId", utils.HandleWebSocket)
 
 		// Protected endpoints (require authentication)
 		protected := api.Group("/")
 		protected.Use(middleware.AuthMiddleware())
 		{
 			// User info endpoint
-			protected.GET("/user", func(c *gin.Context) {
-				userID, err := middleware.GetUserID(c)
-				log.Printf("[API] GetUserInfo called - IP: %s, UserAgent: %s", c.ClientIP(), c.GetHeader("User-Agent"))
-				if err != nil {
-					log.Printf("[API] GetUserInfo failed - Error: %v, IP: %s", err, c.ClientIP())
-					c.JSON(http.StatusInternalServerError, gin.H{
-						"error": gin.H{
-							"code":    "INTERNAL_ERROR",
-							"message": "Failed to get user ID",
-						},
-					})
-					return
-				}
-
-				sessionID, _ := middleware.GetSessionID(c)
-				log.Printf("[API] GetUserInfo success - UserID: %s, SessionID: %s, IP: %s", userID, sessionID, c.ClientIP())
-
-				c.JSON(http.StatusOK, gin.H{
-					"userID":    userID,
-					"sessionID": sessionID,
-				})
-			})
+			protected.GET("/user", handlers.GetUserInfo)
 
 			// Test protected endpoint
-			protected.GET("/protected", func(c *gin.Context) {
-				userID, _ := middleware.GetUserID(c)
-				log.Printf("[API] TestProtected called - UserID: %s, IP: %s, UserAgent: %s", userID, c.ClientIP(), c.GetHeader("User-Agent"))
-				c.JSON(http.StatusOK, gin.H{
-					"message": "This is a protected endpoint",
-					"userID":  userID,
-				})
-			})
+			protected.GET("/protected", handlers.TestProtected)
 
 			// Board management endpoints
-			protected.POST("/boards", func(c *gin.Context) {
-				userID, _ := middleware.GetUserID(c)
-				log.Printf("[API] CreateBoard called - UserID: %s, IP: %s, UserAgent: %s", userID, c.ClientIP(), c.GetHeader("User-Agent"))
-				handlers.CreateBoard(c)
-			})
-			protected.GET("/boards", func(c *gin.Context) {
-				userID, _ := middleware.GetUserID(c)
-				log.Printf("[API] GetBoards called - UserID: %s, IP: %s, UserAgent: %s", userID, c.ClientIP(), c.GetHeader("User-Agent"))
-				handlers.GetBoards(c)
-			})
-			protected.GET("/boards/:id", func(c *gin.Context) {
-				boardID := c.Param("id")
-				userID, _ := middleware.GetUserID(c)
-				log.Printf("[API] GetBoard called - BoardID: %s, UserID: %s, IP: %s, UserAgent: %s", boardID, userID, c.ClientIP(), c.GetHeader("User-Agent"))
-				handlers.GetBoard(c)
-			})
-			protected.PUT("/boards/:id", func(c *gin.Context) {
-				boardID := c.Param("id")
-				userID, _ := middleware.GetUserID(c)
-				log.Printf("[API] UpdateBoard called - BoardID: %s, UserID: %s, IP: %s, UserAgent: %s", boardID, userID, c.ClientIP(), c.GetHeader("User-Agent"))
-				handlers.UpdateBoard(c)
-			})
-			protected.DELETE("/boards/:id", func(c *gin.Context) {
-				boardID := c.Param("id")
-				userID, _ := middleware.GetUserID(c)
-				log.Printf("[API] DeleteBoard called - BoardID: %s, UserID: %s, IP: %s, UserAgent: %s", boardID, userID, c.ClientIP(), c.GetHeader("User-Agent"))
-				handlers.DeleteBoard(c)
-			})
+			protected.POST("/boards", handlers.CreateBoard)
+			protected.GET("/boards", handlers.GetBoards)
+			protected.GET("/boards/:id", handlers.GetBoard)
+			protected.PUT("/boards/:id", handlers.UpdateBoard)
+			protected.DELETE("/boards/:id", handlers.DeleteBoard)
 
 			// Idea management endpoints
-			protected.POST("/boards/:id/ideas", func(c *gin.Context) {
-				boardID := c.Param("id")
-				userID, _ := middleware.GetUserID(c)
-				log.Printf("[API] CreateIdea called - BoardID: %s, UserID: %s, IP: %s, UserAgent: %s", boardID, userID, c.ClientIP(), c.GetHeader("User-Agent"))
-				handlers.CreateIdea(c)
-			})
-			protected.GET("/boards/:id/ideas", func(c *gin.Context) {
-				boardID := c.Param("id")
-				userID, _ := middleware.GetUserID(c)
-				log.Printf("[API] GetBoardIdeas called - BoardID: %s, UserID: %s, IP: %s, UserAgent: %s", boardID, userID, c.ClientIP(), c.GetHeader("User-Agent"))
-				handlers.GetBoardIdeas(c)
-			})
-			protected.GET("/boards/:id/search", func(c *gin.Context) {
-				boardID := c.Param("id")
-				query := c.Query("q")
-				userID, _ := middleware.GetUserID(c)
-				log.Printf("[API] SearchBoardIdeas called - BoardID: %s, Query: %s, UserID: %s, IP: %s, UserAgent: %s", boardID, query, userID, c.ClientIP(), c.GetHeader("User-Agent"))
-				handlers.SearchBoardIdeas(c)
-			})
-			protected.GET("/boards/:id/release", func(c *gin.Context) {
-				boardID := c.Param("id")
-				userID, _ := middleware.GetUserID(c)
-				log.Printf("[API] GetReleasedIdeas (protected) called - BoardID: %s, UserID: %s, IP: %s, UserAgent: %s", boardID, userID, c.ClientIP(), c.GetHeader("User-Agent"))
-				handlers.GetReleasedIdeas(c)
-			})
-			protected.PUT("/ideas/:id", func(c *gin.Context) {
-				ideaID := c.Param("id")
-				userID, _ := middleware.GetUserID(c)
-				log.Printf("[API] UpdateIdea called - IdeaID: %s, UserID: %s, IP: %s, UserAgent: %s", ideaID, userID, c.ClientIP(), c.GetHeader("User-Agent"))
-				handlers.UpdateIdea(c)
-			})
-			protected.DELETE("/ideas/:id", func(c *gin.Context) {
-				ideaID := c.Param("id")
-				userID, _ := middleware.GetUserID(c)
-				log.Printf("[API] DeleteIdea called - IdeaID: %s, UserID: %s, IP: %s, UserAgent: %s", ideaID, userID, c.ClientIP(), c.GetHeader("User-Agent"))
-				handlers.DeleteIdea(c)
-			})
-			protected.PUT("/ideas/:id/position", func(c *gin.Context) {
-				ideaID := c.Param("id")
-				userID, _ := middleware.GetUserID(c)
-				log.Printf("[API] UpdateIdeaPosition called - IdeaID: %s, UserID: %s, IP: %s, UserAgent: %s", ideaID, userID, c.ClientIP(), c.GetHeader("User-Agent"))
-				handlers.UpdateIdeaPosition(c)
-			})
-			protected.PUT("/ideas/:id/status", func(c *gin.Context) {
-				ideaID := c.Param("id")
-				userID, _ := middleware.GetUserID(c)
-				log.Printf("[API] UpdateIdeaStatus called - IdeaID: %s, UserID: %s, IP: %s, UserAgent: %s", ideaID, userID, c.ClientIP(), c.GetHeader("User-Agent"))
-				handlers.UpdateIdeaStatus(c)
-			})
+			protected.POST("/boards/:id/ideas", handlers.CreateIdea)
+			protected.GET("/boards/:id/ideas", handlers.GetBoardIdeas)
+			protected.GET("/boards/:id/search", handlers.SearchBoardIdeas)
+			protected.GET("/boards/:id/release", handlers.GetReleasedIdeas)
+			protected.PUT("/ideas/:id", handlers.UpdateIdea)
+			protected.DELETE("/ideas/:id", handlers.DeleteIdea)
+			protected.PUT("/ideas/:id/position", handlers.UpdateIdeaPosition)
+			protected.PUT("/ideas/:id/status", handlers.UpdateIdeaStatus)
 		}
 	}
 

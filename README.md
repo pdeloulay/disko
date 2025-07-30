@@ -78,7 +78,29 @@ The project is set up with:
 
 ## Changelog
 
-### [Latest] - Board Creation Enhancements & Modal Redesign
+### [v0.1.1] - Code Organization & Handler Cleanup
+- **🧹 Code Cleanup**: Removed all inline handlers from main.go and moved them to proper handler files
+- **📁 Better Organization**: Created dedicated handler files for different concerns (user.go, health.go)
+- **🔧 Maintainability**: Improved code structure with proper separation of concerns
+- **📝 Documentation**: Added comprehensive handler documentation and logging
+- **🎯 Consistency**: Standardized handler patterns across all endpoints
+- **⚡ Performance**: Reduced main.go complexity and improved readability
+- **🔧 API Endpoint Fix**: Fixed JavaScript to use correct private endpoints for board data loading
+
+### [v0.1.0] - Authentication & UI Improvements
+- **🔐 Authentication System**: Complete Clerk integration with JWT token management
+- **🛡️ Route Protection**: Separate private (`/board/:id`) and public (`/public/:publicLink`) board routes
+- **🔑 Bearer Token Auth**: Authenticated API requests with proper Authorization headers
+- **📊 Public Stats**: Server-side templated statistics always visible on landing page
+- **🎨 UI Consistency**: Unified auth setup across dashboard and board pages
+- **🔄 Event Listeners**: Fixed Clerk event listener compatibility for different API versions
+- **📱 User Menu**: Added user menu with sign-out functionality to all pages
+- **🏷️ Version Display**: App version (v0.1.0) shown in footer and headers
+- **🎯 Error Handling**: Improved error messages and user feedback
+- **🔧 Debug Logging**: Enhanced logging for authentication and API calls
+- **🎨 Landing Page Redesign**: Complete redesign focused on solopreneurs with minimal, pixel-perfect design and "less is more" approach
+
+### [v0.0.9] - Board Creation Enhancements & Modal Redesign
 - **Enhanced**: Boards are now private by default (`isPublic: false`) for better security
 - **Added**: Default welcome idea automatically created with each new board
 - **Improved**: Modern modal design with gradient headers, smooth animations, and enhanced UX
@@ -98,12 +120,6 @@ The project is set up with:
 - **Navigation**: Fixed board view loading by using proper page navigation instead of HTML replacement
 - **Authentication**: Updated board route to use AuthMiddleware for authenticated users only
 - **Routes**: Separated private board access (`/board/:id`) from public board access (`/public/:publicLink`)
-- **Authentication**: Fixed board navigation to use authenticated fetch requests with bearer token
-- **Auth Consistency**: Updated board.html to have same auth setup as dashboard.html
-- **Public Stats**: Removed authentication requirement for landing page stats - now server-side templated and always visible
-- **Auth Fix**: Fixed Clerk authentication methods to use proper API calls instead of incorrect function calls
-- **Listener Fix**: Fixed Clerk event listener methods to handle both `addListener/removeListener` and `on/off` patterns
-- **Version Display**: Added app version display to footer (index) and headers (dashboard/board) from static/.version file
 
 ### [Previous] - Short UUID Implementation
 - **Enhanced**: Public board links now use short Google UUIDs (12 characters) with "p" prefix

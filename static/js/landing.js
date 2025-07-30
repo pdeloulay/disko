@@ -96,10 +96,14 @@ function initializeAuthButtons() {
     if (signInBtn) {
         signInBtn.style.display = 'inline-block';
         console.log('[Landing] Sign in button shown');
+    } else {
+        console.error('[Landing] Sign in button not found!');
     }
     if (signUpBtn) {
         signUpBtn.style.display = 'inline-block';
         console.log('[Landing] Sign up button shown');
+    } else {
+        console.error('[Landing] Sign up button not found!');
     }
     
     // Hide dashboard/sign out buttons by default

@@ -5,87 +5,109 @@
     <!-- Clerk Popup Container -->
     <div id="my-popup" class="clerk-popup-container"></div>
     
-    <header class="header">
+    <!-- Navigation -->
+    <nav class="navbar">
         <div class="container">
-            <h1 class="logo">
+            <div class="nav-brand">
                 <a href="/" class="logo-link">
                     <img src="/static/images/logo-sm.png" alt="Disko" class="logo-image">
+                    
                 </a>
-            </h1>
-            <nav class="nav">
+            </div>
+            <div class="nav-actions">
                 <div id="auth-buttons">
-                    <button id="sign-in-btn" class="btn btn-primary" style="display: none;">Sign In</button>
-                    <button id="sign-up-btn" class="btn btn-secondary" style="display: none;">Sign Up</button>
+                    <button id="sign-in-btn" class="btn btn-ghost">Sign In</button>
+                    <button id="sign-up-btn" class="btn btn-primary">Get Started</button>
                     <button id="dashboard-btn" class="btn btn-primary" style="display: none;">Dashboard</button>
-                    <button id="sign-out-btn" class="btn btn-secondary" style="display: none;">Sign Out</button>
+                    <button id="sign-out-btn" class="btn btn-ghost" style="display: none;">Sign Out</button>
                 </div>
-            </nav>
+            </div>
         </div>
-    </header>
+    </nav>
 
-    <main class="main">
-        <!-- Hero Section -->
-        <section class="hero">
-            <div class="container">
-                <div class="hero-content">
-                    <h1 class="hero-title">Transform how you share Progress with Customers</h1>
-                    <p class="hero-subtitle">Disko helps solopreneurs and entrepreneurs create beautiful, interactive project boards that keep customers engaged and informed about your work progress.</p>
-                    <div class="hero-stats">
-                        <div class="stat-item">
-                            <span class="stat-number" id="boards-counter">{{.stats.boards}}</span>
-                            <span class="stat-label">Boards Created</span>
-                        </div>
-                        <div class="stat-item">
-                            <span class="stat-number" id="ideas-counter">{{.stats.ideas}}</span>
-                            <span class="stat-label">Ideas Shared</span>
-                        </div>
-                        <div class="stat-item">
-                            <span class="stat-number" id="feedback-counter">{{.stats.feedback}}</span>
-                            <span class="stat-label">Customer Feedback</span>
-                        </div>
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="container">
+            <div class="hero-content">
+                <div class="hero-text">
+                    <h1 class="hero-title">
+                        Show customers your 
+                        <span class="accent-text">work in progress</span>
+                    </h1>
+                    <p class="hero-subtitle">
+                        Create beautiful project boards that let your customers see exactly what you're working on, vote on ideas, and stay engaged with your progress.
+                    </p>
+                    
+                    <div class="hero-quote">
+                        <blockquote>
+                            <p>"Product discovery is about building the right product for the right customer at the right time. When you get this wrong, you waste months of development time on features that don't matter."</p>
+                            <cite>— Marty Cagan, <em>Inspired</em></cite>
+                        </blockquote>
                     </div>
-                    <div class="hero-cta">
-                        <button id="get-started-btn" class="btn btn-large btn-primary">Start Your Free Board</button>
-                        <button id="demo-btn" class="btn btn-large btn-secondary">Watch Demo</button>
+                    
+                    <div class="hero-actions">
+                        <button id="get-started-btn" class="btn btn-primary btn-large">
+                            Start Free
+                        </button>
+                        <button id="demo-btn" class="btn btn-ghost btn-large">
+                            See Demo
+                        </button>
                     </div>
                 </div>
+                
                 <div class="hero-visual">
                     <div class="board-preview">
-                        <div class="board-header">
-                            <h3>Project Progress Board</h3>
+                        <div class="preview-header">
+                            <h3>Website Redesign Project</h3>
                             <span class="status-badge">Live</span>
                         </div>
-                        <div class="board-columns">
-                            <div class="column">
-                                <h4>Now</h4>
-                                <div class="idea-card active">
-                                    <h5>Mobile App Design</h5>
-                                    <p>Finalizing the user interface design</p>
+                        
+                        <div class="preview-columns">
+                            <div class="preview-column">
+                                <div class="column-header">
+                                    <h4>Now</h4>
+                                    <span class="column-count">2</span>
+                                </div>
+                                <div class="preview-idea active">
+                                    <h5>Homepage Design</h5>
+                                    <p>Creating the hero section and navigation</p>
                                     <div class="idea-meta">
-                                        <span class="status">In Progress</span>
-                                        <span class="feedback">👍 12</span>
+                                        <span class="feedback-count">👍 8 votes</span>
+                                    </div>
+                                </div>
+                                <div class="preview-idea active">
+                                    <h5>Mobile Responsive</h5>
+                                    <p>Optimizing for mobile devices</p>
+                                    <div class="idea-meta">
+                                        <span class="feedback-count">👍 12 votes</span>
                                     </div>
                                 </div>
                             </div>
-                            <div class="column">
-                                <h4>Next</h4>
-                                <div class="idea-card">
-                                    <h5>API Integration</h5>
-                                    <p>Connect payment processing system</p>
+                            
+                            <div class="preview-column">
+                                <div class="column-header">
+                                    <h4>Next</h4>
+                                    <span class="column-count">1</span>
+                                </div>
+                                <div class="preview-idea">
+                                    <h5>Contact Form</h5>
+                                    <p>Building the contact page with form</p>
                                     <div class="idea-meta">
-                                        <span class="status">Planned</span>
-                                        <span class="feedback">👍 8</span>
+                                        <span class="feedback-count">👍 5 votes</span>
                                     </div>
                                 </div>
                             </div>
-                            <div class="column">
-                                <h4>Later</h4>
-                                <div class="idea-card">
-                                    <h5>Analytics Dashboard</h5>
-                                    <p>Build comprehensive reporting tools</p>
+                            
+                            <div class="preview-column">
+                                <div class="column-header">
+                                    <h4>Later</h4>
+                                    <span class="column-count">1</span>
+                                </div>
+                                <div class="preview-idea">
+                                    <h5>Blog Section</h5>
+                                    <p>Adding blog functionality</p>
                                     <div class="idea-meta">
-                                        <span class="status">Backlog</span>
-                                        <span class="feedback">👍 5</span>
+                                        <span class="feedback-count">👍 3 votes</span>
                                     </div>
                                 </div>
                             </div>
@@ -93,227 +115,138 @@
                     </div>
                 </div>
             </div>
-        </section>
-
-        <!-- Benefits Section -->
-        <section class="benefits">
-        <div class="container">
-                <h2 class="section-title">Why Solopreneurs Love Disko</h2>
-                <div class="benefits-grid">
-                    <div class="benefit-card">
-                        <div class="benefit-icon">🚀</div>
-                        <h3>Build Trust with Transparency</h3>
-                        <p>Show customers exactly what you're working on with real-time progress updates. No more wondering about project status.</p>
-                    </div>
-                    <div class="benefit-card">
-                        <div class="benefit-icon">💡</div>
-                        <h3>Organize Ideas with RICE Scoring</h3>
-                        <p>Prioritize your work using the proven RICE framework (Reach, Impact, Confidence, Effort) to make better decisions.</p>
-                    </div>
-                    <div class="benefit-card">
-                        <div class="benefit-icon">🎯</div>
-                        <h3>Get Customer Feedback Instantly</h3>
-                        <p>Let customers vote on ideas with thumbs up and emoji reactions. Know what matters most to your audience.</p>
-                    </div>
-                    <div class="benefit-card">
-                        <div class="benefit-icon">⚡</div>
-                        <h3>Drag & Drop Simplicity</h3>
-                        <p>Move ideas between columns effortlessly. Update priorities and status with simple drag and drop actions.</p>
-                    </div>
-                    <div class="benefit-card">
-                        <div class="benefit-icon">🔗</div>
-                        <h3>Share with One Click</h3>
-                        <p>Generate unique public links for each board. Share progress with customers without requiring them to sign up.</p>
-                    </div>
-                    <div class="benefit-card">
-                        <div class="benefit-icon">📱</div>
-                        <h3>Works Everywhere</h3>
-                        <p>Access your boards from any device. Perfect for sharing during client calls or team meetings.</p>
-                    </div>
-                </div>
-                </div>
-            </section>
-
-        <!-- Features Section -->
-            <section class="features">
-            <div class="container">
-                <h2 class="section-title">Powerful Features for Modern Entrepreneurs</h2>
-                <div class="features-grid">
-                    <div class="feature-item">
-                        <div class="feature-content">
-                            <h3>Smart Project Management</h3>
-                            <p>Organize ideas into intuitive columns: Parking, Now, Next, Later, Release, and Won't Do. Track progress with visual status indicators and automatic workflow transitions.</p>
-                            <ul class="feature-list">
-                                <li>RICE scoring for data-driven prioritization</li>
-                                <li>Drag & drop interface for easy organization</li>
-                                <li>Visual progress indicators and animations</li>
-                                <li>Automatic status updates and transitions</li>
-                            </ul>
-                        </div>
-                        <div class="feature-visual">
-                            <div class="feature-preview">
-                                <div class="rice-score-demo">
-                                    <div class="score-item">
-                                        <span class="score-label">Reach</span>
-                                        <span class="score-value">80%</span>
-                                    </div>
-                                    <div class="score-item">
-                                        <span class="score-label">Impact</span>
-                                        <span class="score-value">70%</span>
-                                    </div>
-                                    <div class="score-item">
-                                        <span class="score-label">Confidence</span>
-                                        <span class="score-value">4</span>
-                                    </div>
-                                    <div class="score-item">
-                                        <span class="score-label">Effort</span>
-                                        <span class="score-value">60%</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="feature-item reverse">
-                        <div class="feature-content">
-                            <h3>Customer Engagement & Feedback</h3>
-                            <p>Turn your progress updates into interactive experiences. Let customers vote, react, and provide feedback on your ideas in real-time.</p>
-                            <ul class="feature-list">
-                                <li>Thumbs up voting system</li>
-                                <li>Emoji reaction support</li>
-                                <li>Real-time feedback updates</li>
-                                <li>Multi-channel notifications</li>
-                            </ul>
-                        </div>
-                        <div class="feature-visual">
-                            <div class="feature-preview">
-                                <div class="feedback-demo">
-                                    <div class="feedback-item">
-                                        <span class="emoji">👍</span>
-                                        <span class="count">24</span>
-                                    </div>
-                                    <div class="feedback-item">
-                                        <span class="emoji">❤️</span>
-                                        <span class="count">12</span>
-                                    </div>
-                                    <div class="feedback-item">
-                                        <span class="emoji">🚀</span>
-                                        <span class="count">8</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="feature-item">
-                        <div class="feature-content">
-                            <h3>Flexible Visibility Controls</h3>
-                            <p>Customize what your customers see. Control column visibility, field display, and create the perfect public view for your audience.</p>
-                            <ul class="feature-list">
-                                <li>Show/hide columns as needed</li>
-                                <li>Control field visibility (RICE scores, descriptions)</li>
-                                <li>Public link sharing with custom branding</li>
-                                <li>Dark/light mode support</li>
-                            </ul>
-                        </div>
-                        <div class="feature-visual">
-                            <div class="feature-preview">
-                                <div class="visibility-demo">
-                                    <div class="visibility-toggle">
-                                        <span class="toggle-label">Show RICE Scores</span>
-                                        <div class="toggle-switch active"></div>
-                                    </div>
-                                    <div class="visibility-toggle">
-                                        <span class="toggle-label">Show Descriptions</span>
-                                        <div class="toggle-switch active"></div>
-                                    </div>
-                                    <div class="visibility-toggle">
-                                        <span class="toggle-label">Show Release Column</span>
-                                        <div class="toggle-switch"></div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Testimonials Section -->
-        <section class="testimonials">
-            <div class="container">
-                <h2 class="section-title">What Our Users Say</h2>
-                <div class="testimonials-grid">
-                    <div class="testimonial-card">
-                        <div class="testimonial-content">
-                            <p>"Disko transformed how I communicate with clients. They can now see exactly what I'm working on and provide feedback in real-time. It's been a game-changer for my freelance business."</p>
-                        </div>
-                        <div class="testimonial-author">
-                            <div class="author-avatar">👩‍💼</div>
-                            <div class="author-info">
-                                <h4>Sarah Chen</h4>
-                                <span>UX Designer & Consultant</span>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="testimonial-card">
-                        <div class="testimonial-content">
-                            <p>"The RICE scoring system helps me prioritize my work better than ever. My clients love being able to vote on ideas and see the reasoning behind my decisions."</p>
-                        </div>
-                        <div class="testimonial-author">
-                            <div class="author-avatar">👨‍💻</div>
-                            <div class="author-info">
-                                <h4>Marcus Rodriguez</h4>
-                                <span>Software Developer</span>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="testimonial-card">
-                        <div class="testimonial-content">
-                            <p>"Finally, a tool that makes project transparency actually engaging! My customers feel more connected to my work, and I get valuable feedback that helps me deliver better results."</p>
-                        </div>
-                        <div class="testimonial-author">
-                            <div class="author-avatar">👩‍🎨</div>
-                            <div class="author-info">
-                                <h4>Emma Thompson</h4>
-                                <span>Brand Strategist</span>
-                            </div>
-                        </div>
-                    </div>
-                    </div>
-                </div>
-            </section>
-
-        <!-- CTA Section -->
-        <section class="cta-section">
-            <div class="container">
-                <div class="cta-content">
-                    <h2>Ready to Transform Your Customer Communication?</h2>
-                    <p>Join hundreds of entrepreneurs who are already using Disko to build trust and engagement with their customers.</p>
-                    <div class="cta-buttons">
-                        <button id="cta-signup-btn" class="btn btn-large btn-primary">Start Free Today</button>
-                        <button id="cta-demo-btn" class="btn btn-large btn-secondary">Schedule Demo</button>
-                    </div>
-                    <div class="cta-features">
-                        <div class="cta-feature">
-                            <span class="feature-icon">✓</span>
-                            <span>No credit card required</span>
-                        </div>
-                        <div class="cta-feature">
-                            <span class="feature-icon">✓</span>
-                            <span>Setup in under 5 minutes</span>
-                        </div>
-                        <div class="cta-feature">
-                            <span class="feature-icon">✓</span>
-                            <span>Unlimited boards & ideas</span>
-                        </div>
-                    </div>
-                </div>
         </div>
-        </section>
-    </main>
+    </section>
+
+    <!-- Features Section -->
+    <section class="features">
+        <div class="container">
+            <div class="section-header">
+                <h2>Built for solopreneurs who want to build trust</h2>
+                <p>Stop wondering if your clients are happy. Show them exactly what you're working on and get real feedback.</p>
+            </div>
+            
+            <div class="features-grid">
+                <div class="feature-card primary">
+                    <div class="feature-icon">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M9 12L11 14L15 10M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </div>
+                    <h3>End status update calls forever</h3>
+                    <p>Your clients see your progress in real-time. No more weekly "what are you working on?" calls or wondering if you're actually working.</p>
+                    <div class="feature-benefit">
+                        <span>Save 2-3 hours per week</span>
+                    </div>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M9 19V13C9 11.8954 9.89543 11 11 11H13C14.1046 11 15 11.8954 15 13V19M9 19H15M9 19H7C5.89543 19 5 18.1046 5 17V7C5 5.89543 5.89543 5 7 5H17C18.1046 5 19 5.89543 19 7V17C19 18.1046 18.1046 19 17 19H15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </div>
+                    <h3>Prioritize with confidence</h3>
+                    <p>Use RICE scoring to show clients why you're working on certain features first. They'll understand your decisions and trust your process.</p>
+                    <div class="feature-benefit">
+                        <span>Build client confidence</span>
+                    </div>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M14 9V5C14 3.89543 13.1046 3 12 3C10.8954 3 10 3.89543 10 5V9M14 9H10M14 9L12 11L10 9M7 21H17C18.1046 21 19 20.1046 19 19V15C19 13.8954 18.1046 13 17 13H7C5.89543 13 5 13.8954 5 15V19C5 20.1046 5.89543 21 7 21Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </div>
+                    <h3>Get feedback without meetings</h3>
+                    <p>Clients can vote on ideas and leave feedback directly on your board. No more scheduling calls for every small decision.</p>
+                    <div class="feature-benefit">
+                        <span>Reduce meetings by 70%</span>
+                    </div>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M8 9L12 5L16 9M12 5V19" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </div>
+                    <h3>Move work with drag & drop</h3>
+                    <p>Update priorities and status by simply dragging ideas between columns. Your clients see changes instantly.</p>
+                    <div class="feature-benefit">
+                        <span>Update in seconds</span>
+                    </div>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M13.828 10.172L16.657 7.343L18.071 8.757L13.828 13L9.586 8.757L10.999 7.343L13.828 10.172ZM12 2C13.1 2 14 2.9 14 4C14 5.1 13.1 6 12 6C10.9 6 10 5.1 10 4C10 2.9 10.9 2 12 2ZM12 18C10.9 18 10 18.9 10 20C10 21.1 10.9 22 12 22C13.1 22 14 21.1 14 20C14 18.9 13.1 18 12 18Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </div>
+                    <h3>Share with one link</h3>
+                    <p>Generate a unique URL for each project. Clients can view and interact without creating accounts or downloading apps.</p>
+                    <div class="feature-benefit">
+                        <span>Zero friction for clients</span>
+                    </div>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M12 18H12.01M8 21H16C17.1046 21 18 20.1046 18 19V5C18 3.89543 17.1046 3 16 3H8C6.89543 3 6 3.89543 6 5V19C6 20.1046 6.89543 21 8 21Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </div>
+                    <h3>Works on any device</h3>
+                    <p>Perfect for sharing during client calls or letting clients check progress on their phones. No app downloads needed.</p>
+                    <div class="feature-benefit">
+                        <span>Mobile-first design</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="cta-section">
+        <div class="container">
+            <div class="cta-content">
+                <h2>Stop losing clients to poor communication</h2>
+                <p>Join hundreds of solopreneurs who use Disko to build trust, reduce meetings, and keep clients happy.</p>
+                
+                <div class="cta-actions">
+                    <button id="cta-signup-btn" class="btn btn-primary btn-large">
+                        Start Free Today
+                    </button>
+                    <button id="cta-demo-btn" class="btn btn-ghost btn-large">
+                        Schedule Demo
+                    </button>
+                </div>
+                
+                <div class="cta-features">
+                    <div class="cta-feature">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M9 12L11 14L15 10M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                        <span>No credit card required</span>
+                    </div>
+                    <div class="cta-feature">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M9 12L11 14L15 10M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                        <span>Setup in under 5 minutes</span>
+                    </div>
+                    <div class="cta-feature">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M9 12L11 14L15 10M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                        <span>Unlimited boards & ideas</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
 
     <!-- Footer -->
     <footer class="footer">

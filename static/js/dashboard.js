@@ -131,8 +131,28 @@ function updateDashboardStats(boardsCount = 0, ideasCount = 0) {
 
 async function loadBoards() {
     const boardsList = document.getElementById('boards-list');
+    
+    // Prevent infinite retry loops
+    if (window.boardLoadAttempts === undefined) {
+        window.boardLoadAttempts = 0;
+    }
+    
+    if (window.boardLoadAttempts > 3) {
+        console.error('[Dashboard] Too many board load attempts, stopping retry loop');
+        boardsList.innerHTML = `
+            <div class="error-state">
+                <h3>Authentication Issue</h3>
+                <p>There seems to be an authentication problem. Please refresh the page and try again.</p>
+                <button class="btn btn-primary" onclick="location.reload()">Refresh Page</button>
+            </div>
+        `;
+        return;
+    }
+    
+    window.boardLoadAttempts++;
+    
     try {
-        console.log('[Dashboard] Starting loadBoards function...');
+        console.log('[Dashboard] Starting loadBoards function... (attempt', window.boardLoadAttempts, ')');
         boardsList.innerHTML = '<div class="loading">Loading your boards...</div>';
         console.log('[Dashboard] Checking authentication status...');
         console.log('[Dashboard] window.auth:', window.auth);
@@ -145,9 +165,17 @@ async function loadBoards() {
             return;
         }
         
+        // Clear any stored tokens to force fresh authentication
+        localStorage.removeItem('clerk-db-jwt');
+        sessionStorage.removeItem('clerk-jwt-token');
+        
         console.log('[Dashboard] User is authenticated, making API call to /boards...');
         const response = await window.api.get('/boards');
         console.log('[Dashboard] API response received:', response);
+        
+        // Reset attempts on success
+        window.boardLoadAttempts = 0;
+        
         const data = response.data || response;
         console.log('[Dashboard] Processed data:', data);
         if (!data.boards || data.boards.length === 0) {
@@ -181,6 +209,9 @@ async function loadBoards() {
         // If it's an authentication error, redirect to sign in
         if (error.message && error.message.includes('401')) {
             console.log('[Dashboard] Authentication error, redirecting to sign in...');
+            // Clear invalid token and force re-authentication
+            localStorage.removeItem('clerk-db-jwt');
+            sessionStorage.removeItem('clerk-jwt-token');
             window.auth.signIn();
         } else {
             updateDashboardStats(0, 0);
@@ -200,9 +231,9 @@ function openCreateBoardModal() {
     const modal = document.getElementById('create-board-modal');
     console.log('[Dashboard] Modal element:', modal);
     if (modal) {
-        console.log('[Dashboard] Setting modal display to flex');
-        modal.style.display = 'flex';
-        console.log('[Dashboard] Modal display set to:', modal.style.display);
+        console.log('[Dashboard] Adding show class to modal');
+        modal.classList.add('show');
+        console.log('[Dashboard] Modal classes:', modal.className);
     } else {
         console.error('[Dashboard] Modal element not found!');
     }
@@ -211,7 +242,7 @@ function openCreateBoardModal() {
 function closeCreateBoardModal() {
     const modal = document.getElementById('create-board-modal');
     if (modal) {
-        modal.style.display = 'none';
+        modal.classList.remove('show');
     }
     
     // Reset form
@@ -329,36 +360,18 @@ async function viewBoard(boardId) {
             return;
         }
         
-        // Get auth token and make authenticated request to board page
+        // Get auth token
         const token = await window.auth.getToken();
-        console.log('[Dashboard] Got auth token, making authenticated request to board page...');
+        console.log('[Dashboard] Got auth token, redirecting to board page...');
         
-        // Make authenticated GET request to board page
-        const response = await fetch(`/board/${boardId}`, {
-            method: 'GET',
-            headers: {
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'text/html'
-            }
-        });
+        // Store the token in localStorage for the board page to use
+        localStorage.setItem('clerk-db-jwt', token);
         
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        
-        // Get the HTML content
-        const htmlContent = await response.text();
-        
-        // Replace the current page content with the board page
-        document.documentElement.innerHTML = htmlContent;
-        
-        // Update the URL without page reload
-        window.history.pushState({}, '', `/board/${boardId}`);
-        
-        console.log('[Dashboard] Board page loaded successfully');
+        // Redirect to the board page
+        window.location.href = `/board/${boardId}`;
         
     } catch (error) {
-        console.error('[Dashboard] Failed to load board:', error);
+        console.error('[Dashboard] Failed to redirect to board:', error);
         
         let errorMessage = 'Failed to access board. Please try again.';
         if (error.message && error.message.includes('401')) {
@@ -429,7 +442,7 @@ function confirmDeleteBoard(boardId, boardName) {
     const boardNameSpan = document.getElementById('delete-board-name');
     
     boardNameSpan.textContent = boardName;
-    modal.style.display = 'flex';
+    modal.classList.add('show');
     
     // Close board menu
     const menu = document.getElementById(`menu-${boardId}`);
@@ -438,7 +451,7 @@ function confirmDeleteBoard(boardId, boardName) {
 
 function closeDeleteBoardModal() {
     const modal = document.getElementById('delete-board-modal');
-    modal.style.display = 'none';
+    modal.classList.remove('show');
     boardToDelete = null;
 }
 

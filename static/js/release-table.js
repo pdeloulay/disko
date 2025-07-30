@@ -79,16 +79,11 @@ class ReleaseTable {
             let endpoint;
             let headers = {};
             
-            if (this.isPublic) {
-                endpoint = `/api/boards/${this.publicLink}/release/public?${params}`;
-                headers['X-Public-Access'] = 'true';
-            } else {
-                endpoint = `/api/boards/${this.boardId}/release?${params}`;
-                // Add auth header if available
-                const token = localStorage.getItem('clerk-db-jwt');
-                if (token) {
-                    headers['Authorization'] = `Bearer ${token}`;
-                }
+            endpoint = `/api/boards/${this.boardId}/release?${params}`;
+            // Add auth header if available
+            const token = localStorage.getItem('clerk-db-jwt');
+            if (token) {
+                headers['Authorization'] = `Bearer ${token}`;
             }
 
             const response = await fetch(endpoint, { headers });

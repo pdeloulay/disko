@@ -300,7 +300,33 @@ class Auth {
         }
         
         try {
-            return await this.clerk.session.getToken();
+            const token = await this.clerk.session.getToken();
+            console.log('[Auth] Token retrieved, length:', token ? token.length : 0);
+            console.log('[Auth] Token preview:', token ? token.substring(0, 50) + '...' : 'null');
+            
+            // Validate token format (should be a proper JWT)
+            if (!token || token.length < 100) {
+                console.error('[Auth] Invalid token format - too short:', token);
+                throw new Error('Invalid token format');
+            }
+            
+            // Validate token expiration
+            try {
+                const payload = JSON.parse(atob(token.split('.')[1]));
+                const currentTime = Math.floor(Date.now() / 1000);
+                
+                if (payload.exp && payload.exp < currentTime) {
+                    console.error('[Auth] Token is expired, exp:', payload.exp, 'current:', currentTime);
+                    throw new Error('Token is expired');
+                }
+                
+                console.log('[Auth] Token is valid, expires at:', new Date(payload.exp * 1000));
+            } catch (decodeError) {
+                console.error('[Auth] Failed to decode token:', decodeError);
+                throw new Error('Invalid token format');
+            }
+            
+            return token;
         } catch (error) {
             console.error('[Auth] Failed to get token:', error);
             throw error;

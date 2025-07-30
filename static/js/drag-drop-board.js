@@ -60,7 +60,7 @@ class DragDropBoard {
 
         try {
             // Load board details
-            const endpoint = this.isAdmin ? `/boards/${this.boardId}` : `/boards/${this.boardId}/public`;
+            const endpoint = `/boards/${this.boardId}`;
             console.log('[DragDropBoard] Making API call to:', endpoint);
             console.log('[DragDropBoard] API base URL:', window.api.baseURL);
             console.log('[DragDropBoard] Full URL will be:', window.api.baseURL + endpoint);
@@ -122,7 +122,7 @@ class DragDropBoard {
         console.log('[DragDropBoard] loadIdeas started - BoardID:', this.boardId, 'IsAdmin:', this.isAdmin);
         
         try {
-            const endpoint = this.isAdmin ? `/boards/${this.boardId}/ideas` : `/boards/${this.boardId}/public/ideas`;
+            const endpoint = `/boards/${this.boardId}/ideas`;
             console.log('[DragDropBoard] Making ideas API call to:', endpoint);
             
             const response = await window.api.get(endpoint);

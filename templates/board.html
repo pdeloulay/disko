@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{.title}}</title>
-    <link rel="icon" type="image/png" href="/static/images/logo-sm.png">
+    <link rel="icon" type="image/png" href="/static/images/boom.png">
     <link rel="stylesheet" href="/static/css/main.css">
     
     <script
@@ -254,9 +254,9 @@
                 });
             }
             
-                    console.log('[Board] Board initialization complete');
-        console.log('[Base] Base template initialization complete');
-    });
+            console.log('[Board] Board initialization complete');
+            console.log('[Base] Base template initialization complete');
+        });
     </script>
     
     <!-- Auth initialization script (same as dashboard) -->
@@ -326,6 +326,49 @@
         
         // Start initialization
         initUserButton();
+        
+        // Log when boards are loaded (board-specific)
+        const originalLoadBoards = window.loadBoards;
+        if (originalLoadBoards) {
+            window.loadBoards = function() {
+                console.log('[Board] Loading board data...');
+                return originalLoadBoards.apply(this, arguments);
+            };
+        }
+        
+        // Log board interactions (board-specific)
+        const createIdeaForm = document.getElementById('create-idea-form');
+        if (createIdeaForm) {
+            createIdeaForm.addEventListener('submit', function(e) {
+                const title = document.getElementById('idea-title')?.value;
+                const description = document.getElementById('idea-description')?.value;
+                console.log('[Board] Creating new idea:', { title, description });
+            });
+        }
+        
+        // Log idea interactions (board-specific)
+        const ideaElements = document.querySelectorAll('.idea-card');
+        ideaElements.forEach(idea => {
+            idea.addEventListener('click', function() {
+                const ideaId = this.dataset.ideaId;
+                console.log('[Board] Idea clicked:', ideaId);
+            });
+        });
+        
+        // Log modal interactions (board-specific)
+        const createIdeaBtn = document.getElementById('create-idea-btn');
+        if (createIdeaBtn) {
+            createIdeaBtn.addEventListener('click', function() {
+                console.log('[Board] Opening create idea modal');
+            });
+        }
+        
+        const boardSettingsBtn = document.getElementById('board-settings-btn');
+        if (boardSettingsBtn) {
+            boardSettingsBtn.addEventListener('click', function() {
+                console.log('[Board] Opening board settings modal');
+            });
+        }
         
         console.log('[Board] Board initialization complete');
     });

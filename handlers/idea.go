@@ -291,6 +291,11 @@ func GetBoardIdeas(c *gin.Context) {
 	userAgent := c.GetHeader("User-Agent")
 	referer := c.GetHeader("Referer")
 
+	log.Printf("[Handler] GetBoardIdeas called - BoardID: %s, IP: %s, UserAgent: %s, Referer: %s",
+		boardID, c.ClientIP(), userAgent, referer)
+	log.Printf("[Handler] GetBoardIdeas - Request method: %s, URL: %s", c.Request.Method, c.Request.URL.String())
+	log.Printf("[Handler] GetBoardIdeas - Request headers: %+v", c.Request.Header)
+
 	// Get user ID from auth middleware
 	userID, err := middleware.GetUserID(c)
 	if err != nil {
@@ -304,9 +309,7 @@ func GetBoardIdeas(c *gin.Context) {
 		return
 	}
 
-	log.Printf("[Handler] GetBoardIdeas started - BoardID: %s, UserID: %s, IP: %s, UserAgent: %s, Referer: %s",
-		boardID, userID, c.ClientIP(), userAgent, referer)
-	log.Printf("[Handler] GetBoardIdeas - Request headers: %+v", c.Request.Header)
+	log.Printf("[Handler] GetBoardIdeas - User authenticated successfully - UserID: %s, BoardID: %s", userID, boardID)
 	log.Printf("[Handler] GetBoardIdeas - Authorization header: %s", c.GetHeader("Authorization"))
 
 	// Get board ID from URL parameter
@@ -321,6 +324,8 @@ func GetBoardIdeas(c *gin.Context) {
 		return
 	}
 
+	log.Printf("[Handler] GetBoardIdeas - Board ID validation passed - BoardID: %s, UserID: %s", boardID, userID)
+
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
@@ -331,12 +336,14 @@ func GetBoardIdeas(c *gin.Context) {
 		"user_id": userID,
 	}
 
-	log.Printf("[Handler] GetBoardIdeas - Verifying board ownership: Filter: %+v, BoardID: %s, UserID: %s", boardFilter, boardID, userID)
+	log.Printf("[Handler] GetBoardIdeas - Starting board verification - Filter: %+v, BoardID: %s, UserID: %s", boardFilter, boardID, userID)
+	log.Printf("[Handler] GetBoardIdeas - Database collection: %s", models.BoardsCollection)
 
 	var board models.Board
 	err = boardsCollection.FindOne(ctx, boardFilter).Decode(&board)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
+			log.Printf("[Handler] GetBoardIdeas failed - Board not found - BoardID: %s, UserID: %s, Error: %v", boardID, userID, err)
 			c.JSON(http.StatusNotFound, gin.H{
 				"error": gin.H{
 					"code":    "BOARD_NOT_FOUND",
@@ -346,6 +353,7 @@ func GetBoardIdeas(c *gin.Context) {
 			return
 		}
 
+		log.Printf("[Handler] GetBoardIdeas failed - Database error during board verification - BoardID: %s, UserID: %s, Error: %v", boardID, userID, err)
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error": gin.H{
 				"code":    "DATABASE_ERROR",
@@ -356,11 +364,14 @@ func GetBoardIdeas(c *gin.Context) {
 		return
 	}
 
+	log.Printf("[Handler] GetBoardIdeas - Board verification successful - BoardID: %s, UserID: %s, Board name: %s", boardID, userID, board.Name)
+
 	// Query ideas for the board
 	ideasCollection := models.GetCollection(models.IdeasCollection)
 	ideasFilter := bson.M{"board_id": boardID}
 
-	log.Printf("[Handler] GetBoardIdeas - Querying ideas: Filter: %+v, BoardID: %s", ideasFilter, boardID)
+	log.Printf("[Handler] GetBoardIdeas - Starting ideas query - Filter: %+v, BoardID: %s", ideasFilter, boardID)
+	log.Printf("[Handler] GetBoardIdeas - Database collection: %s", models.IdeasCollection)
 
 	// Sort by column and position
 	opts := options.Find().SetSort(bson.D{
@@ -368,8 +379,11 @@ func GetBoardIdeas(c *gin.Context) {
 		{Key: "position", Value: 1},
 	})
 
+	log.Printf("[Handler] GetBoardIdeas - Query options: %+v", opts)
+
 	cursor, err := ideasCollection.Find(ctx, ideasFilter, opts)
 	if err != nil {
+		log.Printf("[Handler] GetBoardIdeas failed - Database error during ideas query - BoardID: %s, UserID: %s, Error: %v", boardID, userID, err)
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error": gin.H{
 				"code":    "DATABASE_ERROR",
@@ -381,9 +395,12 @@ func GetBoardIdeas(c *gin.Context) {
 	}
 	defer cursor.Close(ctx)
 
+	log.Printf("[Handler] GetBoardIdeas - Ideas query successful - BoardID: %s, UserID: %s", boardID, userID)
+
 	// Decode results
 	var ideas []models.Idea
 	if err := cursor.All(ctx, &ideas); err != nil {
+		log.Printf("[Handler] GetBoardIdeas failed - Database error during ideas decoding - BoardID: %s, UserID: %s, Error: %v", boardID, userID, err)
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error": gin.H{
 				"code":    "DATABASE_ERROR",
@@ -393,6 +410,8 @@ func GetBoardIdeas(c *gin.Context) {
 		})
 		return
 	}
+
+	log.Printf("[Handler] GetBoardIdeas - Ideas decoded successfully - BoardID: %s, UserID: %s, Ideas count: %d", boardID, userID, len(ideas))
 
 	// Convert to response format
 	var responses []IdeaResponse
@@ -416,8 +435,12 @@ func GetBoardIdeas(c *gin.Context) {
 	}
 
 	duration := time.Since(startTime)
-	log.Printf("[Handler] GetBoardIdeas success - BoardID: %s, UserID: %s, Ideas count: %d, Duration: %v, IP: %s",
-		boardID, userID, len(responses), duration, c.ClientIP())
+	log.Printf("[Handler] GetBoardIdeas success - BoardID: %s, UserID: %s, Ideas count: %d, Duration: %v, IP: %s, Response size: %d bytes",
+		boardID, userID, len(responses), duration, c.ClientIP(), len(responses)*100) // Approximate response size
+	log.Printf("[Handler] GetBoardIdeas - Response structure: %+v", gin.H{
+		"ideas": len(responses),
+		"count": len(responses),
+	})
 
 	c.JSON(http.StatusOK, gin.H{
 		"ideas": responses,

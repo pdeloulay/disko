@@ -22,18 +22,41 @@ class API {
         // Add auth token if user is signed in
         let token = null;
         
-        // First try to get token from sessionStorage (for board navigation)
-        const storedToken = sessionStorage.getItem('clerk-jwt-token');
-        if (storedToken) {
-            token = storedToken;
-            console.log('[API] Using stored auth token from sessionStorage');
+        // First try to get token from localStorage (for board navigation)
+        const storedToken = localStorage.getItem('clerk-db-jwt');
+        if (storedToken && storedToken.length > 100) {
+            // Check if token is expired by trying to decode it
+            try {
+                const payload = JSON.parse(atob(storedToken.split('.')[1]));
+                const currentTime = Math.floor(Date.now() / 1000);
+                
+                if (payload.exp && payload.exp < currentTime) {
+                    console.warn('[API] Stored token is expired, clearing:', storedToken);
+                    localStorage.removeItem('clerk-db-jwt');
+                } else {
+                    token = storedToken;
+                    console.log('[API] Using stored auth token from localStorage, length:', token.length);
+                }
+            } catch (error) {
+                console.warn('[API] Failed to decode stored token, clearing:', error);
+                localStorage.removeItem('clerk-db-jwt');
+            }
+        } else if (storedToken) {
+            console.warn('[API] Stored token is invalid (too short), clearing:', storedToken);
+            localStorage.removeItem('clerk-db-jwt');
         }
         
         // If no stored token, try to get from Clerk session
         if (!token && window.Clerk && window.Clerk.user) {
             try {
                 token = await window.Clerk.session.getToken();
-                console.log('[API] Got auth token from Clerk session');
+                console.log('[API] Got auth token from Clerk session, length:', token ? token.length : 0);
+                
+                // Validate token format
+                if (!token || token.length < 100) {
+                    console.error('[API] Invalid token from Clerk session:', token);
+                    token = null;
+                }
             } catch (error) {
                 console.error('[API] Failed to get auth token from Clerk:', error);
             }
@@ -56,6 +79,13 @@ class API {
             if (!response.ok) {
                 const errorText = await response.text();
                 console.error('[API] Response not ok:', response.status, errorText);
+                
+                // If it's an authentication error, clear the stored token
+                if (response.status === 401) {
+                    console.warn('[API] Authentication failed, clearing stored token');
+                    localStorage.removeItem('clerk-db-jwt');
+                }
+                
                 throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
             }
             

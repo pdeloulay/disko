@@ -888,6 +888,14 @@ func GetPublicBoard(c *gin.Context) {
 	c.JSON(http.StatusOK, response)
 }
 
+// GetPublicReleasedIdeas handles GET /api/boards/:id/release/public
+func GetPublicReleasedIdeas(c *gin.Context) {
+	boardID := c.Param("id")
+	log.Printf("[API] GetReleasedIdeas (public) called - BoardID: %s, IP: %s, UserAgent: %s", boardID, c.ClientIP(), c.GetHeader("User-Agent"))
+	c.Header("X-Public-Access", "true")
+	GetReleasedIdeas(c)
+}
+
 // BoardNotFoundError represents a board not found error
 type BoardNotFoundError struct{}
 

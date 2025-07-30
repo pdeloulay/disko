@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{.title}}</title>
-    <link rel="icon" type="image/png" href="/static/images/logo-sm.png">
+    <link rel="icon" type="image/png" href="/static/images/boom.png">
     <link rel="stylesheet" href="/static/css/main.css">
     
 <script
@@ -36,8 +36,8 @@
         window.clerkFrontendApiUrl = clerkFrontendApiUrl;
         
         // Base template logging
-        console.log('[Base] Page loaded at:', new Date().toISOString());
-        console.log('[Base] Page title:', document.title);
+        console.log('[Base] Page - ', new Date().toISOString());
+        console.log('[Base] Page - ', document.title);
         console.log('[Base] Clerk publishable key:', clerkPublishableKey ? 'Set' : 'Not set');
         console.log('[Base] Clerk frontend API URL:', clerkFrontendApiUrl ? 'Set' : 'Not set');
         

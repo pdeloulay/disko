@@ -5,6 +5,7 @@ class IdeaManager {
     constructor() {
         this.currentBoardId = null;
         this.editingIdeaId = null;
+        console.log('[IdeaManager] Constructor called');
         this.init();
     }
 
@@ -15,11 +16,14 @@ class IdeaManager {
     bindEvents() {
         // Create idea form submission
         document.addEventListener('submit', (e) => {
+            console.log('[IdeaManager] Form submit event triggered:', e.target.id);
             if (e.target.id === 'create-idea-form') {
+                console.log('[IdeaManager] Create idea form submitted');
                 e.preventDefault();
                 this.handleCreateIdea(e);
             }
             if (e.target.id === 'edit-idea-form') {
+                console.log('[IdeaManager] Edit idea form submitted');
                 e.preventDefault();
                 this.handleEditIdea(e);
             }
@@ -32,29 +36,62 @@ class IdeaManager {
             }
         });
 
-        // Escape key to close modals
+        // Keyboard events
         document.addEventListener('keydown', (e) => {
+            // Escape key to close modals
             if (e.key === 'Escape') {
                 this.closeModals();
+            }
+            
+            // Enter key to submit form
+            if (e.key === 'Enter' && !e.shiftKey) {
+                const activeElement = document.activeElement;
+                if (activeElement && activeElement.closest('.modal')) {
+                    // Check if we're in a textarea (allow Shift+Enter for new lines)
+                    if (activeElement.tagName === 'TEXTAREA') {
+                        return; // Allow normal textarea behavior
+                    }
+                    
+                    // Validate One-liner field before submitting
+                    const modal = activeElement.closest('.modal');
+                    const oneLinerField = modal.querySelector('input[name="oneLiner"]');
+                    if (oneLinerField && oneLinerField.value.trim() === '') {
+                        // One-liner is empty, don't submit
+                        oneLinerField.focus();
+                        return;
+                    }
+                    
+                    // Find the submit button and trigger it
+                    const submitBtn = modal.querySelector('button[type="submit"]');
+                    if (submitBtn) {
+                        console.log('[IdeaManager] Enter key - found submit button, clicking it');
+                        e.preventDefault();
+                        submitBtn.click();
+                    } else {
+                        console.log('[IdeaManager] Enter key - submit button not found');
+                    }
+                }
             }
         });
     }
 
     setBoardId(boardId) {
         this.currentBoardId = boardId;
+        console.log('[IdeaManager] Board ID set to:', boardId);
     }
 
     // Create Idea Form Component
     createIdeaCreationForm() {
         return `
-            <div id="create-idea-modal" class="modal" style="display: none;">
+            <div id="create-idea-modal" class="modal show">
                 <div class="modal-content">
                     <div class="modal-header">
                         <h3>Create New Idea</h3>
                         <button class="modal-close">&times;</button>
                     </div>
-                    <form id="create-idea-form">
-                        <div class="form-group">
+                    <div class="modal-body">
+                        <form id="create-idea-form">
+                                                    <div class="form-group">
                             <label for="idea-oneliner">One-liner *</label>
                             <input type="text" id="idea-oneliner" name="oneLiner" required maxlength="200" 
                                    placeholder="Brief description of your idea">
@@ -62,65 +99,64 @@ class IdeaManager {
                         </div>
                         
                         <div class="form-group">
-                            <label for="idea-description">Description *</label>
-                            <textarea id="idea-description" name="description" required maxlength="1000" rows="4"
-                                      placeholder="Detailed description of your idea"></textarea>
-                            <small class="form-help">Maximum 1000 characters</small>
+                            <label for="idea-description">Description</label>
+                            <textarea id="idea-description" name="description" maxlength="1000" rows="4"
+                                      placeholder="Detailed description of your idea (optional)"></textarea>
+                            <small class="form-help">Maximum 1000 characters (optional)</small>
                         </div>
                         
                         <div class="form-group">
-                            <label for="idea-value-statement">Value Statement *</label>
-                            <textarea id="idea-value-statement" name="valueStatement" required maxlength="500" rows="3"
-                                      placeholder="What value does this idea provide?"></textarea>
-                            <small class="form-help">Maximum 500 characters</small>
+                            <label for="idea-value-statement">Value Statement</label>
+                            <textarea id="idea-value-statement" name="valueStatement" maxlength="500" rows="3"
+                                      placeholder="What value does this idea provide? (optional)"></textarea>
+                            <small class="form-help">Maximum 500 characters (optional)</small>
                         </div>
-                        
-                        <div class="rice-score-section">
-                            <h4>RICE Score</h4>
-                            <div class="rice-grid">
-                                <div class="form-group">
-                                    <label for="rice-reach">Reach (%) *</label>
-                                    <input type="number" id="rice-reach" name="reach" required min="0" max="100" 
-                                           placeholder="0-100">
+                            
+                            <div class="rice-score-section">
+                                <h4>RICE Score</h4>
+                                <div class="rice-grid">
+                                                                    <div class="form-group">
+                                    <label for="rice-reach">Reach (%)</label>
+                                    <input type="number" id="rice-reach" name="reach" min="0" max="100" 
+                                           value="100" placeholder="0-100">
                                     <small class="form-help">Percentage of users affected</small>
                                 </div>
                                 
                                 <div class="form-group">
-                                    <label for="rice-impact">Impact (%) *</label>
-                                    <input type="number" id="rice-impact" name="impact" required min="0" max="100" 
-                                           placeholder="0-100">
+                                    <label for="rice-impact">Impact (%)</label>
+                                    <input type="number" id="rice-impact" name="impact" min="0" max="100" 
+                                           value="50" placeholder="0-100">
                                     <small class="form-help">Impact per user</small>
                                 </div>
                                 
                                 <div class="form-group">
-                                    <label for="rice-confidence">Confidence *</label>
-                                    <select id="rice-confidence" name="confidence" required>
-                                        <option value="">Select confidence level</option>
-                                        <option value="1">1 - Low (hours)</option>
-                                        <option value="2">2 - Medium (days)</option>
-                                        <option value="4">4 - High (weeks)</option>
-                                        <option value="8">8 - Very High (months)</option>
-                                    </select>
-                                    <small class="form-help">Time investment confidence</small>
+                                    <label for="rice-confidence">Confidence (%)</label>
+                                    <input type="number" id="rice-confidence" name="confidence" min="0" max="100" 
+                                           value="50" placeholder="0-100">
+                                    <small class="form-help">Confidence in the estimate</small>
                                 </div>
                                 
                                 <div class="form-group">
-                                    <label for="rice-effort">Effort (%) *</label>
-                                    <input type="number" id="rice-effort" name="effort" required min="0" max="100" 
-                                           placeholder="0-100">
+                                    <label for="rice-effort">Effort</label>
+                                    <select id="rice-effort" name="effort">
+                                        <option value="1" selected>1 - Low (hours)</option>
+                                        <option value="3">3 - Medium (days)</option>
+                                        <option value="8">8 - High (weeks)</option>
+                                        <option value="21">21 - Very High (months)</option>
+                                    </select>
                                     <small class="form-help">Development effort required</small>
                                 </div>
+                                </div>
+                                <div class="rice-score-display">
+                                    <span>RICE Score: <strong id="rice-score-value">0</strong></span>
+                                </div>
                             </div>
-                            <div class="rice-score-display">
-                                <span>RICE Score: <strong id="rice-score-value">0</strong></span>
-                            </div>
-                        </div>
-                        
-                        <div class="form-actions">
-                            <button type="button" class="btn btn-secondary" onclick="ideaManager.closeCreateModal()">Cancel</button>
-                            <button type="submit" class="btn btn-primary">Create Idea</button>
-                        </div>
-                    </form>
+                        </form>
+                    </div>
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-secondary" onclick="ideaManager.closeCreateModal()">Cancel</button>
+                        <button type="submit" form="create-idea-form" class="btn btn-primary" onclick="console.log('[IdeaManager] Create button clicked')">Create Idea</button>
+                    </div>
                 </div>
             </div>
         `;
@@ -190,12 +226,7 @@ class IdeaManager {
                             ).join('')}
                         </div>
                     ` : ''}
-                </div>
-                
-                <div class="idea-meta">
-                    <span class="idea-status">${this.formatStatus(idea.status)}</span>
-                    <span class="idea-column">${this.formatColumn(idea.column)}</span>
-                    <span class="idea-date">${this.formatDate(idea.createdAt)}</span>
+                    <span class="idea-date">Updated ${this.formatTimeAgo(idea.updatedAt)}</span>
                 </div>
             </div>
         `;
@@ -204,13 +235,14 @@ class IdeaManager {
     // Idea Edit Modal Component
     createIdeaEditModal(idea) {
         return `
-            <div id="edit-idea-modal" class="modal" style="display: flex;">
+            <div id="edit-idea-modal" class="modal show">
                 <div class="modal-content">
                     <div class="modal-header">
                         <h3>Edit Idea</h3>
                         <button class="modal-close">&times;</button>
                     </div>
-                    <form id="edit-idea-form">
+                    <div class="modal-body">
+                        <form id="edit-idea-form">
                         <input type="hidden" name="ideaId" value="${idea.id}">
                         
                         <div class="form-group">
@@ -221,52 +253,52 @@ class IdeaManager {
                         </div>
                         
                         <div class="form-group">
-                            <label for="edit-idea-description">Description *</label>
-                            <textarea id="edit-idea-description" name="description" required maxlength="1000" rows="4"
-                                      placeholder="Detailed description of your idea">${this.escapeHtml(idea.description)}</textarea>
-                            <small class="form-help">Maximum 1000 characters</small>
+                            <label for="edit-idea-description">Description</label>
+                            <textarea id="edit-idea-description" name="description" maxlength="1000" rows="4"
+                                      placeholder="Detailed description of your idea (optional)">${this.escapeHtml(idea.description)}</textarea>
+                            <small class="form-help">Maximum 1000 characters (optional)</small>
                         </div>
                         
                         <div class="form-group">
-                            <label for="edit-idea-value-statement">Value Statement *</label>
-                            <textarea id="edit-idea-value-statement" name="valueStatement" required maxlength="500" rows="3"
-                                      placeholder="What value does this idea provide?">${this.escapeHtml(idea.valueStatement)}</textarea>
-                            <small class="form-help">Maximum 500 characters</small>
+                            <label for="edit-idea-value-statement">Value Statement</label>
+                            <textarea id="edit-idea-value-statement" name="valueStatement" maxlength="500" rows="3"
+                                      placeholder="What value does this idea provide? (optional)">${this.escapeHtml(idea.valueStatement)}</textarea>
+                            <small class="form-help">Maximum 500 characters (optional)</small>
                         </div>
                         
                         <div class="rice-score-section">
                             <h4>RICE Score</h4>
                             <div class="rice-grid">
                                 <div class="form-group">
-                                    <label for="edit-rice-reach">Reach (%) *</label>
-                                    <input type="number" id="edit-rice-reach" name="reach" required min="0" max="100" 
+                                    <label for="edit-rice-reach">Reach (%)</label>
+                                    <input type="number" id="edit-rice-reach" name="reach" min="0" max="100" 
                                            value="${idea.riceScore.reach}" placeholder="0-100">
                                     <small class="form-help">Percentage of users affected</small>
                                 </div>
                                 
                                 <div class="form-group">
-                                    <label for="edit-rice-impact">Impact (%) *</label>
-                                    <input type="number" id="edit-rice-impact" name="impact" required min="0" max="100" 
+                                    <label for="edit-rice-impact">Impact (%)</label>
+                                    <input type="number" id="edit-rice-impact" name="impact" min="0" max="100" 
                                            value="${idea.riceScore.impact}" placeholder="0-100">
                                     <small class="form-help">Impact per user</small>
                                 </div>
                                 
                                 <div class="form-group">
-                                    <label for="edit-rice-confidence">Confidence *</label>
-                                    <select id="edit-rice-confidence" name="confidence" required>
-                                        <option value="">Select confidence level</option>
-                                        <option value="1" ${idea.riceScore.confidence === 1 ? 'selected' : ''}>1 - Low (hours)</option>
-                                        <option value="2" ${idea.riceScore.confidence === 2 ? 'selected' : ''}>2 - Medium (days)</option>
-                                        <option value="4" ${idea.riceScore.confidence === 4 ? 'selected' : ''}>4 - High (weeks)</option>
-                                        <option value="8" ${idea.riceScore.confidence === 8 ? 'selected' : ''}>8 - Very High (months)</option>
-                                    </select>
-                                    <small class="form-help">Time investment confidence</small>
+                                    <label for="edit-rice-confidence">Confidence (%)</label>
+                                    <input type="number" id="edit-rice-confidence" name="confidence" min="0" max="100" 
+                                           value="${idea.riceScore.confidence}" placeholder="0-100">
+                                    <small class="form-help">Confidence in the estimate</small>
                                 </div>
                                 
                                 <div class="form-group">
-                                    <label for="edit-rice-effort">Effort (%) *</label>
-                                    <input type="number" id="edit-rice-effort" name="effort" required min="0" max="100" 
-                                           value="${idea.riceScore.effort}" placeholder="0-100">
+                                    <label for="edit-rice-effort">Effort</label>
+                                    <select id="edit-rice-effort" name="effort">
+                                        <option value="">Select effort level</option>
+                                        <option value="1" ${idea.riceScore.effort === 1 ? 'selected' : ''}>1 - Low (hours)</option>
+                                        <option value="3" ${idea.riceScore.effort === 3 ? 'selected' : ''}>3 - Medium (days)</option>
+                                        <option value="8" ${idea.riceScore.effort === 8 ? 'selected' : ''}>8 - High (weeks)</option>
+                                        <option value="21" ${idea.riceScore.effort === 21 ? 'selected' : ''}>21 - Very High (months)</option>
+                                    </select>
                                     <small class="form-help">Development effort required</small>
                                 </div>
                             </div>
@@ -274,12 +306,12 @@ class IdeaManager {
                                 <span>RICE Score: <strong id="edit-rice-score-value">${this.calculateRICEScore(idea.riceScore).toFixed(1)}</strong></span>
                             </div>
                         </div>
-                        
-                        <div class="form-actions">
-                            <button type="button" class="btn btn-secondary" onclick="ideaManager.closeEditModal()">Cancel</button>
-                            <button type="submit" class="btn btn-primary">Update Idea</button>
-                        </div>
-                    </form>
+                        </form>
+                    </div>
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-secondary" onclick="ideaManager.closeEditModal()">Cancel</button>
+                        <button type="submit" form="edit-idea-form" class="btn btn-primary">Update Idea</button>
+                    </div>
                 </div>
             </div>
         `;
@@ -309,6 +341,8 @@ class IdeaManager {
 
     // Event Handlers
     openCreateModal() {
+        console.log('[IdeaManager] Opening create idea modal...');
+        
         // Remove existing modal if any
         const existingModal = document.getElementById('create-idea-modal');
         if (existingModal) {
@@ -318,18 +352,17 @@ class IdeaManager {
         // Add modal to page
         document.body.insertAdjacentHTML('beforeend', this.createIdeaCreationForm());
         
-        // Show modal
-        const modal = document.getElementById('create-idea-modal');
-        modal.style.display = 'flex';
-        
         // Setup RICE score calculation
         this.setupRICECalculation('create');
         
         // Focus first input
+        const modal = document.getElementById('create-idea-modal');
         const firstInput = modal.querySelector('input[type="text"]');
         if (firstInput) {
             firstInput.focus();
         }
+        
+        console.log('[IdeaManager] Create idea modal opened');
     }
 
     closeCreateModal() {
@@ -341,10 +374,28 @@ class IdeaManager {
 
     async editIdea(ideaId) {
         try {
-            // Fetch idea details
-            const response = await window.api.get(`/ideas/${ideaId}`);
-            const idea = response.data || response;
+            console.log('[IdeaManager] editIdea called with ideaId:', ideaId);
             
+            // Find the idea in the current board data
+            let idea = null;
+            
+            // Try to get idea from drag-drop board if available
+            if (window.dragDropBoard && window.dragDropBoard.ideas) {
+                idea = window.dragDropBoard.ideas.find(i => i.id === ideaId);
+            }
+            
+            // If not found in drag-drop board, try to get from board view
+            if (!idea && window.boardView && window.boardView.ideas) {
+                idea = window.boardView.ideas.find(i => i.id === ideaId);
+            }
+            
+            if (!idea) {
+                console.error('[IdeaManager] Idea not found:', ideaId);
+                this.showErrorMessage('Idea not found. Please refresh the page and try again.');
+                return;
+            }
+            
+            console.log('[IdeaManager] Found idea for editing:', idea);
             this.editingIdeaId = ideaId;
             
             // Remove existing modal if any
@@ -369,7 +420,7 @@ class IdeaManager {
             this.closeIdeaMenus();
             
         } catch (error) {
-            console.error('Failed to load idea for editing:', error);
+            console.error('[IdeaManager] Failed to load idea for editing:', error);
             this.showErrorMessage('Failed to load idea details. Please try again.');
         }
     }
@@ -411,6 +462,7 @@ class IdeaManager {
 
     // API Handlers
     async handleCreateIdea(e) {
+        console.log('[IdeaManager] handleCreateIdea called');
         const formData = new FormData(e.target);
         const ideaData = {
             oneLiner: formData.get('oneLiner'),
@@ -425,19 +477,27 @@ class IdeaManager {
             column: 'parking', // New ideas start in parking
             status: 'active'
         };
+        console.log('[IdeaManager] Form data collected:', ideaData);
+        console.log('[IdeaManager] RICE score data:', ideaData.riceScore);
 
         // Validate form
+        console.log('[IdeaManager] Validating form data...');
         if (!this.validateIdeaForm(ideaData)) {
+            console.log('[IdeaManager] Form validation failed');
             return;
         }
+        console.log('[IdeaManager] Form validation passed');
 
         try {
-            const submitBtn = e.target.querySelector('button[type="submit"]');
+            const modal = e.target.closest('.modal');
+            const submitBtn = modal.querySelector('button[type="submit"]');
             const originalText = submitBtn.textContent;
             submitBtn.disabled = true;
             submitBtn.textContent = 'Creating...';
 
+            console.log('[IdeaManager] Making API call to create idea...');
             const response = await window.api.post(`/boards/${this.currentBoardId}/ideas`, ideaData);
+            console.log('[IdeaManager] API response received:', response);
             
             this.closeCreateModal();
             this.showSuccessMessage('Idea created successfully!');
@@ -451,7 +511,8 @@ class IdeaManager {
             console.error('Failed to create idea:', error);
             this.handleFormError(error, 'create');
         } finally {
-            const submitBtn = e.target.querySelector('button[type="submit"]');
+            const modal = e.target.closest('.modal');
+            const submitBtn = modal.querySelector('button[type="submit"]');
             if (submitBtn) {
                 submitBtn.disabled = false;
                 submitBtn.textContent = 'Create Idea';
@@ -479,7 +540,8 @@ class IdeaManager {
         }
 
         try {
-            const submitBtn = e.target.querySelector('button[type="submit"]');
+            const modal = e.target.closest('.modal');
+            const submitBtn = modal.querySelector('button[type="submit"]');
             const originalText = submitBtn.textContent;
             submitBtn.disabled = true;
             submitBtn.textContent = 'Updating...';
@@ -498,7 +560,8 @@ class IdeaManager {
             console.error('Failed to update idea:', error);
             this.handleFormError(error, 'edit');
         } finally {
-            const submitBtn = e.target.querySelector('button[type="submit"]');
+            const modal = e.target.closest('.modal');
+            const submitBtn = modal.querySelector('button[type="submit"]');
             if (submitBtn) {
                 submitBtn.disabled = false;
                 submitBtn.textContent = 'Update Idea';
@@ -715,35 +778,12 @@ class IdeaManager {
         });
     }
 
-    setupRICECalculation(prefix) {
-        const reachInput = document.getElementById(`${prefix === 'create' ? '' : 'edit-'}rice-reach`);
-        const impactInput = document.getElementById(`${prefix === 'create' ? '' : 'edit-'}rice-impact`);
-        const confidenceInput = document.getElementById(`${prefix === 'create' ? '' : 'edit-'}rice-confidence`);
-        const effortInput = document.getElementById(`${prefix === 'create' ? '' : 'edit-'}rice-effort`);
-        const scoreDisplay = document.getElementById(`${prefix === 'create' ? '' : 'edit-'}rice-score-value`);
 
-        const calculateScore = () => {
-            const reach = parseInt(reachInput.value) || 0;
-            const impact = parseInt(impactInput.value) || 0;
-            const confidence = parseInt(confidenceInput.value) || 0;
-            const effort = parseInt(effortInput.value) || 1;
-
-            const score = effort > 0 ? (reach * impact * confidence) / effort : 0;
-            scoreDisplay.textContent = score.toFixed(1);
-        };
-
-        [reachInput, impactInput, confidenceInput, effortInput].forEach(input => {
-            if (input) {
-                input.addEventListener('input', calculateScore);
-                input.addEventListener('change', calculateScore);
-            }
-        });
-
-        // Initial calculation
-        calculateScore();
-    }
 
     validateIdeaForm(ideaData) {
+        console.log('[IdeaManager] validateIdeaForm called with:', ideaData);
+        console.log('[IdeaManager] validateIdeaForm - oneLiner:', ideaData.oneLiner);
+        console.log('[IdeaManager] validateIdeaForm - riceScore:', ideaData.riceScore);
         let isValid = true;
 
         // Clear previous errors
@@ -751,51 +791,68 @@ class IdeaManager {
         document.querySelectorAll('.error').forEach(field => field.classList.remove('error'));
 
         // Validate one-liner
+        console.log('[IdeaManager] Validating one-liner:', ideaData.oneLiner);
         if (!ideaData.oneLiner || ideaData.oneLiner.trim().length === 0) {
+            console.log('[IdeaManager] One-liner validation failed - empty');
             this.showFieldError('oneLiner', 'One-liner is required');
             isValid = false;
         } else if (ideaData.oneLiner.length > 200) {
+            console.log('[IdeaManager] One-liner validation failed - too long');
             this.showFieldError('oneLiner', 'One-liner must be less than 200 characters');
             isValid = false;
+        } else {
+            console.log('[IdeaManager] One-liner validation passed');
         }
 
-        // Validate description
-        if (!ideaData.description || ideaData.description.trim().length === 0) {
-            this.showFieldError('description', 'Description is required');
-            isValid = false;
-        } else if (ideaData.description.length > 1000) {
+        // Validate description (optional)
+        if (ideaData.description && ideaData.description.length > 1000) {
             this.showFieldError('description', 'Description must be less than 1000 characters');
             isValid = false;
         }
 
-        // Validate value statement
-        if (!ideaData.valueStatement || ideaData.valueStatement.trim().length === 0) {
-            this.showFieldError('valueStatement', 'Value statement is required');
-            isValid = false;
-        } else if (ideaData.valueStatement.length > 500) {
+        // Validate value statement (optional)
+        if (ideaData.valueStatement && ideaData.valueStatement.length > 500) {
             this.showFieldError('valueStatement', 'Value statement must be less than 500 characters');
             isValid = false;
         }
 
         // Validate RICE score
         const rice = ideaData.riceScore;
+        console.log('[IdeaManager] Validating RICE score:', rice);
+        
         if (isNaN(rice.reach) || rice.reach < 0 || rice.reach > 100) {
+            console.log('[IdeaManager] Reach validation failed:', rice.reach);
             this.showFieldError('reach', 'Reach must be between 0 and 100');
             isValid = false;
+        } else {
+            console.log('[IdeaManager] Reach validation passed:', rice.reach);
         }
+        
         if (isNaN(rice.impact) || rice.impact < 0 || rice.impact > 100) {
+            console.log('[IdeaManager] Impact validation failed:', rice.impact);
             this.showFieldError('impact', 'Impact must be between 0 and 100');
             isValid = false;
+        } else {
+            console.log('[IdeaManager] Impact validation passed:', rice.impact);
         }
-        if (isNaN(rice.confidence) || ![1, 2, 4, 8].includes(rice.confidence)) {
-            this.showFieldError('confidence', 'Please select a valid confidence level');
+        
+        if (isNaN(rice.confidence) || rice.confidence < 0 || rice.confidence > 100) {
+            console.log('[IdeaManager] Confidence validation failed:', rice.confidence);
+            this.showFieldError('confidence', 'Confidence must be between 0 and 100');
             isValid = false;
+        } else {
+            console.log('[IdeaManager] Confidence validation passed:', rice.confidence);
         }
-        if (isNaN(rice.effort) || rice.effort < 0 || rice.effort > 100) {
-            this.showFieldError('effort', 'Effort must be between 0 and 100');
+        
+        if (isNaN(rice.effort) || ![1, 3, 8, 21].includes(rice.effort)) {
+            console.log('[IdeaManager] Effort validation failed:', rice.effort);
+            this.showFieldError('effort', 'Please select a valid effort level');
             isValid = false;
+        } else {
+            console.log('[IdeaManager] Effort validation passed:', rice.effort);
         }
 
+        console.log('[IdeaManager] Final validation result:', isValid);
         return isValid;
     }
 
@@ -839,7 +896,11 @@ class IdeaManager {
 
     calculateRICEScore(riceScore) {
         if (!riceScore || riceScore.effort === 0) return 0;
-        return (riceScore.reach * riceScore.impact * riceScore.confidence) / riceScore.effort;
+        // Convert percentages to decimals (0-100 -> 0-1)
+        const reach = riceScore.reach / 100;
+        const impact = riceScore.impact / 100;
+        const confidence = riceScore.confidence / 100;
+        return (reach * impact * confidence) / riceScore.effort;
     }
 
     getEmojiCount(emojiReactions) {
@@ -879,6 +940,46 @@ class IdeaManager {
         if (diffDays < 7) return `${diffDays} days ago`;
         if (diffDays < 30) return `${Math.ceil(diffDays / 7)} weeks ago`;
         return date.toLocaleDateString();
+    }
+
+    formatTimeAgo(dateString) {
+        if (!dateString) return '';
+        
+        const date = new Date(dateString);
+        const now = new Date();
+        const diffInSeconds = Math.floor((now - date) / 1000);
+        
+        if (diffInSeconds < 60) {
+            return 'just now';
+        }
+        
+        const diffInMinutes = Math.floor(diffInSeconds / 60);
+        if (diffInMinutes < 60) {
+            return `${diffInMinutes}m ago`;
+        }
+        
+        const diffInHours = Math.floor(diffInMinutes / 60);
+        if (diffInHours < 24) {
+            return `${diffInHours}h ago`;
+        }
+        
+        const diffInDays = Math.floor(diffInHours / 24);
+        if (diffInDays < 7) {
+            return `${diffInDays}d ago`;
+        }
+        
+        const diffInWeeks = Math.floor(diffInDays / 7);
+        if (diffInWeeks < 4) {
+            return `${diffInWeeks}w ago`;
+        }
+        
+        const diffInMonths = Math.floor(diffInDays / 30);
+        if (diffInMonths < 12) {
+            return `${diffInMonths}mo ago`;
+        }
+        
+        const diffInYears = Math.floor(diffInDays / 365);
+        return `${diffInYears}y ago`;
     }
 
     escapeHtml(text) {
@@ -959,10 +1060,17 @@ class IdeaManager {
         const calculateScore = () => {
             const reach = parseInt(reachInput.value) || 0;
             const impact = parseInt(impactInput.value) || 0;
-            const confidence = parseInt(confidenceInput.value) || 1;
+            const confidence = parseInt(confidenceInput.value) || 0;
             const effort = parseInt(effortInput.value) || 1;
 
+            // RICE Score formula: (Reach × Impact × Confidence) ÷ Effort
+            // All values are now properly scaled:
+            // - Reach: 0-100 (percentage)
+            // - Impact: 0-100 (percentage) 
+            // - Confidence: 0-100 (percentage)
+            // - Effort: 1-21 (scale: 1=Low, 3=Medium, 8=High, 21=Very High)
             const score = effort > 0 ? (reach * impact * confidence) / effort : 0;
+            
             if (scoreDisplay) {
                 scoreDisplay.textContent = score.toFixed(1);
             }
@@ -980,54 +1088,7 @@ class IdeaManager {
         calculateScore();
     }
 
-    // Form validation
-    validateIdeaForm(ideaData) {
-        const errors = [];
 
-        if (!ideaData.oneLiner || ideaData.oneLiner.trim().length === 0) {
-            errors.push('One-liner is required');
-        } else if (ideaData.oneLiner.length > 200) {
-            errors.push('One-liner must be 200 characters or less');
-        }
-
-        if (!ideaData.description || ideaData.description.trim().length === 0) {
-            errors.push('Description is required');
-        } else if (ideaData.description.length > 1000) {
-            errors.push('Description must be 1000 characters or less');
-        }
-
-        if (!ideaData.valueStatement || ideaData.valueStatement.trim().length === 0) {
-            errors.push('Value statement is required');
-        } else if (ideaData.valueStatement.length > 500) {
-            errors.push('Value statement must be 500 characters or less');
-        }
-
-        // RICE score validation
-        const rice = ideaData.riceScore;
-        if (!rice) {
-            errors.push('RICE score is required');
-        } else {
-            if (rice.reach < 0 || rice.reach > 100) {
-                errors.push('Reach must be between 0 and 100');
-            }
-            if (rice.impact < 0 || rice.impact > 100) {
-                errors.push('Impact must be between 0 and 100');
-            }
-            if (![1, 2, 4, 8].includes(rice.confidence)) {
-                errors.push('Confidence must be 1, 2, 4, or 8');
-            }
-            if (rice.effort < 0 || rice.effort > 100) {
-                errors.push('Effort must be between 0 and 100');
-            }
-        }
-
-        if (errors.length > 0) {
-            this.showErrorMessage('Validation errors:\n' + errors.join('\n'));
-            return false;
-        }
-
-        return true;
-    }
 }
 
 // Initialize idea manager

@@ -1,16 +1,33 @@
 // Release Table functionality
 class ReleaseTable {
     constructor() {
-        this.boardData = window.boardData || {};
-        this.boardId = this.boardData.boardId;
-        this.publicLink = this.boardData.publicLink;
-        this.isAdmin = this.boardData.isAdmin || false;
-        this.isPublic = this.boardData.isPublic || false;
+        this.boardData = null;
+        this.boardId = null;
+        this.publicLink = null;
+        this.isAdmin = false;
+        this.isPublic = false;
         this.currentPage = 1;
         this.pageSize = 20;
         this.currentSearch = '';
         this.currentSort = 'created_at:desc';
         this.debounceTimer = null;
+        this.initialized = false;
+        this.waitForBoardData();
+    }
+
+    async waitForBoardData() {
+        // Wait for board data to be available
+        while (!window.boardData || !window.boardData.boardId) {
+            await new Promise(resolve => setTimeout(resolve, 100));
+        }
+        
+        this.boardData = window.boardData;
+        this.boardId = this.boardData.boardId;
+        this.publicLink = this.boardData.publicLink;
+        this.isAdmin = this.boardData.isAdmin || false;
+        this.isPublic = this.boardData.isPublic || false;
+        
+        console.log('[ReleaseTable] Board data loaded:', this.boardData);
         this.init();
     }
 

@@ -27,7 +27,6 @@
                             </a>
                         </div>
                         <div class="user-menu">
-                            <span id="user-name">👤 User</span>
                             <div id="clerk-user-button"></div>
                             <button id="sign-out-btn" class="btn btn-secondary">Sign Out</button>
                             <span class="version-display">v{{.version}}</span>
@@ -48,7 +47,6 @@
                         <div class="board-actions">
                             {{if not .isPublic}}
                             <button id="board-settings-btn" class="btn btn-secondary">⚙️ Settings</button>
-                            <button id="create-idea-btn" class="btn btn-primary create-idea-btn">Create Idea</button>
                             {{end}}
                             <button id="refresh-btn" class="btn btn-secondary">Refresh</button>
                         </div>
@@ -73,7 +71,12 @@
                         <div id="board-view" class="tab-content active">
                             <div class="board-header-info">
                                 <h2>Board</h2>
-                                <span id="ideas-count" class="ideas-count">Loading...</span>
+                                <div class="board-count-section">
+                                    <span id="ideas-count" class="ideas-count">Loading...</span>
+                                    {{if not .isPublic}}
+                                    <button id="create-idea-btn" class="btn btn-primary create-idea-btn">Create Idea</button>
+                                    {{end}}
+                                </div>
                             </div>
                             <div id="drag-drop-board" class="drag-drop-board">
                                 <!-- Column layout will be loaded here -->
@@ -103,7 +106,7 @@
                         <div id="release-table" class="release-table">
                             <!-- Release table will be loaded here -->
                                 <div class="release-loading">Loading released ideas...</div>
-                        </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -174,12 +177,6 @@
                     return;
                 }
 
-                // Update user name display
-                const userNameElement = document.getElementById('user-name');
-                if (userNameElement) {
-                    const displayName = user.firstName || user.emailAddresses[0]?.emailAddress || 'User';
-                    userNameElement.textContent = `👤 ${displayName}`;
-                }
 
                 // Mount user button
                 const userButtonElement = document.getElementById('clerk-user-button');

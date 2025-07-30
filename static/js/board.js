@@ -38,24 +38,39 @@ class BoardView {
 
         // Create idea button (admin only)
         const createIdeaBtn = document.getElementById('create-idea-btn');
+        console.log('[BoardView] Create idea button found:', !!createIdeaBtn, 'IsAdmin:', this.isAdmin);
         if (createIdeaBtn && this.isAdmin) {
+            console.log('[BoardView] Adding create idea button event listener');
             createIdeaBtn.addEventListener('click', () => {
+                console.log('[BoardView] Create idea button clicked');
+                console.log('[BoardView] Idea manager available:', !!window.ideaManager);
                 if (window.ideaManager) {
                     window.ideaManager.setBoardId(this.boardId);
+                    console.log('[BoardView] About to open create idea modal...');
                     window.ideaManager.openCreateModal();
+                    console.log('[BoardView] Create idea modal opened');
+                } else {
+                    console.error('[BoardView] Idea manager not available');
                 }
             });
+        } else {
+            console.log('[BoardView] Create idea button not found or user not admin - Button exists:', !!createIdeaBtn, 'IsAdmin:', this.isAdmin);
         }
 
         // Board settings button (admin only)
         const settingsBtn = document.getElementById('board-settings-btn');
         if (settingsBtn && this.isAdmin) {
             console.log('[BoardView] Adding settings button event listener - IsAdmin:', this.isAdmin);
-            settingsBtn.addEventListener('click', () => {
+            settingsBtn.addEventListener('click', async () => {
                 console.log('[BoardView] Settings button clicked');
+                console.log('[BoardView] Board settings manager available:', !!window.boardSettingsManager);
+                console.log('[BoardView] Current board ID:', this.boardId);
+                
                 if (window.boardSettingsManager) {
                     window.boardSettingsManager.setBoardId(this.boardId);
-                    window.boardSettingsManager.openSettingsModal();
+                    console.log('[BoardView] About to open settings modal...');
+                    await window.boardSettingsManager.openSettingsModal();
+                    console.log('[BoardView] Settings modal opened');
                 } else {
                     console.error('[BoardView] Board settings manager not available');
                 }

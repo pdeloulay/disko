@@ -6,6 +6,10 @@ class DragDropBoard {
         this.boardData = window.boardData || {};
         this.isAdmin = this.boardData.isAdmin || false;
         this.boardId = this.boardData.boardId;
+        console.log('[DragDropBoard] Constructor - BoardData:', this.boardData);
+        console.log('[DragDropBoard] Constructor - IsAdmin:', this.isAdmin);
+        console.log('[DragDropBoard] Constructor - BoardID:', this.boardId);
+        
         this.ideas = [];
         this.columns = [
             { id: 'parking', title: 'Parking', description: 'Ideas waiting to be prioritized' },
@@ -71,6 +75,18 @@ class DragDropBoard {
 
             // Store board data for column filtering
             this.board = board;
+            
+            // Update admin status based on board data
+            this.isAdmin = board.isAdmin || false;
+            console.log('[DragDropBoard] Updated admin status from board data - IsAdmin:', this.isAdmin);
+            
+            // Update window.boardData for consistency across components
+            window.boardData = {
+                boardId: this.boardId,
+                isAdmin: this.isAdmin,
+                publicLink: board.publicLink
+            };
+            console.log('[DragDropBoard] Updated window.boardData:', window.boardData);
 
             if (boardTitle) {
                 boardTitle.textContent = board.name || 'Untitled Board';
@@ -200,8 +216,12 @@ class DragDropBoard {
         boardContainer.innerHTML = columnsHtml;
         
         // Make idea cards draggable if admin
+        console.log('[DragDropBoard] renderBoard - IsAdmin:', this.isAdmin);
         if (this.isAdmin) {
+            console.log('[DragDropBoard] renderBoard - Calling makeDraggable');
             this.makeDraggable();
+        } else {
+            console.log('[DragDropBoard] renderBoard - Not admin, skipping makeDraggable');
         }
         
         console.log('[DragDropBoard] Board rendering complete');
@@ -225,28 +245,37 @@ class DragDropBoard {
     }
 
     shouldShowField(fieldName) {
+        console.log('[DragDropBoard] shouldShowField called for:', fieldName, 'IsAdmin:', this.isAdmin);
+        
         // For admin users, show all fields except RICE score is admin-only
         if (this.isAdmin) {
+            console.log('[DragDropBoard] Admin user, showing field:', fieldName);
             return true;
         }
         
         // oneLiner is always visible
         if (fieldName === 'oneLiner') {
+            console.log('[DragDropBoard] One-liner always visible');
             return true;
         }
         
         // riceScore is admin-only
         if (fieldName === 'riceScore') {
+            console.log('[DragDropBoard] RICE score admin-only, not showing');
             return false;
         }
         
         // For public users, filter based on board visibility settings
         if (this.board && this.board.visibleFields) {
-            return this.board.visibleFields.includes(fieldName);
+            const isVisible = this.board.visibleFields.includes(fieldName);
+            console.log('[DragDropBoard] Public user, field visible:', fieldName, isVisible);
+            return isVisible;
         }
         
         // Default to showing all fields except RICE score
-        return fieldName !== 'riceScore';
+        const shouldShow = fieldName !== 'riceScore';
+        console.log('[DragDropBoard] Default visibility for:', fieldName, shouldShow);
+        return shouldShow;
     }
 
     groupIdeasByColumn() {
@@ -374,31 +403,43 @@ class DragDropBoard {
                             ).join('')}
                         </div>
                     ` : ''}
-                </div>
-                
-                <div class="idea-meta">
-                    <span class="idea-status">${this.formatStatus(idea.status)}</span>
-                    <span class="idea-column">${this.formatColumn(idea.column)}</span>
-                    <span class="idea-date">${this.formatDate(idea.createdAt)}</span>
+                    <span class="idea-date">Updated ${this.formatTimeAgo(idea.updatedAt)}</span>
                 </div>
             </div>
         `;
     }
 
     makeDraggable() {
+        console.log('[DragDropBoard] makeDraggable called');
         const ideaCards = document.querySelectorAll('.idea-card[draggable="true"]');
-        ideaCards.forEach(card => {
+        console.log('[DragDropBoard] Found draggable idea cards:', ideaCards.length);
+        
+        ideaCards.forEach((card, index) => {
+            console.log(`[DragDropBoard] Making card ${index + 1} draggable:`, card.dataset.ideaId);
             card.addEventListener('dragstart', this.handleDragStart.bind(this));
             card.addEventListener('dragend', this.handleDragEnd.bind(this));
         });
+        
+        console.log('[DragDropBoard] makeDraggable complete');
     }
 
     // Drag and Drop Event Handlers
     handleDragStart(e) {
-        if (!this.isAdmin) return;
+        console.log('[DragDropBoard] Drag start event triggered');
+        console.log('[DragDropBoard] IsAdmin:', this.isAdmin);
+        
+        if (!this.isAdmin) {
+            console.log('[DragDropBoard] Drag blocked - user not admin');
+            return;
+        }
         
         const ideaCard = e.target.closest('.idea-card');
-        if (!ideaCard) return;
+        if (!ideaCard) {
+            console.log('[DragDropBoard] No idea card found in drag target');
+            return;
+        }
+        
+        console.log('[DragDropBoard] Starting drag for idea:', ideaCard.dataset.ideaId);
         
         this.draggedElement = ideaCard;
         this.draggedIdeaId = ideaCard.dataset.ideaId;
@@ -412,6 +453,8 @@ class DragDropBoard {
         
         // Close any open menus
         this.closeAllMenus();
+        
+        console.log('[DragDropBoard] Drag started successfully');
     }
 
     handleDragEnd(e) {
@@ -457,17 +500,26 @@ class DragDropBoard {
     }
 
     async handleDrop(e) {
-        if (!this.isAdmin || !this.draggedElement) return;
+        console.log('[DragDropBoard] Drop event triggered');
+        console.log('[DragDropBoard] IsAdmin:', this.isAdmin, 'DraggedElement:', !!this.draggedElement);
+        
+        if (!this.isAdmin || !this.draggedElement) {
+            console.log('[DragDropBoard] Drop blocked - not admin or no dragged element');
+            return;
+        }
         
         e.preventDefault();
         
         const targetColumn = e.target.closest('.board-column');
-        if (!targetColumn) return;
+        if (!targetColumn) {
+            console.log('[DragDropBoard] No target column found');
+            return;
+        }
         
         const targetColumnId = targetColumn.dataset.column;
         const sourceColumnId = this.draggedElement.dataset.column;
         
-        console.log('Drop event:', { targetColumnId, sourceColumnId, draggedIdeaId: this.draggedIdeaId });
+        console.log('[DragDropBoard] Drop event:', { targetColumnId, sourceColumnId, draggedIdeaId: this.draggedIdeaId });
         
         // Remove drag-over styling
         targetColumn.classList.remove('drag-over');
@@ -514,7 +566,11 @@ class DragDropBoard {
     // Utility Methods
     calculateRICEScore(riceScore) {
         if (!riceScore || riceScore.effort === 0) return 0;
-        return (riceScore.reach * riceScore.impact * riceScore.confidence) / riceScore.effort;
+        // Convert percentages to decimals (0-100 -> 0-1)
+        const reach = riceScore.reach / 100;
+        const impact = riceScore.impact / 100;
+        const confidence = riceScore.confidence / 100;
+        return (reach * impact * confidence) / riceScore.effort;
     }
 
     getEmojiCount(emojiReactions) {
@@ -548,6 +604,46 @@ class DragDropBoard {
         if (!dateString) return '';
         const date = new Date(dateString);
         return date.toLocaleDateString();
+    }
+
+    formatTimeAgo(dateString) {
+        if (!dateString) return '';
+        
+        const date = new Date(dateString);
+        const now = new Date();
+        const diffInSeconds = Math.floor((now - date) / 1000);
+        
+        if (diffInSeconds < 60) {
+            return 'just now';
+        }
+        
+        const diffInMinutes = Math.floor(diffInSeconds / 60);
+        if (diffInMinutes < 60) {
+            return `${diffInMinutes}m ago`;
+        }
+        
+        const diffInHours = Math.floor(diffInMinutes / 60);
+        if (diffInHours < 24) {
+            return `${diffInHours}h ago`;
+        }
+        
+        const diffInDays = Math.floor(diffInHours / 24);
+        if (diffInDays < 7) {
+            return `${diffInDays}d ago`;
+        }
+        
+        const diffInWeeks = Math.floor(diffInDays / 7);
+        if (diffInWeeks < 4) {
+            return `${diffInWeeks}w ago`;
+        }
+        
+        const diffInMonths = Math.floor(diffInDays / 30);
+        if (diffInMonths < 12) {
+            return `${diffInMonths}mo ago`;
+        }
+        
+        const diffInYears = Math.floor(diffInDays / 365);
+        return `${diffInYears}y ago`;
     }
 
     escapeHtml(text) {
@@ -605,8 +701,14 @@ class DragDropBoard {
 
     // Delegate to idea manager for these actions
     editIdea(ideaId) {
+        console.log('[DragDropBoard] editIdea called with ideaId:', ideaId);
+        console.log('[DragDropBoard] ideaManager available:', !!window.ideaManager);
+        console.log('[DragDropBoard] ideas available:', !!this.ideas, 'count:', this.ideas?.length);
+        
         if (window.ideaManager) {
             window.ideaManager.editIdea(ideaId);
+        } else {
+            console.error('[DragDropBoard] ideaManager not available');
         }
         this.closeAllMenus();
     }

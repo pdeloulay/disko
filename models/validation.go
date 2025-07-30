@@ -117,38 +117,30 @@ func ValidateIdea(idea *Idea) ValidationErrors {
 		})
 	}
 
-	// Validate description
-	if strings.TrimSpace(idea.Description) == "" {
-		errors = append(errors, ValidationError{
-			Field:   "description",
-			Message: "description is required",
-		})
-	} else if len(idea.Description) > 1000 {
+	// Validate description (optional)
+	if len(idea.Description) > 1000 {
 		errors = append(errors, ValidationError{
 			Field:   "description",
 			Message: "description must be 1000 characters or less",
 		})
 	}
 
-	// Validate value statement
-	if strings.TrimSpace(idea.ValueStatement) == "" {
-		errors = append(errors, ValidationError{
-			Field:   "valueStatement",
-			Message: "value statement is required",
-		})
-	} else if len(idea.ValueStatement) > 500 {
+	// Validate value statement (optional)
+	if len(idea.ValueStatement) > 500 {
 		errors = append(errors, ValidationError{
 			Field:   "valueStatement",
 			Message: "value statement must be 500 characters or less",
 		})
 	}
 
-	// Validate RICE score
-	if !idea.RiceScore.IsValidRICEScore() {
-		errors = append(errors, ValidationError{
-			Field:   "riceScore",
-			Message: "invalid RICE score values",
-		})
+	// Validate RICE score (optional)
+	if idea.RiceScore.Reach != 0 || idea.RiceScore.Impact != 0 || idea.RiceScore.Confidence != 0 || idea.RiceScore.Effort != 0 {
+		if !idea.RiceScore.IsValidRICEScore() {
+			errors = append(errors, ValidationError{
+				Field:   "riceScore",
+				Message: "invalid RICE score values",
+			})
+		}
 	}
 
 	// Validate column

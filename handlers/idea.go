@@ -20,9 +20,9 @@ import (
 // CreateIdeaRequest represents the request payload for creating an idea
 type CreateIdeaRequest struct {
 	OneLiner       string           `json:"oneLiner" binding:"required,min=1,max=200"`
-	Description    string           `json:"description" binding:"required,min=1,max=1000"`
-	ValueStatement string           `json:"valueStatement" binding:"required,min=1,max=500"`
-	RiceScore      models.RICEScore `json:"riceScore" binding:"required"`
+	Description    string           `json:"description" binding:"omitempty,max=1000"`
+	ValueStatement string           `json:"valueStatement" binding:"omitempty,max=500"`
+	RiceScore      models.RICEScore `json:"riceScore" binding:"omitempty"`
 	Column         string           `json:"column,omitempty"`
 	Position       int              `json:"position,omitempty"`
 }
@@ -86,6 +86,8 @@ type PublicIdeaResponse struct {
 
 // CreateIdea handles POST /api/boards/:id/ideas
 func CreateIdea(c *gin.Context) {
+	log.Printf("[Handler] CreateIdea started - Method: %s, Path: %s, IP: %s", c.Request.Method, c.Request.URL.Path, c.ClientIP())
+
 	// Get user ID from auth middleware
 	userID, err := middleware.GetUserID(c)
 	if err != nil {
@@ -112,7 +114,9 @@ func CreateIdea(c *gin.Context) {
 
 	// Parse request body
 	var req CreateIdeaRequest
+	log.Printf("[Handler] CreateIdea - About to parse JSON request body")
 	if err := c.ShouldBindJSON(&req); err != nil {
+		log.Printf("[Handler] CreateIdea - JSON parsing failed: %v", err)
 		c.JSON(http.StatusBadRequest, gin.H{
 			"error": gin.H{
 				"code":    "VALIDATION_ERROR",
@@ -122,17 +126,22 @@ func CreateIdea(c *gin.Context) {
 		})
 		return
 	}
+	log.Printf("[Handler] CreateIdea - JSON parsed successfully: OneLiner='%s', Description='%s', ValueStatement='%s', RiceScore=%+v",
+		req.OneLiner, req.Description, req.ValueStatement, req.RiceScore)
 
 	// Validate RICE score
+	log.Printf("[Handler] CreateIdea - Validating RICE score: %+v", req.RiceScore)
 	if !req.RiceScore.IsValidRICEScore() {
+		log.Printf("[Handler] CreateIdea - RICE score validation failed")
 		c.JSON(http.StatusBadRequest, gin.H{
 			"error": gin.H{
 				"code":    "INVALID_RICE_SCORE",
-				"message": "Invalid RICE score values. R: 0-100%, I: 0-100%, C: 1/2/4/8, E: 0-100%",
+				"message": "Invalid RICE score values. R: 0-100%, I: 0-100%, C: 0-100%, E: 1/3/8/21",
 			},
 		})
 		return
 	}
+	log.Printf("[Handler] CreateIdea - RICE score validation passed")
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()

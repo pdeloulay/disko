@@ -5,6 +5,7 @@ class BoardSettingsManager {
     constructor() {
         this.currentBoardId = null;
         this.currentBoard = null;
+        console.log('[BoardSettings] Constructor called');
         this.init();
     }
 
@@ -39,10 +40,12 @@ class BoardSettingsManager {
 
     setBoardId(boardId) {
         this.currentBoardId = boardId;
+        console.log('[BoardSettings] Board ID set to:', boardId);
     }
 
     setBoard(board) {
         this.currentBoard = board;
+        console.log('[BoardSettings] Board data set:', board);
     }
 
     // Board Settings Modal Component
@@ -64,73 +67,65 @@ class BoardSettingsManager {
         ];
 
         return `
-            <div id="board-settings-modal" class="modal" style="display: flex;">
-                <div class="modal-content board-settings-modal">
+            <div id="board-settings-modal" class="modal show">
+                <div class="modal-content">
                     <div class="modal-header">
                         <h3>Board Settings</h3>
                         <button class="modal-close">&times;</button>
                     </div>
-                    <form id="board-settings-form">
-                        <div class="settings-section">
-                            <h4>Column Visibility</h4>
-                            <p class="section-description">Choose which columns are visible to public users on your board.</p>
-                            <div class="column-visibility-grid">
-                                ${allColumns.map(column => `
-                                    <div class="column-visibility-item">
-                                        <label class="checkbox-label">
-                                            <input type="checkbox" 
-                                                   name="visibleColumns" 
-                                                   value="${column.id}"
-                                                   ${board.visibleColumns.includes(column.id) ? 'checked' : ''}>
-                                            <span class="checkbox-custom"></span>
-                                            <div class="column-info">
-                                                <strong>${column.title}</strong>
-                                                <small>${column.description}</small>
-                                            </div>
-                                        </label>
-                                    </div>
-                                `).join('')}
-                            </div>
-                        </div>
-
-                        <div class="settings-section">
-                            <h4>Field Visibility</h4>
-                            <p class="section-description">Choose which idea fields are visible to public users.</p>
-                            <div class="field-visibility-grid">
-                                ${allFields.map(field => `
-                                    <div class="field-visibility-item">
-                                        <label class="checkbox-label ${field.id === 'oneLiner' ? 'disabled' : ''}">
-                                            <input type="checkbox" 
-                                                   name="visibleFields" 
-                                                   value="${field.id}"
-                                                   ${board.visibleFields.includes(field.id) ? 'checked' : ''}
-                                                   ${field.id === 'oneLiner' ? 'checked disabled' : ''}>
-                                            <span class="checkbox-custom"></span>
-                                            <div class="field-info">
-                                                <strong>${field.title}</strong>
-                                                <small>${field.description}</small>
-                                            </div>
-                                        </label>
-                                    </div>
-                                `).join('')}
-                            </div>
-                        </div>
-
-                        <div class="settings-preview">
-                            <h4>Preview</h4>
-                            <p class="section-description">This is how your board will appear to public users:</p>
-                            <div class="preview-container">
-                                <div class="preview-columns" id="settings-preview">
-                                    <!-- Preview will be generated here -->
+                    <div class="modal-body">
+                        <form id="board-settings-form">
+                            <div class="settings-section">
+                                <h4>Column Visibility</h4>
+                                <p class="section-description">Choose which columns are visible to public users on your board.</p>
+                                <div class="column-visibility-grid">
+                                    ${allColumns.map(column => `
+                                        <div class="column-visibility-item">
+                                            <label class="checkbox-label">
+                                                <input type="checkbox" 
+                                                       name="visibleColumns" 
+                                                       value="${column.id}"
+                                                       ${board.visibleColumns.includes(column.id) ? 'checked' : ''}>
+                                                <span class="checkbox-custom"></span>
+                                                <div class="column-info">
+                                                    <strong>${column.title}</strong>
+                                                    <small>${column.description}</small>
+                                                </div>
+                                            </label>
+                                        </div>
+                                    `).join('')}
                                 </div>
                             </div>
-                        </div>
-                        
-                        <div class="form-actions">
-                            <button type="button" class="btn btn-secondary" onclick="boardSettingsManager.closeModal()">Cancel</button>
-                            <button type="submit" class="btn btn-primary">Save Settings</button>
-                        </div>
-                    </form>
+
+                            <div class="settings-section">
+                                <h4>Field Visibility</h4>
+                                <p class="section-description">Choose which idea fields are visible to public users.</p>
+                                <div class="field-visibility-grid">
+                                    ${allFields.map(field => `
+                                        <div class="field-visibility-item">
+                                            <label class="checkbox-label ${field.id === 'oneLiner' ? 'disabled' : ''}">
+                                                <input type="checkbox" 
+                                                       name="visibleFields" 
+                                                       value="${field.id}"
+                                                       ${board.visibleFields.includes(field.id) ? 'checked' : ''}
+                                                       ${field.id === 'oneLiner' ? 'checked disabled' : ''}>
+                                                <span class="checkbox-custom"></span>
+                                                <div class="field-info">
+                                                    <strong>${field.title}</strong>
+                                                    <small>${field.description}</small>
+                                                </div>
+                                            </label>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            </div>
+                            
+                            <div class="form-actions">
+                                <button type="button" class="btn btn-secondary" onclick="boardSettingsManager.closeModal()">Cancel</button>
+                                <button type="submit" class="btn btn-primary">Save Settings</button>
+                            </div>
+                        </form>
+                    </div>
                 </div>
             </div>
         `;
@@ -138,30 +133,49 @@ class BoardSettingsManager {
 
     // Open settings modal
     async openSettingsModal() {
+        console.log('[BoardSettings] Opening settings modal...');
+        console.log('[BoardSettings] Current board ID:', this.currentBoardId);
+        console.log('[BoardSettings] Current board data:', this.currentBoard);
+        
         try {
             // Fetch current board settings if not available
             if (!this.currentBoard) {
+                console.log('[BoardSettings] Fetching board data...');
                 const response = await window.api.get(`/boards/${this.currentBoardId}`);
                 this.currentBoard = response.data || response;
+                console.log('[BoardSettings] Board data fetched:', this.currentBoard);
             }
 
             // Remove existing modal if any
             const existingModal = document.getElementById('board-settings-modal');
             if (existingModal) {
+                console.log('[BoardSettings] Removing existing modal');
                 existingModal.remove();
             }
 
             // Add modal to page
-            document.body.insertAdjacentHTML('beforeend', this.createBoardSettingsModal(this.currentBoard));
+            console.log('[BoardSettings] Creating modal HTML...');
+            const modalHtml = this.createBoardSettingsModal(this.currentBoard);
+            console.log('[BoardSettings] Modal HTML created, length:', modalHtml.length);
+            console.log('[BoardSettings] Modal HTML preview:', modalHtml.substring(0, 200) + '...');
+            document.body.insertAdjacentHTML('beforeend', modalHtml);
+            console.log('[BoardSettings] Modal added to page');
             
-            // Setup event listeners for preview updates
-            this.setupPreviewUpdates();
+            // Verify modal was added
+            const modal = document.getElementById('board-settings-modal');
+            console.log('[BoardSettings] Modal element found:', !!modal);
+            if (modal) {
+                console.log('[BoardSettings] Modal classes:', modal.className);
+                console.log('[BoardSettings] Modal computed style:', window.getComputedStyle(modal).display);
+                console.log('[BoardSettings] Modal z-index:', window.getComputedStyle(modal).zIndex);
+            }
             
-            // Generate initial preview
-            this.updatePreview();
+            // Setup event listeners for form updates
+            this.setupFormUpdates();
+            console.log('[BoardSettings] Form updates setup complete');
             
         } catch (error) {
-            console.error('Failed to load board settings:', error);
+            console.error('[BoardSettings] Failed to load board settings:', error);
             this.showErrorMessage('Failed to load board settings. Please try again.');
         }
     }
@@ -173,7 +187,7 @@ class BoardSettingsManager {
         }
     }
 
-    setupPreviewUpdates() {
+    setupFormUpdates() {
         const modal = document.getElementById('board-settings-modal');
         if (!modal) return;
 
@@ -181,72 +195,28 @@ class BoardSettingsManager {
         const checkboxes = modal.querySelectorAll('input[type="checkbox"]');
         checkboxes.forEach(checkbox => {
             checkbox.addEventListener('change', () => {
-                this.updatePreview();
+                console.log('[BoardSettings] Form field updated:', checkbox.name, checkbox.value, checkbox.checked);
             });
         });
     }
 
-    updatePreview() {
-        const modal = document.getElementById('board-settings-modal');
-        const previewContainer = document.getElementById('settings-preview');
-        if (!modal || !previewContainer) return;
-
-        // Get selected columns and fields
-        const selectedColumns = Array.from(modal.querySelectorAll('input[name="visibleColumns"]:checked'))
-            .map(cb => cb.value);
-        const selectedFields = Array.from(modal.querySelectorAll('input[name="visibleFields"]:checked'))
-            .map(cb => cb.value);
-
-        // Generate preview
-        const columnTitles = {
-            'parking': 'Parking',
-            'now': 'Now',
-            'next': 'Next',
-            'later': 'Later',
-            'release': 'Release',
-            'wont-do': "Won't Do"
-        };
-
-        const previewHtml = selectedColumns.length > 0 ? `
-            <div class="preview-board">
-                ${selectedColumns.map(columnId => `
-                    <div class="preview-column">
-                        <div class="preview-column-header">
-                            <h5>${columnTitles[columnId]}</h5>
-                            <span class="preview-count">0</span>
-                        </div>
-                        <div class="preview-idea-card">
-                            <div class="preview-idea-header">
-                                <h6>Sample Idea</h6>
-                            </div>
-                            <div class="preview-idea-content">
-                                ${selectedFields.includes('description') ? '<p class="preview-description">This is a sample description...</p>' : ''}
-                                ${selectedFields.includes('valueStatement') ? '<p class="preview-value"><strong>Value:</strong> Sample value statement...</p>' : ''}
-                            </div>
-                            <div class="preview-feedback">
-                                <span class="preview-thumbs">👍 0</span>
-                                <span class="preview-emoji">😊 0</span>
-                            </div>
-                        </div>
-                    </div>
-                `).join('')}
-            </div>
-        ` : '<p class="preview-empty">No columns selected. Public users will not see any content.</p>';
-
-        previewContainer.innerHTML = previewHtml;
-    }
-
     // Handle settings form submission
     async handleUpdateSettings(e) {
+        console.log('[BoardSettings] Form submission started');
+        
         const formData = new FormData(e.target);
         
         // Get selected columns and fields
         const visibleColumns = formData.getAll('visibleColumns');
         const visibleFields = formData.getAll('visibleFields');
 
+        console.log('[BoardSettings] Form data - VisibleColumns:', visibleColumns);
+        console.log('[BoardSettings] Form data - VisibleFields:', visibleFields);
+
         // Ensure oneLiner is always included
         if (!visibleFields.includes('oneLiner')) {
             visibleFields.push('oneLiner');
+            console.log('[BoardSettings] Added oneLiner to visible fields');
         }
 
         const settingsData = {
@@ -254,32 +224,51 @@ class BoardSettingsManager {
             visibleFields
         };
 
+        console.log('[BoardSettings] Settings data to send:', settingsData);
+        console.log('[BoardSettings] Current board ID:', this.currentBoardId);
+
         try {
             const submitBtn = e.target.querySelector('button[type="submit"]');
             const originalText = submitBtn.textContent;
             submitBtn.disabled = true;
             submitBtn.textContent = 'Saving...';
 
+            console.log('[BoardSettings] Making API call to PUT /boards/' + this.currentBoardId);
             const response = await window.api.put(`/boards/${this.currentBoardId}`, settingsData);
+            
+            console.log('[BoardSettings] API response received:', response);
             
             // Update current board data
             this.currentBoard = response.data || response;
             
+            console.log('[BoardSettings] Updated current board data:', this.currentBoard);
+            
             this.closeModal();
             this.showSuccessMessage('Board settings updated successfully!');
             
+            console.log('[BoardSettings] Triggering board refresh...');
+            
             // Trigger refresh of board view
             if (window.boardView && window.boardView.refreshIdeas) {
+                console.log('[BoardSettings] Refreshing board view...');
                 await window.boardView.refreshIdeas();
             }
             
             // Trigger refresh of drag-drop board
             if (window.dragDropBoard && window.dragDropBoard.loadBoard) {
+                console.log('[BoardSettings] Refreshing drag-drop board...');
                 await window.dragDropBoard.loadBoard();
             }
             
+            console.log('[BoardSettings] Board settings update completed successfully');
+            
         } catch (error) {
-            console.error('Failed to update board settings:', error);
+            console.error('[BoardSettings] Failed to update board settings:', error);
+            console.error('[BoardSettings] Error details:', {
+                message: error.message,
+                status: error.response?.status,
+                data: error.response?.data
+            });
             this.handleFormError(error);
         } finally {
             const submitBtn = e.target.querySelector('button[type="submit"]');

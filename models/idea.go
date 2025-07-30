@@ -9,9 +9,9 @@ type Idea struct {
 	ID             string          `bson:"_id,omitempty" json:"id"`
 	BoardID        string          `bson:"board_id" json:"boardId" validate:"required"`
 	OneLiner       string          `bson:"one_liner" json:"oneLiner" validate:"required,min=1,max=200"`
-	Description    string          `bson:"description" json:"description" validate:"required,min=1,max=1000"`
-	ValueStatement string          `bson:"value_statement" json:"valueStatement" validate:"required,min=1,max=500"`
-	RiceScore      RICEScore       `bson:"rice_score" json:"riceScore" validate:"required"`
+	Description    string          `bson:"description" json:"description" validate:"omitempty,max=1000"`
+	ValueStatement string          `bson:"value_statement" json:"valueStatement" validate:"omitempty,max=500"`
+	RiceScore      RICEScore       `bson:"rice_score" json:"riceScore" validate:"omitempty"`
 	Column         string          `bson:"column" json:"column" validate:"required"`
 	Position       int             `bson:"position" json:"position" validate:"min=0"`
 	InProgress     bool            `bson:"in_progress" json:"inProgress"`
@@ -26,8 +26,8 @@ type Idea struct {
 type RICEScore struct {
 	Reach      int `bson:"reach" json:"reach" validate:"min=0,max=100"`           // 0-100%
 	Impact     int `bson:"impact" json:"impact" validate:"min=0,max=100"`         // 0-100%
-	Confidence int `bson:"confidence" json:"confidence" validate:"oneof=1 2 4 8"` // 1, 2, 4, 8 (hours, days, weeks, months)
-	Effort     int `bson:"effort" json:"effort" validate:"min=0,max=100"`         // 0-100%
+	Confidence int `bson:"confidence" json:"confidence" validate:"min=0,max=100"` // 0-100%
+	Effort     int `bson:"effort" json:"effort" validate:"oneof=1 3 8 21"`        // 1, 3, 8, 21 (Low, Medium, High, Very High)
 }
 
 // EmojiReaction represents emoji feedback on ideas
@@ -68,7 +68,11 @@ func (r *RICEScore) CalculateRICEScore() float64 {
 	if r.Effort == 0 {
 		return 0
 	}
-	return float64(r.Reach*r.Impact*r.Confidence) / float64(r.Effort)
+	// Convert percentages to decimals (0-100 -> 0-1)
+	reach := float64(r.Reach) / 100.0
+	impact := float64(r.Impact) / 100.0
+	confidence := float64(r.Confidence) / 100.0
+	return (reach * impact * confidence) / float64(r.Effort)
 }
 
 // IsValidRICEScore validates the RICE score values
@@ -79,10 +83,10 @@ func (r *RICEScore) IsValidRICEScore() bool {
 	if r.Impact < 0 || r.Impact > 100 {
 		return false
 	}
-	if r.Confidence != 1 && r.Confidence != 2 && r.Confidence != 4 && r.Confidence != 8 {
+	if r.Confidence < 0 || r.Confidence > 100 {
 		return false
 	}
-	if r.Effort < 0 || r.Effort > 100 {
+	if r.Effort != 1 && r.Effort != 3 && r.Effort != 8 && r.Effort != 21 {
 		return false
 	}
 	return true

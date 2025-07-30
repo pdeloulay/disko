@@ -97,14 +97,37 @@ class API {
 
         try {
             console.log('[API] Sending fetch request to:', url);
+            console.log('[API] Request config:', {
+                method: config.method,
+                headers: config.headers,
+                body: config.body ? JSON.parse(config.body) : null
+            });
+            console.log('[API] Request body (raw):', config.body);
             const response = await fetch(url, config);
             
             console.log('[API] Response status:', response.status);
             console.log('[API] Response headers:', Object.fromEntries(response.headers.entries()));
+            console.log('[API] Response ok:', response.ok);
+            console.log('[API] About to check response.ok...');
             
             if (!response.ok) {
+                console.log('[API] Response is NOT ok, getting error text...');
                 const errorText = await response.text();
                 console.error('[API] Response not ok:', response.status, errorText);
+                console.error('[API] Full error details:', {
+                    status: response.status,
+                    statusText: response.statusText,
+                    url: url,
+                    body: errorText
+                });
+                
+                // Try to parse JSON error response
+                try {
+                    const errorJson = JSON.parse(errorText);
+                    console.error('[API] Parsed error JSON:', errorJson);
+                } catch (e) {
+                    console.error('[API] Could not parse error as JSON:', e);
+                }
                 
                 // If it's an authentication error, clear the stored token
                 if (response.status === 401) {

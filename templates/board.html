@@ -1,55 +1,349 @@
-{{template "base.html" .}}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{.title}}</title>
+    <link rel="icon" type="image/png" href="/static/images/logo-sm.png">
+    <link rel="stylesheet" href="/static/css/main.css">
+    
+    <script
+      async
+      crossorigin="anonymous"
+      data-clerk-publishable-key={{.clerkPublishableKey}}
+      src="https://unpkg.com/@clerk/clerk-js@5/dist/clerk.browser.js"
+      type="text/javascript"
+    ></script>
+</head>
+<body>
+    <div id="app">
+        <div class="board-page">
+            <!-- Clerk Popup Container -->
+            <div id="my-popup" class="clerk-popup-container"></div>
+            
+            <header class="board-header">
+                <div class="container">
+                    <div class="board-header-content">
+                        <div class="board-logo">
+                            <a href="/" class="logo-link">
+                                <img src="/static/images/logo-sm.png" alt="Disko" class="logo-image">
+                            </a>
+                        </div>
+                        <div class="board-info">
+                            <h1 id="board-title">Loading...</h1>
+                            <p id="board-description"></p>
+                            <div id="ws-status" class="ws-status reconnecting">Connecting...</div>
+                        </div>
+                        <div class="user-menu">
+                            <span id="user-name">👤 User</span>
+                            <div id="clerk-user-button"></div>
+                            <button id="sign-out-btn" class="btn btn-secondary">Sign Out</button>
+                            <span class="version-display">v{{.version}}</span>
+                        </div>
+                    </div>
+                    <div class="board-actions">
+                        {{if not .isPublic}}
+                        <button id="board-settings-btn" class="btn btn-secondary">⚙️ Settings</button>
+                        <button id="create-idea-btn" class="btn btn-primary create-idea-btn">Create Idea</button>
+                        {{end}}
+                        <button id="refresh-btn" class="btn btn-secondary">Refresh</button>
+                    </div>
+                </div>
+            </header>
 
-{{define "content"}}
-<div class="board-view">
-    <header class="board-header">
-        <div class="container">
-            <div class="board-header-content">
-                <div class="board-logo">
-                    <img src="/static/images/logo.png" alt="Disko" class="logo-image">
+            <main class="board-main">
+                <div class="container">
+                    <div class="board-container">
+                        <!-- Tab Navigation -->
+                        <div class="board-tabs">
+                            <button id="board-tab" class="tab-button active" data-tab="board">
+                                <span class="tab-icon">📋</span>
+                                Board
+                                <span id="board-ideas-count" class="tab-count">0</span>
+                            </button>
+                            <button id="release-tab" class="tab-button" data-tab="release">
+                                <span class="tab-icon">🚀</span>
+                                Release
+                                <span id="release-ideas-count" class="tab-count">0</span>
+                            </button>
+                        </div>
+
+                        <!-- Board View -->
+                        <div id="board-view" class="tab-content active">
+                            <div class="board-header-info">
+                                <h2>Board</h2>
+                                <span id="ideas-count" class="ideas-count">Loading...</span>
+                            </div>
+                            <div id="drag-drop-board" class="drag-drop-board">
+                                <!-- Column layout will be loaded here -->
+                                <div class="board-loading">Loading board...</div>
+                            </div>
+                        </div>
+
+                        <!-- Release View -->
+                        <div id="release-view" class="tab-content">
+                            <div class="release-header">
+                                <h2>Released Ideas</h2>
+                                <div class="release-controls">
+                                    <div class="search-container">
+                                        <input type="text" id="release-search" placeholder="Search released ideas..." class="search-input">
+                                        <button id="clear-search" class="clear-search-btn" title="Clear search">×</button>
+                                    </div>
+                                    <div class="sort-container">
+                                        <select id="release-sort" class="sort-select">
+                                            <option value="created_at:desc">Newest First</option>
+                                            <option value="created_at:asc">Oldest First</option>
+                                            <option value="name:asc">Name A-Z</option>
+                                            <option value="name:desc">Name Z-A</option>
+                                            <option value="thumbs_up:desc">Most Liked</option>
+                                            {{if not .isPublic}}
+                                            <option value="rice_score:desc">Highest RICE Score</option>
+                                            {{end}}
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            <div id="release-table-container" class="release-table-container">
+                                <div class="release-loading">Loading released ideas...</div>
+                            </div>
+                            <div id="release-pagination" class="pagination-container"></div>
+                        </div>
+                    </div>
                 </div>
-                <div class="board-info">
-                    <h1 id="board-title">Loading...</h1>
-                    <p id="board-description"></p>
-                </div>
-            </div>
-            <div class="board-actions">
-                {{if .isAdmin}}
-                <button id="create-idea-btn" class="btn btn-primary create-idea-btn">Create Idea</button>
-                {{end}}
-                <button id="refresh-btn" class="btn btn-secondary">Refresh</button>
-            </div>
+            </main>
         </div>
-    </header>
+    </div>
 
-    <main class="board-main">
-        <div class="container">
-            <div class="board-container">
-                <div class="board-header-info">
-                    <h2>Board</h2>
-                    <span id="ideas-count" class="ideas-count">Loading...</span>
-                </div>
-                <div id="drag-drop-board" class="drag-drop-board">
-                    <!-- Column layout will be loaded here -->
-                    <div class="board-loading">Loading board...</div>
-                </div>
-            </div>
-        </div>
-    </main>
-</div>
+    <!-- Common JavaScript -->
+    <script src="/static/js/auth.js"></script>
+    <script src="/static/js/api.js"></script>
+    <script src="/static/js/user-context.js"></script>
+    <script src="/static/js/route-protection.js"></script>
+    <script>
+        // Initialize Clerk
+        console.log("Clerk Key = " + "{{.clerkPublishableKey}}");
+        const clerkPublishableKey = "{{.clerkPublishableKey}}";
+        const clerkFrontendApiUrl = "{{.clerkFrontendApiUrl}}";
+        
+        // Make configuration globally available for auth.js
+        window.clerkPublishableKey = clerkPublishableKey;
+        window.clerkFrontendApiUrl = clerkFrontendApiUrl;
+        
+        // Base template logging
+        console.log('[Base] Page loaded at:', new Date().toISOString());
+        console.log('[Base] Page title:', document.title);
+        console.log('[Base] Clerk publishable key:', clerkPublishableKey ? 'Set' : 'Not set');
+        console.log('[Base] Clerk frontend API URL:', clerkFrontendApiUrl ? 'Set' : 'Not set');
+        
+        // Log when DOM is loaded
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('[Base] DOM loaded, initializing base template...');
+            console.log('[Base] Base template initialization complete');
+        });
+    </script>
+    
+    <script>
+        // Clerk configuration
+        console.log("Clerk Key = " + "{{.clerkPublishableKey}}");
+        const clerkPublishableKey = "{{.clerkPublishableKey}}";
+        const clerkFrontendApiUrl = "{{.clerkFrontendApiUrl}}";
+        
+        // Global variables
+        window.clerkPublishableKey = clerkPublishableKey;
+        window.clerkFrontendApiUrl = clerkFrontendApiUrl;
+        
+        // Base logging
+        console.log('[Base] Page loaded at:', new Date().toISOString());
+        console.log('[Base] Page title:', document.title);
+        console.log('[Base] Clerk publishable key:', clerkPublishableKey ? 'Set' : 'Not set');
+        console.log('[Base] Clerk frontend API URL:', clerkFrontendApiUrl ? 'Set' : 'Not set');
+        
+        // Board data
+        window.boardData = {
+            publicLink: "{{.publicLink}}",
+            boardId: "{{.boardID}}",
+            isAdmin: {{if .isOwner}}true{{else}}false{{end}},
+            isPublic: {{if .isPublic}}true{{else}}false{{end}}
+        };
+        
+        // Board logging
+        console.log('[Board] Page loaded at:', new Date().toISOString());
+        console.log('[Board] Board data:', window.boardData);
+        console.log('[Board] Board ID:', window.boardData.boardId);
+        console.log('[Board] Is Admin:', window.boardData.isAdmin);
+        console.log('[Board] Is Public:', window.boardData.isPublic);
+        console.log('[Board] Public Link:', window.boardData.publicLink);
+        console.log('[Board] User context:', window.userContext);
+        console.log('[Board] Clerk user:', window.Clerk?.user);
+        console.log('[Board] Clerk session:', window.Clerk?.session);
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('[Base] DOM loaded, initializing base template...');
+            console.log('[Board] DOM loaded, initializing board...');
+            console.log('[Board] Board ID:', window.boardData.boardId);
+            console.log('[Board] Public Link:', window.boardData.publicLink);
+            console.log('[Board] Is Admin:', window.boardData.isAdmin);
+            console.log('[Board] Is Public:', window.boardData.isPublic);
+            
+            // Log tab interactions
+            const boardTab = document.getElementById('board-tab');
+            const releaseTab = document.getElementById('release-tab');
+            
+            if (boardTab) {
+                boardTab.addEventListener('click', function() {
+                    console.log('[Board] Switching to Board tab');
+                });
+            }
+            
+            if (releaseTab) {
+                releaseTab.addEventListener('click', function() {
+                    console.log('[Board] Switching to Release tab');
+                });
+            }
+            
+            // Log search interactions
+            const releaseSearch = document.getElementById('release-search');
+            if (releaseSearch) {
+                releaseSearch.addEventListener('input', function(e) {
+                    console.log('[Board] Release search query:', e.target.value);
+                });
+            }
+            
+            // Log sort interactions
+            const releaseSort = document.getElementById('release-sort');
+            if (releaseSort) {
+                releaseSort.addEventListener('change', function(e) {
+                    console.log('[Board] Release sort changed to:', e.target.value);
+                });
+            }
+            
+            // Log WebSocket status changes
+            const wsStatus = document.getElementById('ws-status');
+            if (wsStatus) {
+                const observer = new MutationObserver(function(mutations) {
+                    mutations.forEach(function(mutation) {
+                        if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
+                            console.log('[Board] WebSocket status changed:', wsStatus.className);
+                        }
+                    });
+                });
+                observer.observe(wsStatus, { attributes: true });
+            }
+            
+            // Log idea creation (admin only)
+            const createIdeaBtn = document.getElementById('create-idea-btn');
+            if (createIdeaBtn) {
+                createIdeaBtn.addEventListener('click', function() {
+                    console.log('[Board] Opening create idea modal');
+                });
+            }
+            
+            // Log board settings (admin only)
+            const boardSettingsBtn = document.getElementById('board-settings-btn');
+            if (boardSettingsBtn) {
+                boardSettingsBtn.addEventListener('click', function() {
+                    console.log('[Board] Opening board settings');
+                });
+            }
+            
+            // Log refresh button
+            const refreshBtn = document.getElementById('refresh-btn');
+            if (refreshBtn) {
+                refreshBtn.addEventListener('click', function() {
+                    console.log('[Board] Refreshing board data');
+                });
+            }
+            
+                    console.log('[Board] Board initialization complete');
+        console.log('[Base] Base template initialization complete');
+    });
+    </script>
+    
+    <!-- Auth initialization script (same as dashboard) -->
+    <script>
+    // Board logging
+    console.log('[Board] Page loaded at:', new Date().toISOString());
+    console.log('[Board] User context:', window.userContext);
 
-<script>
-    // Pass data to JavaScript
-    window.boardData = {
-        publicLink: "{{.publicLink}}",
-        boardId: "{{.boardId}}",
-        isAdmin: {{.isAdmin}}
-    };
-</script>
-{{end}}
-
-{{define "scripts"}}
-<script src="/static/js/board.js"></script>
-<script src="/static/js/idea-management.js"></script>
-<script src="/static/js/drag-drop-board.js"></script>
-{{end}}
+    // Initialize Clerk user button
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('[Board] DOM loaded, initializing board...');
+        
+        // Initialize Clerk user button when auth is ready
+        let retryCount = 0;
+        const maxRetries = 10;
+        
+        const initUserButton = async () => {
+            if (retryCount >= maxRetries) {
+                console.error('[Board] Max retries reached for Clerk user button, giving up');
+                return;
+            }
+            
+            if (window.auth && window.auth.clerk) {
+                console.log('[Board] Initializing Clerk user button... (attempt ' + (retryCount + 1) + ')');
+                try {
+                    // Wait for Clerk components to be ready
+                    await window.auth.waitForComponentsReady();
+                    
+                    window.auth.clerk.mountUserButton('#clerk-user-button', {
+                        appearance: {
+                            elements: {
+                                userButtonAvatarBox: {
+                                    width: '32px',
+                                    height: '32px'
+                                }
+                            }
+                        }
+                    });
+                    console.log('[Board] Clerk user button mounted successfully');
+                } catch (error) {
+                    console.error('[Board] Failed to mount Clerk user button:', error);
+                    retryCount++;
+                    
+                    // Retry with different approaches
+                    if (error.message && error.message.includes('not ready yet')) {
+                        console.log('[Board] Clerk components not ready, retrying in 500ms... (attempt ' + retryCount + ')');
+                        setTimeout(initUserButton, 500);
+                    } else {
+                        // Fallback: try to mount without waiting
+                        try {
+                            console.log('[Board] Trying fallback mount approach...');
+                            window.auth.clerk.mountUserButton('#clerk-user-button');
+                            console.log('[Board] Clerk user button mounted with fallback');
+                        } catch (fallbackError) {
+                            console.error('[Board] Fallback mount also failed:', fallbackError);
+                            // Final retry after longer delay
+                            setTimeout(initUserButton, 1000);
+                        }
+                    }
+                }
+            } else {
+                console.log('[Board] Auth not ready yet, retrying in 100ms... (attempt ' + (retryCount + 1) + ')');
+                retryCount++;
+                setTimeout(initUserButton, 100);
+            }
+        };
+        
+        // Start initialization
+        initUserButton();
+        
+        console.log('[Board] Board initialization complete');
+    });
+    </script>
+    
+    <!-- Board-specific JavaScript -->
+    <script src="/static/js/board-tabs.js"></script>
+    <script src="/static/js/release-table.js"></script>
+    {{if .isPublic}}
+    <script src="/static/js/feedback-widget.js"></script>
+    <script src="/static/js/public-board.js"></script>
+    {{else}}
+    <script src="/static/js/websocket-manager.js"></script>
+    <script src="/static/js/search-bar.js"></script>
+    <script src="/static/js/board.js"></script>
+    <script src="/static/js/idea-management.js"></script>
+    <script src="/static/js/drag-drop-board.js"></script>
+    <script src="/static/js/board-settings.js"></script>
+    {{end}}
+</body>
+</html>

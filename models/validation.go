@@ -65,11 +65,11 @@ func ValidateBoard(board *Board) ValidationErrors {
 		})
 	}
 
-	// Validate admin ID
-	if strings.TrimSpace(board.AdminID) == "" {
+	// Validate user ID
+	if strings.TrimSpace(board.UserID) == "" {
 		errors = append(errors, ValidationError{
-			Field:   "adminId",
-			Message: "admin ID is required",
+			Field:   "userId",
+			Message: "user ID is required",
 		})
 	}
 

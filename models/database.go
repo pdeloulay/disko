@@ -108,14 +108,14 @@ func setupIndexes() error {
 	// Boards collection indexes
 	boardsCollection := GetCollection(BoardsCollection)
 
-	// Index on admin_id for efficient board queries by admin
+	// Index on user_id for efficient board queries by user
 	_, err := boardsCollection.Indexes().CreateOne(ctx, mongo.IndexModel{
 		Keys: bson.D{
-			{Key: "admin_id", Value: 1},
+			{Key: "user_id", Value: 1},
 		},
 	})
 	if err != nil {
-		return fmt.Errorf("failed to create admin_id index on boards: %w", err)
+		return fmt.Errorf("failed to create user_id index on boards: %w", err)
 	}
 
 	// Unique index on public_link for efficient public board access

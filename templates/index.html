@@ -2,10 +2,15 @@
 
 {{define "content"}}
 <div class="landing-page">
+    <!-- Clerk Popup Container -->
+    <div id="my-popup" class="clerk-popup-container"></div>
+    
     <header class="header">
         <div class="container">
             <h1 class="logo">
-                <img src="/static/images/logo-sm.png" alt="Disko" class="logo-image">
+                <a href="/" class="logo-link">
+                    <img src="/static/images/logo-sm.png" alt="Disko" class="logo-image">
+                </a>
             </h1>
             <nav class="nav">
                 <div id="auth-buttons">
@@ -23,19 +28,19 @@
         <section class="hero">
             <div class="container">
                 <div class="hero-content">
-                    <h1 class="hero-title">Transform How You Share Progress with Customers</h1>
+                    <h1 class="hero-title">Transform how you share Progress with Customers</h1>
                     <p class="hero-subtitle">Disko helps solopreneurs and entrepreneurs create beautiful, interactive project boards that keep customers engaged and informed about your work progress.</p>
                     <div class="hero-stats">
                         <div class="stat-item">
-                            <span class="stat-number" id="boards-counter">0</span>
+                            <span class="stat-number" id="boards-counter">{{.stats.boards}}</span>
                             <span class="stat-label">Boards Created</span>
                         </div>
                         <div class="stat-item">
-                            <span class="stat-number" id="ideas-counter">0</span>
+                            <span class="stat-number" id="ideas-counter">{{.stats.ideas}}</span>
                             <span class="stat-label">Ideas Shared</span>
                         </div>
                         <div class="stat-item">
-                            <span class="stat-number" id="feedback-counter">0</span>
+                            <span class="stat-number" id="feedback-counter">{{.stats.feedback}}</span>
                             <span class="stat-label">Customer Feedback</span>
                         </div>
                     </div>
@@ -92,7 +97,7 @@
 
         <!-- Benefits Section -->
         <section class="benefits">
-            <div class="container">
+        <div class="container">
                 <h2 class="section-title">Why Solopreneurs Love Disko</h2>
                 <div class="benefits-grid">
                     <div class="benefit-card">
@@ -126,11 +131,11 @@
                         <p>Access your boards from any device. Perfect for sharing during client calls or team meetings.</p>
                     </div>
                 </div>
-            </div>
-        </section>
+                </div>
+            </section>
 
         <!-- Features Section -->
-        <section class="features">
+            <section class="features">
             <div class="container">
                 <h2 class="section-title">Powerful Features for Modern Entrepreneurs</h2>
                 <div class="features-grid">
@@ -277,9 +282,9 @@
                             </div>
                         </div>
                     </div>
+                    </div>
                 </div>
-            </div>
-        </section>
+            </section>
 
         <!-- CTA Section -->
         <section class="cta-section">
@@ -306,7 +311,7 @@
                         </div>
                     </div>
                 </div>
-            </div>
+        </div>
         </section>
     </main>
 
@@ -346,7 +351,7 @@
                 </div>
             </div>
             <div class="footer-bottom">
-                <p>&copy; 2025 Disko. A Nomadis Service. All rights reserved.</p>
+                <p>&copy; 2025 Disko. A Nomadis Service. All rights reserved. | v{{.version}}</p>
             </div>
         </div>
     </footer>

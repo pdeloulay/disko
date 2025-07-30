@@ -140,12 +140,20 @@ class IdeaManager {
                         <div class="idea-card-menu">
                             <button class="btn-menu" onclick="ideaManager.toggleIdeaMenu('${idea.id}')">⋮</button>
                             <div class="idea-menu" id="idea-menu-${idea.id}" style="display: none;">
-                                <button onclick="ideaManager.editIdea('${idea.id}')">Edit</button>
+                                <button onclick="ideaManager.editIdea('${idea.id}')">✏️ Edit</button>
                                 <button onclick="ideaManager.toggleInProgress('${idea.id}', ${!idea.inProgress})">
-                                    ${idea.inProgress ? 'Mark as Not In Progress' : 'Mark as In Progress'}
+                                    ${idea.inProgress ? '⏸️ Mark as Not In Progress' : '▶️ Mark as In Progress'}
                                 </button>
-                                <button onclick="ideaManager.markAsDone('${idea.id}')">Mark as Done</button>
-                                <button onclick="ideaManager.confirmDeleteIdea('${idea.id}', '${this.escapeHtml(idea.oneLiner)}')">Delete</button>
+                                ${idea.status !== 'done' ? `
+                                    <button onclick="ideaManager.updateIdeaStatus('${idea.id}', 'done')">✅ Mark as Done</button>
+                                ` : ''}
+                                ${idea.status === 'done' ? `
+                                    <button onclick="ideaManager.updateIdeaStatus('${idea.id}', 'active')">🔄 Reactivate</button>
+                                ` : ''}
+                                ${idea.status !== 'archived' ? `
+                                    <button onclick="ideaManager.updateIdeaStatus('${idea.id}', 'archived')">🗃️ Archive</button>
+                                ` : ''}
+                                <button onclick="ideaManager.confirmDeleteIdea('${idea.id}', '${this.escapeHtml(idea.oneLiner)}')">🗑️ Delete</button>
                             </div>
                         </div>
                     ` : ''}
@@ -529,6 +537,12 @@ class IdeaManager {
 
     async toggleInProgress(ideaId, inProgress) {
         try {
+            // Add visual feedback during status change
+            const ideaCard = document.querySelector(`[data-idea-id="${ideaId}"]`);
+            if (ideaCard) {
+                ideaCard.classList.add('status-changing');
+            }
+
             await window.api.put(`/ideas/${ideaId}/status`, { inProgress });
             
             this.showSuccessMessage(`Idea marked as ${inProgress ? 'in progress' : 'not in progress'}!`);
@@ -541,16 +555,72 @@ class IdeaManager {
         } catch (error) {
             console.error('Failed to update idea status:', error);
             this.showErrorMessage('Failed to update idea status. Please try again.');
+        } finally {
+            // Remove status changing animation
+            const ideaCard = document.querySelector(`[data-idea-id="${ideaId}"]`);
+            if (ideaCard) {
+                setTimeout(() => {
+                    ideaCard.classList.remove('status-changing');
+                }, 500);
+            }
         }
         
         this.closeIdeaMenus();
     }
 
     async markAsDone(ideaId) {
+        // Use the updateIdeaStatus method for consistency
+        await this.updateIdeaStatus(ideaId, 'done');
+    }
+
+    // New method to handle status changes with automatic column transitions
+    async updateIdeaStatus(ideaId, status, inProgress = null) {
         try {
-            await window.api.put(`/ideas/${ideaId}/status`, { status: 'done' });
+            // Add visual feedback during status change
+            const ideaCard = document.querySelector(`[data-idea-id="${ideaId}"]`);
+            if (ideaCard) {
+                // Add specific animation class based on status
+                switch (status) {
+                    case 'done':
+                        ideaCard.classList.add('status-done');
+                        break;
+                    case 'archived':
+                        ideaCard.classList.add('status-archived');
+                        break;
+                    case 'active':
+                        ideaCard.classList.add('status-reactivated');
+                        break;
+                    default:
+                        ideaCard.classList.add('status-changing');
+                }
+            }
+
+            const updateData = { status };
+            if (inProgress !== null) {
+                updateData.inProgress = inProgress;
+            }
+
+            await window.api.put(`/ideas/${ideaId}/status`, updateData);
             
-            this.showSuccessMessage('Idea marked as done and moved to Release!');
+            // Show appropriate success message based on status
+            let message = 'Idea status updated!';
+            let icon = '✅';
+            switch (status) {
+                case 'done':
+                    message = 'Idea marked as done and moved to Release!';
+                    icon = '🎉';
+                    break;
+                case 'archived':
+                    message = 'Idea archived and moved to Won\'t Do!';
+                    icon = '🗃️';
+                    break;
+                case 'active':
+                    message = 'Idea reactivated and moved to Parking!';
+                    icon = '🔄';
+                    break;
+            }
+            
+            this.showSuccessMessage(`${icon} ${message}`);
             
             // Trigger refresh of ideas list
             if (window.boardView && window.boardView.refreshIdeas) {
@@ -558,11 +628,39 @@ class IdeaManager {
             }
             
         } catch (error) {
-            console.error('Failed to mark idea as done:', error);
-            this.showErrorMessage('Failed to mark idea as done. Please try again.');
+            console.error('Failed to update idea status:', error);
+            this.showErrorMessage('Failed to update idea status. Please try again.');
+        } finally {
+            // Remove all status animation classes
+            const ideaCard = document.querySelector(`[data-idea-id="${ideaId}"]`);
+            if (ideaCard) {
+                setTimeout(() => {
+                    ideaCard.classList.remove('status-changing', 'status-done', 'status-archived', 'status-reactivated');
+                }, 800);
+            }
         }
         
         this.closeIdeaMenus();
+    }
+
+    // Menu management utilities
+    toggleIdeaMenu(ideaId) {
+        // Close all other menus first
+        this.closeIdeaMenus();
+        
+        // Toggle the specific menu
+        const menu = document.getElementById(`idea-menu-${ideaId}`);
+        if (menu) {
+            const isVisible = menu.style.display !== 'none';
+            menu.style.display = isVisible ? 'none' : 'block';
+        }
+    }
+
+    closeIdeaMenus() {
+        const menus = document.querySelectorAll('.idea-menu');
+        menus.forEach(menu => {
+            menu.style.display = 'none';
+        });
     }
 
     // Feedback handlers (placeholder for future implementation)
@@ -790,6 +888,26 @@ class IdeaManager {
         return div.innerHTML;
     }
 
+    // Menu management utilities
+    toggleIdeaMenu(ideaId) {
+        // Close all other menus first
+        this.closeIdeaMenus();
+        
+        // Toggle the specific menu
+        const menu = document.getElementById(`idea-menu-${ideaId}`);
+        if (menu) {
+            const isVisible = menu.style.display !== 'none';
+            menu.style.display = isVisible ? 'none' : 'block';
+        }
+    }
+
+    closeIdeaMenus() {
+        const menus = document.querySelectorAll('.idea-menu');
+        menus.forEach(menu => {
+            menu.style.display = 'none';
+        });
+    }
+
     // Message utilities
     showSuccessMessage(message) {
         this.showMessage(message, 'success');
@@ -827,6 +945,88 @@ class IdeaManager {
         messageDiv.addEventListener('click', () => {
             messageDiv.remove();
         });
+    }
+
+    // RICE score calculation setup
+    setupRICECalculation(formType) {
+        const prefix = formType === 'edit' ? 'edit-' : '';
+        const reachInput = document.getElementById(`${prefix}rice-reach`);
+        const impactInput = document.getElementById(`${prefix}rice-impact`);
+        const confidenceInput = document.getElementById(`${prefix}rice-confidence`);
+        const effortInput = document.getElementById(`${prefix}rice-effort`);
+        const scoreDisplay = document.getElementById(`${prefix}rice-score-value`);
+
+        const calculateScore = () => {
+            const reach = parseInt(reachInput.value) || 0;
+            const impact = parseInt(impactInput.value) || 0;
+            const confidence = parseInt(confidenceInput.value) || 1;
+            const effort = parseInt(effortInput.value) || 1;
+
+            const score = effort > 0 ? (reach * impact * confidence) / effort : 0;
+            if (scoreDisplay) {
+                scoreDisplay.textContent = score.toFixed(1);
+            }
+        };
+
+        // Add event listeners
+        [reachInput, impactInput, confidenceInput, effortInput].forEach(input => {
+            if (input) {
+                input.addEventListener('input', calculateScore);
+                input.addEventListener('change', calculateScore);
+            }
+        });
+
+        // Calculate initial score
+        calculateScore();
+    }
+
+    // Form validation
+    validateIdeaForm(ideaData) {
+        const errors = [];
+
+        if (!ideaData.oneLiner || ideaData.oneLiner.trim().length === 0) {
+            errors.push('One-liner is required');
+        } else if (ideaData.oneLiner.length > 200) {
+            errors.push('One-liner must be 200 characters or less');
+        }
+
+        if (!ideaData.description || ideaData.description.trim().length === 0) {
+            errors.push('Description is required');
+        } else if (ideaData.description.length > 1000) {
+            errors.push('Description must be 1000 characters or less');
+        }
+
+        if (!ideaData.valueStatement || ideaData.valueStatement.trim().length === 0) {
+            errors.push('Value statement is required');
+        } else if (ideaData.valueStatement.length > 500) {
+            errors.push('Value statement must be 500 characters or less');
+        }
+
+        // RICE score validation
+        const rice = ideaData.riceScore;
+        if (!rice) {
+            errors.push('RICE score is required');
+        } else {
+            if (rice.reach < 0 || rice.reach > 100) {
+                errors.push('Reach must be between 0 and 100');
+            }
+            if (rice.impact < 0 || rice.impact > 100) {
+                errors.push('Impact must be between 0 and 100');
+            }
+            if (![1, 2, 4, 8].includes(rice.confidence)) {
+                errors.push('Confidence must be 1, 2, 4, or 8');
+            }
+            if (rice.effort < 0 || rice.effort > 100) {
+                errors.push('Effort must be between 0 and 100');
+            }
+        }
+
+        if (errors.length > 0) {
+            this.showErrorMessage('Validation errors:\n' + errors.join('\n'));
+            return false;
+        }
+
+        return true;
     }
 }
 

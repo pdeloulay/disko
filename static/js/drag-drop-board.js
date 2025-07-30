@@ -40,6 +40,15 @@ class DragDropBoard {
                 this.closeAllMenus();
             }
         });
+
+        // WebSocket event listeners for real-time updates
+        document.addEventListener('feedbackUpdated', (event) => {
+            this.handleFeedbackUpdate(event.detail);
+        });
+
+        document.addEventListener('ideaUpdated', (event) => {
+            this.handleIdeaUpdate(event.detail);
+        });
     }
 
     async loadBoard() {
@@ -47,11 +56,21 @@ class DragDropBoard {
         const boardTitle = document.getElementById('board-title');
         const boardDescription = document.getElementById('board-description');
 
+        console.log('[DragDropBoard] loadBoard started - BoardID:', this.boardId, 'IsAdmin:', this.isAdmin);
+
         try {
             // Load board details
             const endpoint = this.isAdmin ? `/boards/${this.boardId}` : `/boards/${this.boardId}/public`;
+            console.log('[DragDropBoard] Making API call to:', endpoint);
+            console.log('[DragDropBoard] API base URL:', window.api.baseURL);
+            console.log('[DragDropBoard] Full URL will be:', window.api.baseURL + endpoint);
+            
             const response = await window.api.get(endpoint);
+            console.log('[DragDropBoard] API response received:', response);
             const board = response.data || response;
+
+            // Store board data for column filtering
+            this.board = board;
 
             if (boardTitle) {
                 boardTitle.textContent = board.name || 'Untitled Board';
@@ -62,6 +81,11 @@ class DragDropBoard {
                 boardDescription.style.display = board.description ? 'block' : 'none';
             }
 
+            // Update board settings manager with current board data
+            if (window.boardSettingsManager) {
+                window.boardSettingsManager.setBoard(board);
+            }
+
             // Load ideas
             await this.loadIdeas();
             
@@ -69,7 +93,13 @@ class DragDropBoard {
             this.renderBoard();
 
         } catch (error) {
-            console.error('Failed to load board:', error);
+            console.error('[DragDropBoard] Failed to load board:', error);
+            console.error('[DragDropBoard] Error details:', {
+                message: error.message,
+                stack: error.stack,
+                boardId: this.boardId,
+                isAdmin: this.isAdmin
+            });
             
             if (boardTitle) {
                 boardTitle.textContent = 'Error Loading Board';
@@ -79,16 +109,24 @@ class DragDropBoard {
                 <div class="error">
                     <h3>Error</h3>
                     <p>Failed to load board. Please try again.</p>
+                    <p>Error: ${error.message}</p>
                     <button class="btn btn-primary" onclick="dragDropBoard.loadBoard()">Try Again</button>
                 </div>
             `;
         }
     }
 
+
+
     async loadIdeas() {
+        console.log('[DragDropBoard] loadIdeas started - BoardID:', this.boardId, 'IsAdmin:', this.isAdmin);
+        
         try {
             const endpoint = this.isAdmin ? `/boards/${this.boardId}/ideas` : `/boards/${this.boardId}/public/ideas`;
+            console.log('[DragDropBoard] Making ideas API call to:', endpoint);
+            
             const response = await window.api.get(endpoint);
+            console.log('[DragDropBoard] Ideas API response received:', response);
             const data = response.data || response;
             
             this.ideas = data.ideas || [];
@@ -99,9 +137,18 @@ class DragDropBoard {
                 const count = this.ideas.length;
                 ideasCount.textContent = `${count} ${count === 1 ? 'idea' : 'ideas'}`;
             }
+
+            // Update tab counts
+            this.updateTabCounts();
             
         } catch (error) {
-            console.error('Failed to load ideas:', error);
+            console.error('[DragDropBoard] Failed to load ideas:', error);
+            console.error('[DragDropBoard] Ideas error details:', {
+                message: error.message,
+                stack: error.stack,
+                boardId: this.boardId,
+                isAdmin: this.isAdmin
+            });
             this.ideas = [];
             
             const ideasCount = document.getElementById('ideas-count');
@@ -122,8 +169,11 @@ class DragDropBoard {
         // Group ideas by column
         const ideasByColumn = this.groupIdeasByColumn();
         
-        // Render columns
-        const columnsHtml = this.columns.map(column => 
+        // Filter columns based on visibility settings
+        const visibleColumns = this.getVisibleColumns();
+        
+        // Render only visible columns
+        const columnsHtml = visibleColumns.map(column => 
             this.createColumnView(column, ideasByColumn[column.id] || [])
         ).join('');
         
@@ -133,6 +183,48 @@ class DragDropBoard {
         if (this.isAdmin) {
             this.makeDraggable();
         }
+    }
+
+    getVisibleColumns() {
+        // For admin users, show all columns
+        if (this.isAdmin) {
+            return this.columns;
+        }
+        
+        // For public users, filter based on board visibility settings
+        if (this.board && this.board.visibleColumns) {
+            return this.columns.filter(column => 
+                this.board.visibleColumns.includes(column.id)
+            );
+        }
+        
+        // Default to all columns if no settings
+        return this.columns;
+    }
+
+    shouldShowField(fieldName) {
+        // For admin users, show all fields except RICE score is admin-only
+        if (this.isAdmin) {
+            return true;
+        }
+        
+        // oneLiner is always visible
+        if (fieldName === 'oneLiner') {
+            return true;
+        }
+        
+        // riceScore is admin-only
+        if (fieldName === 'riceScore') {
+            return false;
+        }
+        
+        // For public users, filter based on board visibility settings
+        if (this.board && this.board.visibleFields) {
+            return this.board.visibleFields.includes(fieldName);
+        }
+        
+        // Default to showing all fields except RICE score
+        return fieldName !== 'riceScore';
     }
 
     groupIdeasByColumn() {
@@ -165,12 +257,32 @@ class DragDropBoard {
         return `
             <div class="board-column" data-column="${column.id}">
                 <div class="column-header">
-                    <div class="column-title">${column.title}</div>
-                    <div class="column-count">${ideas.length}</div>
+                    <div class="column-title-section">
+                        <div class="column-title">${column.title}</div>
+                        <div class="column-count">${ideas.length}</div>
+                    </div>
+                    ${this.isAdmin ? this.createColumnSortControls(column.id) : ''}
                 </div>
                 <div class="column-ideas ${isEmpty ? 'empty' : ''}" data-column="${column.id}">
                     ${ideas.map(idea => this.createIdeaCard(idea)).join('')}
                 </div>
+            </div>
+        `;
+    }
+
+    createColumnSortControls(columnId) {
+        return `
+            <div class="column-sort-controls">
+                <select class="column-sort-select" data-column="${columnId}" onchange="dragDropBoard.sortColumn('${columnId}', this.value)">
+                    <option value="">Sort by...</option>
+                    <option value="name-asc">Name A-Z</option>
+                    <option value="name-desc">Name Z-A</option>
+                    <option value="rice-desc">RICE Score ↓</option>
+                    <option value="rice-asc">RICE Score ↑</option>
+                    <option value="status-progress">In Progress First</option>
+                    <option value="created-desc">Newest First</option>
+                    <option value="created-asc">Oldest First</option>
+                </select>
             </div>
         `;
     }
@@ -185,28 +297,36 @@ class DragDropBoard {
                  data-column="${idea.column}"
                  ${this.isAdmin ? 'draggable="true"' : ''}>
                 <div class="idea-card-header">
-                    <h4 class="idea-oneliner">${this.escapeHtml(idea.oneLiner)}</h4>
+                    <h4 class="idea-title idea-oneliner">${this.escapeHtml(idea.oneLiner)}</h4>
                     ${this.isAdmin ? `
                         <div class="idea-card-menu">
                             <button class="btn-menu" onclick="dragDropBoard.toggleIdeaMenu('${idea.id}')">⋮</button>
                             <div class="idea-menu" id="idea-menu-${idea.id}" style="display: none;">
-                                <button onclick="dragDropBoard.editIdea('${idea.id}')">Edit</button>
+                                <button onclick="dragDropBoard.editIdea('${idea.id}')">✏️ Edit</button>
                                 <button onclick="dragDropBoard.toggleInProgress('${idea.id}', ${!idea.inProgress})">
-                                    ${idea.inProgress ? 'Mark as Not In Progress' : 'Mark as In Progress'}
+                                    ${idea.inProgress ? '⏸️ Mark as Not In Progress' : '▶️ Mark as In Progress'}
                                 </button>
-                                <button onclick="dragDropBoard.markAsDone('${idea.id}')">Mark as Done</button>
-                                <button onclick="dragDropBoard.confirmDeleteIdea('${idea.id}', '${this.escapeHtml(idea.oneLiner)}')">Delete</button>
+                                ${idea.status !== 'done' ? `
+                                    <button onclick="dragDropBoard.updateIdeaStatus('${idea.id}', 'done')">✅ Mark as Done</button>
+                                ` : ''}
+                                ${idea.status === 'done' ? `
+                                    <button onclick="dragDropBoard.updateIdeaStatus('${idea.id}', 'active')">🔄 Reactivate</button>
+                                ` : ''}
+                                ${idea.status !== 'archived' ? `
+                                    <button onclick="dragDropBoard.updateIdeaStatus('${idea.id}', 'archived')">🗃️ Archive</button>
+                                ` : ''}
+                                <button onclick="dragDropBoard.confirmDeleteIdea('${idea.id}', '${this.escapeHtml(idea.oneLiner)}')">🗑️ Delete</button>
                             </div>
                         </div>
                     ` : ''}
                 </div>
                 
                 <div class="idea-content">
-                    <p class="idea-description">${this.escapeHtml(idea.description)}</p>
-                    <p class="idea-value-statement"><strong>Value:</strong> ${this.escapeHtml(idea.valueStatement)}</p>
+                    ${this.shouldShowField('description') ? `<p class="idea-description">${this.escapeHtml(idea.description)}</p>` : ''}
+                    ${this.shouldShowField('valueStatement') ? `<p class="idea-value-statement"><strong>Value:</strong> <span class="idea-value">${this.escapeHtml(idea.valueStatement)}</span></p>` : ''}
                 </div>
                 
-                ${this.isAdmin ? `
+                ${this.shouldShowField('riceScore') ? `
                     <div class="idea-rice-score">
                         <span class="rice-label">RICE Score:</span>
                         <span class="rice-value">${riceScore.toFixed(1)}</span>
@@ -489,6 +609,16 @@ class DragDropBoard {
         this.closeAllMenus();
     }
 
+    async updateIdeaStatus(ideaId, status, inProgress = null) {
+        if (window.ideaManager) {
+            await window.ideaManager.updateIdeaStatus(ideaId, status, inProgress);
+            // Reload board after status change
+            await this.loadIdeas();
+            this.renderBoard();
+        }
+        this.closeAllMenus();
+    }
+
     confirmDeleteIdea(ideaId, ideaTitle) {
         if (window.ideaManager) {
             window.ideaManager.confirmDeleteIdea(ideaId, ideaTitle);
@@ -556,6 +686,192 @@ class DragDropBoard {
     async refreshBoard() {
         await this.loadIdeas();
         this.renderBoard();
+    }
+
+    // Method to update ideas with search results
+    updateIdeasWithSearch(searchResults, searchInfo) {
+        // Store the search results as current ideas
+        this.ideas = searchResults || [];
+        this.searchInfo = searchInfo;
+        
+        // Re-render the board with search results
+        this.renderBoard();
+        
+        // Update ideas count with search context
+        this.updateIdeasCountWithSearch(searchInfo);
+        
+        // Update tab counts
+        this.updateTabCounts();
+    }
+
+    updateIdeasCountWithSearch(searchInfo) {
+        const ideasCount = document.getElementById('ideas-count');
+        if (!ideasCount) return;
+
+        const count = this.ideas.length;
+        let countText = `${count} ${count === 1 ? 'idea' : 'ideas'}`;
+        
+        if (searchInfo && (searchInfo.query || this.hasActiveFilters(searchInfo))) {
+            countText += ' (filtered)';
+        }
+        
+        ideasCount.textContent = countText;
+    }
+
+    hasActiveFilters(searchInfo) {
+        if (!searchInfo || !searchInfo.filters) return false;
+        
+        return searchInfo.filters.column || 
+               searchInfo.filters.status || 
+               searchInfo.filters.inProgress !== null ||
+               (searchInfo.sort && searchInfo.sort.by);
+    }
+
+    // Method to sort ideas within a specific column
+    sortColumn(columnId, sortType) {
+        if (!sortType) {
+            // Reset to default order (by position)
+            this.renderBoard();
+            return;
+        }
+
+        const [sortBy, sortDir] = sortType.split('-');
+        
+        // Get ideas for this column
+        const columnIdeas = this.ideas.filter(idea => idea.column === columnId);
+        
+        // Sort the ideas
+        columnIdeas.sort((a, b) => {
+            let comparison = 0;
+            
+            switch (sortBy) {
+                case 'name':
+                    comparison = a.oneLiner.localeCompare(b.oneLiner);
+                    break;
+                case 'rice':
+                    const riceA = this.calculateRICEScore(a.riceScore);
+                    const riceB = this.calculateRICEScore(b.riceScore);
+                    comparison = riceA - riceB;
+                    break;
+                case 'status':
+                    // Sort by in-progress first, then by status
+                    if (sortDir === 'progress') {
+                        if (a.inProgress && !b.inProgress) return -1;
+                        if (!a.inProgress && b.inProgress) return 1;
+                        return a.status.localeCompare(b.status);
+                    }
+                    comparison = a.status.localeCompare(b.status);
+                    break;
+                case 'created':
+                    comparison = new Date(a.createdAt) - new Date(b.createdAt);
+                    break;
+                default:
+                    comparison = a.position - b.position;
+            }
+            
+            return sortDir === 'desc' ? -comparison : comparison;
+        });
+        
+        // Update the column display
+        const columnElement = document.querySelector(`[data-column="${columnId}"] .column-ideas`);
+        if (columnElement) {
+            columnElement.innerHTML = columnIdeas.map(idea => this.createIdeaCard(idea)).join('');
+            
+            // Re-enable dragging if admin
+            if (this.isAdmin) {
+                this.makeDraggable();
+            }
+        }
+    }
+
+    updateTabCounts() {
+        // Update board tab count (exclude release column ideas)
+        const boardIdeas = this.ideas.filter(idea => idea.column !== 'release');
+        if (window.boardTabs) {
+            window.boardTabs.setBoardCount(boardIdeas.length);
+        }
+
+        // Update release tab count
+        const releaseIdeas = this.ideas.filter(idea => idea.column === 'release');
+        if (window.boardTabs) {
+            window.boardTabs.setReleaseCount(releaseIdeas.length);
+        }
+    }
+
+    // WebSocket event handlers for real-time updates
+    handleFeedbackUpdate(detail) {
+        console.log('Feedback updated for idea:', detail.ideaId);
+        
+        // Find the idea card and refresh its feedback display
+        const ideaCard = document.querySelector(`[data-idea-id="${detail.ideaId}"]`);
+        if (ideaCard) {
+            this.refreshIdeaFeedback(detail.ideaId, ideaCard);
+        }
+    }
+
+    handleIdeaUpdate(detail) {
+        console.log('Idea updated:', detail);
+        
+        // Handle different types of idea updates
+        if (detail.type === 'position_update') {
+            this.handlePositionUpdate(detail);
+        } else if (detail.type === 'status_update') {
+            this.handleStatusUpdate(detail);
+        }
+    }
+
+    async refreshIdeaFeedback(ideaId, ideaCard) {
+        try {
+            // Re-fetch the board ideas to get updated feedback
+            const response = await fetch(`/api/boards/${this.boardId}/ideas`, {
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('clerk-db-jwt')}`
+                }
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                const updatedIdea = data.ideas.find(idea => idea.id === ideaId);
+                if (updatedIdea) {
+                    this.updateIdeaCardFeedback(ideaCard, updatedIdea);
+                }
+            }
+        } catch (error) {
+            console.error('Error refreshing idea feedback:', error);
+        }
+    }
+
+    updateIdeaCardFeedback(ideaCard, idea) {
+        // Update thumbs up count
+        const thumbsUpCount = ideaCard.querySelector('.thumbs-up-count');
+        if (thumbsUpCount) {
+            thumbsUpCount.textContent = idea.thumbsUp || 0;
+        }
+
+        // Update emoji reactions
+        const emojiContainer = ideaCard.querySelector('.emoji-reactions');
+        if (emojiContainer && idea.emojiReactions) {
+            emojiContainer.innerHTML = '';
+            idea.emojiReactions.forEach(reaction => {
+                const emojiSpan = document.createElement('span');
+                emojiSpan.className = 'emoji-reaction';
+                emojiSpan.innerHTML = `${reaction.emoji} ${reaction.count}`;
+                emojiContainer.appendChild(emojiSpan);
+            });
+        }
+    }
+
+    handlePositionUpdate(detail) {
+        // If this is an update from another client, refresh the board
+        // to show the new position
+        if (detail.ideaId !== this.draggedIdeaId) {
+            this.loadBoardData();
+        }
+    }
+
+    handleStatusUpdate(detail) {
+        // Refresh the board to show status changes
+        this.loadBoardData();
     }
 }
 

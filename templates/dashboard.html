@@ -1,82 +1,261 @@
-{{template "base.html" .}}
-
-{{define "content"}}
-<div class="dashboard">
-    <header class="dashboard-header">
-        <div class="container">
-            <div class="dashboard-header-content">
-                <div class="dashboard-logo">
-                    <img src="/static/images/logo.png" alt="Disko" class="logo-image">
-                    <h1>Dashboard</h1>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{.title}}</title>
+    <link rel="icon" type="image/png" href="/static/images/logo-sm.png">
+    <link rel="stylesheet" href="/static/css/main.css">
+    
+<script
+  async
+  crossorigin="anonymous"
+  data-clerk-publishable-key={{.clerkPublishableKey}}
+  src="https://unpkg.com/@clerk/clerk-js@5/dist/clerk.browser.js"
+  type="text/javascript"
+></script>
+</head>
+<body>
+    <div id="app">
+        <div class="dashboard-page">
+            <!-- Clerk Popup Container -->
+            <div id="my-popup" class="clerk-popup-container"></div>
+            
+            <header class="dashboard-header">
+                <div class="container">
+                    <div class="dashboard-header-content">
+                        <div class="dashboard-logo">
+                            <a href="/" class="logo-link">
+                                <img src="/static/images/logo-sm.png" alt="Disko" class="logo-image">
+                                <h1>Disko</h1>
+                            </a>
+                        </div>
+                        <div class="user-menu">
+                            <span id="user-name">👤 User</span>
+                            <div id="clerk-user-button"></div>
+                            <button id="sign-out-btn" class="btn btn-secondary">Sign Out</button>
+                            <span class="version-display">v{{.version}}</span>
+                        </div>
+                    </div>
                 </div>
-                <div class="user-menu">
-                <span id="user-name"></span>
-                <button id="sign-out-btn" class="btn btn-secondary">Sign Out</button>
+            </header>
+
+            <main class="dashboard-main">
+                <div class="container">
+                    <!-- Welcome Section -->
+                    <div class="welcome-section">
+                        <h2>Welcome back! 🚀</h2>
+                        <p>Manage your project boards and share progress with your customers.</p>
+                    </div>
+
+                    <div class="dashboard-actions">
+                        <button id="create-board-btn" class="btn btn-primary">
+                            <span>✨</span>
+                            Create New Board
+                        </button>
+                    </div>
+
+                    <section class="boards-section">
+                        <div class="section-header">
+                            <h2>Your Boards</h2>
+                            <div class="section-stats">
+                                <span class="stat-item">
+                                    <span class="stat-number" id="boards-count">0</span>
+                                    <span class="stat-label">Total Boards</span>
+                                </span>
+                                <span class="stat-item">
+                                    <span class="stat-number" id="ideas-count">0</span>
+                                    <span class="stat-label">Total Ideas</span>
+                                </span>
+                            </div>
+                        </div>
+                        <div id="boards-list" class="boards-grid">
+                            <!-- Boards will be loaded here -->
+                            <div class="loading">Loading your boards...</div>
+                        </div>
+                    </section>
+                </div>
+            </main>
+
+            <!-- Create Board Modal -->
+            <div id="create-board-modal" class="modal" style="display: none;">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h3>✨ Create New Board</h3>
+                        <button class="modal-close">&times;</button>
+                    </div>
+                    <form id="create-board-form">
+                        <div class="form-group">
+                            <label for="board-title">Board Title *</label>
+                            <input type="text" id="board-title" name="title" required maxlength="100" placeholder="Enter board title">
+                        </div>
+                        <div class="form-group">
+                            <label for="board-description">Description</label>
+                            <textarea id="board-description" name="description" rows="3" maxlength="500" placeholder="Optional description for your board"></textarea>
+                        </div>
+                        <div class="form-actions">
+                            <button type="button" class="btn btn-secondary" onclick="closeCreateBoardModal()">Cancel</button>
+                            <button type="submit" class="btn btn-primary">Create Board</button>
+                        </div>
+                    </form>
+                </div>
             </div>
-        </div>
-    </header>
 
-    <main class="dashboard-main">
-        <div class="container">
-            <div class="dashboard-actions">
-                <button id="create-board-btn" class="btn btn-primary">Create New Board</button>
+            <!-- Delete Board Confirmation Modal -->
+            <div id="delete-board-modal" class="modal" style="display: none;">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h3>🗑️ Delete Board</h3>
+                        <button class="modal-close">&times;</button>
+                    </div>
+                    <div class="modal-body">
+                        <p>Are you sure you want to delete the board "<strong id="delete-board-name"></strong>"?</p>
+                        <p class="warning-text">⚠️ This action cannot be undone. All ideas in this board will also be deleted.</p>
+                    </div>
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-secondary" onclick="closeDeleteBoardModal()">Cancel</button>
+                        <button type="button" class="btn btn-danger" id="confirm-delete-btn" onclick="deleteBoard()">Delete Board</button>
+                    </div>
+                </div>
             </div>
-
-            <section class="boards-section">
-                <h2>Your Boards</h2>
-                <div id="boards-list" class="boards-grid">
-                    <!-- Boards will be loaded here -->
-                    <div class="loading">Loading your boards...</div>
-                </div>
-            </section>
-        </div>
-    </main>
-
-    <!-- Create Board Modal -->
-    <div id="create-board-modal" class="modal" style="display: none;">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3>Create New Board</h3>
-                <button class="modal-close">&times;</button>
-            </div>
-            <form id="create-board-form">
-                <div class="form-group">
-                    <label for="board-title">Board Title *</label>
-                    <input type="text" id="board-title" name="title" required maxlength="100" placeholder="Enter board title">
-                </div>
-                <div class="form-group">
-                    <label for="board-description">Description</label>
-                    <textarea id="board-description" name="description" rows="3" maxlength="500" placeholder="Optional description for your board"></textarea>
-                </div>
-                <div class="form-actions">
-                    <button type="button" class="btn btn-secondary" onclick="closeCreateBoardModal()">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Create Board</button>
-                </div>
-            </form>
         </div>
     </div>
 
-    <!-- Delete Board Confirmation Modal -->
-    <div id="delete-board-modal" class="modal" style="display: none;">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3>Delete Board</h3>
-                <button class="modal-close">&times;</button>
-            </div>
-            <div class="modal-body">
-                <p>Are you sure you want to delete the board "<strong id="delete-board-name"></strong>"?</p>
-                <p class="warning-text">This action cannot be undone. All ideas in this board will also be deleted.</p>
-            </div>
-            <div class="form-actions">
-                <button type="button" class="btn btn-secondary" onclick="closeDeleteBoardModal()">Cancel</button>
-                <button type="button" class="btn btn-danger" id="confirm-delete-btn" onclick="deleteBoard()">Delete Board</button>
-            </div>
-        </div>
-    </div>
-</div>
-{{end}}
+    <!-- Common JavaScript -->
+    <script src="/static/js/auth.js"></script>
+    <script src="/static/js/api.js"></script>
+    <script src="/static/js/user-context.js"></script>
+    <script src="/static/js/route-protection.js"></script>
+    <script>
+        // Initialize Clerk
+        console.log("Clerk Key = " + "{{.clerkPublishableKey}}");
+        const clerkPublishableKey = "{{.clerkPublishableKey}}";
+        const clerkFrontendApiUrl = "{{.clerkFrontendApiUrl}}";
+        
+        // Make configuration globally available for auth.js
+        window.clerkPublishableKey = clerkPublishableKey;
+        window.clerkFrontendApiUrl = clerkFrontendApiUrl;
+        
+        // Base template logging
+        console.log('[Base] Page loaded at:', new Date().toISOString());
+        console.log('[Base] Page title:', document.title);
+        console.log('[Base] Clerk publishable key:', clerkPublishableKey ? 'Set' : 'Not set');
+        console.log('[Base] Clerk frontend API URL:', clerkFrontendApiUrl ? 'Set' : 'Not set');
+        
+        // Log when DOM is loaded
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('[Base] DOM loaded, initializing base template...');
+            console.log('[Base] Base template initialization complete');
+        });
+    </script>
+    
+    <script src="/static/js/dashboard.js"></script>
+    <script src="/static/js/idea-management.js"></script>
+    <script>
+    // Dashboard logging
+    console.log('[Dashboard] Page loaded at:', new Date().toISOString());
+    console.log('[Dashboard] User context:', window.userContext);
 
-{{define "scripts"}}
-<script src="/static/js/dashboard.js"></script>
-<script src="/static/js/idea-management.js"></script>
-{{end}}
+    // Initialize Clerk user button
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('[Dashboard] DOM loaded, initializing dashboard...');
+        
+        // Initialize Clerk user button when auth is ready
+        let retryCount = 0;
+        const maxRetries = 10;
+        
+        const initUserButton = async () => {
+            if (retryCount >= maxRetries) {
+                console.error('[Dashboard] Max retries reached for Clerk user button, giving up');
+                return;
+            }
+            
+            if (window.auth && window.auth.clerk) {
+                console.log('[Dashboard] Initializing Clerk user button... (attempt ' + (retryCount + 1) + ')');
+                try {
+                    // Wait for Clerk components to be ready
+                    await window.auth.waitForComponentsReady();
+                    
+                    window.auth.clerk.mountUserButton('#clerk-user-button', {
+                        appearance: {
+                            elements: {
+                                userButtonAvatarBox: {
+                                    width: '32px',
+                                    height: '32px'
+                                }
+                            }
+                        }
+                    });
+                    console.log('[Dashboard] Clerk user button mounted successfully');
+                } catch (error) {
+                    console.error('[Dashboard] Failed to mount Clerk user button:', error);
+                    retryCount++;
+                    
+                    // Retry with different approaches
+                    if (error.message && error.message.includes('not ready yet')) {
+                        console.log('[Dashboard] Clerk components not ready, retrying in 500ms... (attempt ' + retryCount + ')');
+                        setTimeout(initUserButton, 500);
+                    } else {
+                        // Fallback: try to mount without waiting
+                        try {
+                            console.log('[Dashboard] Trying fallback mount approach...');
+                            window.auth.clerk.mountUserButton('#clerk-user-button');
+                            console.log('[Dashboard] Clerk user button mounted with fallback');
+                        } catch (fallbackError) {
+                            console.error('[Dashboard] Fallback mount also failed:', fallbackError);
+                            // Final retry after longer delay
+                            setTimeout(initUserButton, 1000);
+                        }
+                    }
+                }
+            } else {
+                console.log('[Dashboard] Auth not ready yet, retrying in 100ms... (attempt ' + (retryCount + 1) + ')');
+                retryCount++;
+                setTimeout(initUserButton, 100);
+            }
+        };
+        
+        // Start initialization
+        initUserButton();
+        
+        // Log when boards are loaded
+        const originalLoadBoards = window.loadBoards;
+        if (originalLoadBoards) {
+            window.loadBoards = function() {
+                console.log('[Dashboard] Loading user boards...');
+                return originalLoadBoards.apply(this, arguments);
+            };
+        }
+        
+        // Log board creation attempts
+        const createBoardForm = document.getElementById('create-board-form');
+        if (createBoardForm) {
+            createBoardForm.addEventListener('submit', function(e) {
+                const title = document.getElementById('board-title').value;
+                const description = document.getElementById('board-description').value;
+                console.log('[Dashboard] Creating new board:', { title, description });
+            });
+        }
+        
+        // Log board deletion attempts
+        const confirmDeleteBtn = document.getElementById('confirm-delete-btn');
+        if (confirmDeleteBtn) {
+            confirmDeleteBtn.addEventListener('click', function() {
+                const boardName = document.getElementById('delete-board-name').textContent;
+                console.log('[Dashboard] Deleting board:', boardName);
+            });
+        }
+        
+        // Log modal interactions
+        const createBoardBtn = document.getElementById('create-board-btn');
+        if (createBoardBtn) {
+            createBoardBtn.addEventListener('click', function() {
+                console.log('[Dashboard] Opening create board modal');
+            });
+        }
+        
+        console.log('[Dashboard] Dashboard initialization complete');
+    });
+    </script>
+</body>
+</html>

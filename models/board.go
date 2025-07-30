@@ -10,7 +10,8 @@ type Board struct {
 	Name           string    `bson:"name" json:"name" validate:"required,min=1,max=100"`
 	Description    string    `bson:"description,omitempty" json:"description,omitempty" validate:"max=500"`
 	PublicLink     string    `bson:"public_link" json:"publicLink" validate:"required"`
-	AdminID        string    `bson:"admin_id" json:"adminId" validate:"required"`
+	IsPublic       bool      `bson:"is_public" json:"isPublic"`
+	UserID         string    `bson:"user_id" json:"userId" validate:"required"`
 	VisibleColumns []string  `bson:"visible_columns" json:"visibleColumns"`
 	VisibleFields  []string  `bson:"visible_fields" json:"visibleFields"`
 	CreatedAt      time.Time `bson:"created_at" json:"createdAt"`
@@ -74,6 +75,23 @@ func IsValidColumn(column string) bool {
 
 	for _, valid := range validColumns {
 		if column == valid {
+			return true
+		}
+	}
+	return false
+}
+
+// IsValidField checks if a field type is valid
+func IsValidField(field string) bool {
+	validFields := []string{
+		string(FieldOneLiner),
+		string(FieldDescription),
+		string(FieldValueStatement),
+		string(FieldRiceScore),
+	}
+
+	for _, valid := range validFields {
+		if field == valid {
 			return true
 		}
 	}

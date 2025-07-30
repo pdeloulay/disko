@@ -1,19 +1,37 @@
 // Dashboard functionality
 document.addEventListener('DOMContentLoaded', async () => {
-    // Wait for auth to be ready
-    await window.auth.waitForReady();
+    console.log('[Dashboard] DOM loaded, initializing dashboard...');
     
-    // Route protection will handle authentication check
-    // If we reach here, user is authenticated
-    
-    // Load user info and boards
-    await loadUserInfo();
-    await loadBoards();
+    try {
+        // Wait for auth to be ready
+        console.log('[Dashboard] Waiting for auth to be ready...');
+        await window.auth.waitForReady();
+        console.log('[Dashboard] Auth is ready');
+        
+        // Load user info and boards
+        await loadUserInfo();
+        await loadBoards();
+        
+    } catch (error) {
+        console.error('[Dashboard] Error during initialization:', error);
+        // If auth fails to initialize, still show the dashboard with demo content
+        console.log('[Dashboard] Auth initialization failed, showing demo mode...');
+        await loadUserInfo();
+        await loadBoards();
+    }
 
     // Create board button
     const createBoardBtn = document.getElementById('create-board-btn');
     if (createBoardBtn) {
-        createBoardBtn.addEventListener('click', openCreateBoardModal);
+        createBoardBtn.addEventListener('click', () => {
+            console.log('[Dashboard] Create board button clicked');
+            if (!window.auth || !window.auth.isSignedIn()) {
+                console.log('[Dashboard] User not authenticated, opening sign in...');
+                window.auth.signIn();
+                return;
+            }
+            openCreateBoardModal();
+        });
     }
 
     // Create board form
@@ -53,17 +71,29 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         });
     }
+    
+    console.log('[Dashboard] Dashboard initialization complete');
 });
 
 async function loadUserInfo() {
     try {
-        // Use user context for consistent user information
-        window.userContext.addListener((user) => {
+        // Check if user is authenticated
+        if (!window.auth || !window.auth.isSignedIn()) {
+            console.log('[Dashboard] User not authenticated, redirecting to sign in...');
+            window.auth.signIn();
+            return;
+        }
+
+        // Get user info from Clerk
+        const userInfo = window.auth.getUserInfo();
+        if (userInfo) {
             const userName = document.getElementById('user-name');
             if (userName) {
-                userName.textContent = window.userContext.getDisplayName() || 'User';
+                const displayName = userInfo.fullName || `${userInfo.firstName || ''} ${userInfo.lastName || ''}`.trim() || userInfo.email || 'User';
+                userName.textContent = displayName;
             }
-        });
+            console.log('[Dashboard] User info loaded:', userInfo);
+        }
 
         // Test the protected API endpoint
         const response = await window.api.get('/user');
@@ -71,19 +101,58 @@ async function loadUserInfo() {
         
     } catch (error) {
         console.error('Failed to load user info:', error);
+        
+        // If it's an authentication error, redirect to sign in
+        if (error.message && error.message.includes('401')) {
+            console.log('[Dashboard] Authentication error in loadUserInfo, redirecting to sign in...');
+            window.auth.signIn();
+        } else {
+            const userName = document.getElementById('user-name');
+            if (userName) {
+                userName.textContent = '👤 User';
+            }
+        }
+    }
+}
+
+// Update dashboard stats
+function updateDashboardStats(boardsCount = 0, ideasCount = 0) {
+    const boardsCountElement = document.getElementById('boards-count');
+    const ideasCountElement = document.getElementById('ideas-count');
+    
+    if (boardsCountElement) {
+        boardsCountElement.textContent = boardsCount;
+    }
+    
+    if (ideasCountElement) {
+        ideasCountElement.textContent = ideasCount;
     }
 }
 
 async function loadBoards() {
     const boardsList = document.getElementById('boards-list');
-    
     try {
+        console.log('[Dashboard] Starting loadBoards function...');
         boardsList.innerHTML = '<div class="loading">Loading your boards...</div>';
+        console.log('[Dashboard] Checking authentication status...');
+        console.log('[Dashboard] window.auth:', window.auth);
+        console.log('[Dashboard] window.auth.isSignedIn():', window.auth ? window.auth.isSignedIn() : 'auth not available');
+
+        // Check if user is signed in
+        if (!window.auth || !window.auth.isSignedIn()) {
+            console.log('[Dashboard] User not authenticated, redirecting to sign in...');
+            window.auth.signIn();
+            return;
+        }
         
+        console.log('[Dashboard] User is authenticated, making API call to /boards...');
         const response = await window.api.get('/boards');
+        console.log('[Dashboard] API response received:', response);
         const data = response.data || response;
-        
+        console.log('[Dashboard] Processed data:', data);
         if (!data.boards || data.boards.length === 0) {
+            console.log('[Dashboard] No boards found in response');
+            updateDashboardStats(0, 0);
             boardsList.innerHTML = `
                 <div class="empty-state">
                     <h3>No boards yet</h3>
@@ -93,26 +162,49 @@ async function loadBoards() {
             `;
             return;
         }
-
-        // Render board cards
+        console.log('[Dashboard] Found boards:', data.boards.length);
+        console.log('[Dashboard] Board details:', data.boards);
+        const totalIdeas = data.boards.reduce((total, board) => {
+            return total + (board.ideasCount || 0);
+        }, 0);
+        updateDashboardStats(data.boards.length, totalIdeas);
         boardsList.innerHTML = data.boards.map(board => createBoardCard(board)).join('');
-        
+        console.log('[Dashboard] Boards rendered successfully');
     } catch (error) {
-        console.error('Failed to load boards:', error);
-        boardsList.innerHTML = `
-            <div class="error">
-                <h3>Failed to load boards</h3>
-                <p>Please try again or contact support if the problem persists.</p>
-                <button class="btn btn-primary" onclick="loadBoards()">Retry</button>
-            </div>
-        `;
+        console.error('[Dashboard] Failed to load boards:', error);
+        console.error('[Dashboard] Error details:', {
+            message: error.message,
+            stack: error.stack,
+            response: error.response
+        });
+        
+        // If it's an authentication error, redirect to sign in
+        if (error.message && error.message.includes('401')) {
+            console.log('[Dashboard] Authentication error, redirecting to sign in...');
+            window.auth.signIn();
+        } else {
+            updateDashboardStats(0, 0);
+            boardsList.innerHTML = `
+                <div class="error-state">
+                    <h3>Failed to load boards</h3>
+                    <p>There was an error loading your boards. Please try again.</p>
+                    <button class="btn btn-primary" onclick="loadBoards()">Retry</button>
+                </div>
+            `;
+        }
     }
 }
 
 function openCreateBoardModal() {
+    console.log('[Dashboard] openCreateBoardModal called');
     const modal = document.getElementById('create-board-modal');
+    console.log('[Dashboard] Modal element:', modal);
     if (modal) {
+        console.log('[Dashboard] Setting modal display to flex');
         modal.style.display = 'flex';
+        console.log('[Dashboard] Modal display set to:', modal.style.display);
+    } else {
+        console.error('[Dashboard] Modal element not found!');
     }
 }
 
@@ -226,9 +318,57 @@ function createBoardCard(board) {
 }
 
 // Board actions
-function viewBoard(boardId) {
-    // Navigate to board view - this will be implemented in later tasks
-    window.location.href = `/board/${boardId}`;
+async function viewBoard(boardId) {
+    console.log('[Dashboard] View board clicked:', boardId);
+    
+    try {
+        // Check if user is authenticated
+        if (!window.auth || !window.auth.isSignedIn()) {
+            console.log('[Dashboard] User not authenticated, redirecting to sign in...');
+            window.auth.signIn();
+            return;
+        }
+        
+        // Get auth token and make authenticated request to board page
+        const token = await window.auth.getToken();
+        console.log('[Dashboard] Got auth token, making authenticated request to board page...');
+        
+        // Make authenticated GET request to board page
+        const response = await fetch(`/board/${boardId}`, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'text/html'
+            }
+        });
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        // Get the HTML content
+        const htmlContent = await response.text();
+        
+        // Replace the current page content with the board page
+        document.documentElement.innerHTML = htmlContent;
+        
+        // Update the URL without page reload
+        window.history.pushState({}, '', `/board/${boardId}`);
+        
+        console.log('[Dashboard] Board page loaded successfully');
+        
+    } catch (error) {
+        console.error('[Dashboard] Failed to load board:', error);
+        
+        let errorMessage = 'Failed to access board. Please try again.';
+        if (error.message && error.message.includes('401')) {
+            errorMessage = 'You are not authorized to access this board.';
+        } else if (error.message && error.message.includes('404')) {
+            errorMessage = 'Board not found.';
+        }
+        
+        showErrorMessage(errorMessage);
+    }
 }
 
 function editBoard(boardId) {
@@ -250,6 +390,19 @@ function toggleBoardMenu(boardId) {
     
     // Toggle current menu
     menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
+    
+    // Add click outside handler to close menu
+    if (menu.style.display === 'block') {
+        setTimeout(() => {
+            const handleClickOutside = (event) => {
+                if (!menu.contains(event.target) && !event.target.closest('.btn-menu')) {
+                    menu.style.display = 'none';
+                    document.removeEventListener('click', handleClickOutside);
+                }
+            };
+            document.addEventListener('click', handleClickOutside);
+        }, 0);
+    }
 }
 
 function copyPublicLink(url) {
@@ -321,8 +474,8 @@ async function deleteBoard() {
         }
     }
 }
-// Ut
-ility functions
+
+// Utility functions
 function escapeHtml(text) {
     const div = document.createElement('div');
     div.textContent = text;

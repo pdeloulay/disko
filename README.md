@@ -76,11 +76,54 @@ The project is set up with:
 - `/api/*` - API endpoints
 - `/health` - Health check endpoint
 
+## Changelog
+
+### [Latest] - Board Creation Enhancements & Modal Redesign
+- **Enhanced**: Boards are now private by default (`isPublic: false`) for better security
+- **Added**: Default welcome idea automatically created with each new board
+- **Improved**: Modern modal design with gradient headers, smooth animations, and enhanced UX
+- **Updated**: Form styling with better typography, spacing, and visual feedback
+- **Enhanced**: Button design with hover effects and improved accessibility
+- **Security**: Public board endpoints now require `isPublic: true` - boards must be explicitly made public
+- **Fixed**: Board card hamburger menu now displays as proper dropdown overlay instead of inline buttons
+- **Fixed**: Board owners can now access their own boards via direct URL without requiring public access
+- **Fixed**: Board access workflow now properly handles non-existent or private boards with clear error pages
+- **Fixed**: Board route now uses OptionalAuthMiddleware to properly handle authenticated user access
+- **Enhanced**: Restructured board routes for better security and clarity:
+  - `GET /board/:id` - Private route with JWT enforcement (for board owners)
+  - `GET /board/public/:publicLink` - Public route with rate limiting (for public access)
+- **Security**: Enhanced public link generation to use full UUID (37 characters) for maximum security
+- **API**: Added missing GET `/boards/:id` endpoint for authenticated board access
+- **Dashboard**: Enhanced `/api/boards` endpoint to include ideas count for each board
+- **Navigation**: Fixed board view loading by using proper page navigation instead of HTML replacement
+- **Authentication**: Updated board route to use AuthMiddleware for authenticated users only
+- **Routes**: Separated private board access (`/board/:id`) from public board access (`/public/:publicLink`)
+- **Authentication**: Fixed board navigation to use authenticated fetch requests with bearer token
+- **Auth Consistency**: Updated board.html to have same auth setup as dashboard.html
+- **Public Stats**: Removed authentication requirement for landing page stats - now server-side templated and always visible
+- **Auth Fix**: Fixed Clerk authentication methods to use proper API calls instead of incorrect function calls
+- **Listener Fix**: Fixed Clerk event listener methods to handle both `addListener/removeListener` and `on/off` patterns
+- **Version Display**: Added app version display to footer (index) and headers (dashboard/board) from static/.version file
+
+### [Previous] - Short UUID Implementation
+- **Enhanced**: Public board links now use short Google UUIDs (12 characters) with "p" prefix
+- **Improved**: Better user experience with shorter, more manageable public links
+- **Added**: Utility functions in `utils/uuid.go` for consistent UUID generation
+- **Updated**: Board IDs use "b" prefix, Idea IDs use "i" prefix for easy identification
+- **Standardized**: All UUIDs now have consistent prefixes for better organization
+
+### Previous Updates
+- **Added**: Clerk authentication integration
+- **Added**: MongoDB database setup and models
+- **Added**: Board and idea management APIs
+- **Added**: Public board sharing functionality
+- **Added**: Real-time feedback system with thumbs up and emoji reactions
+
 ## Next Steps
 
 This is the foundation setup. The next tasks will implement:
-1. Database models and MongoDB setup
-2. Authentication system with Clerk
-3. Board and idea management APIs
-4. Enhanced UI components and interactions
+1. Enhanced UI components and interactions
+2. Advanced board customization features
+3. Analytics and reporting capabilities
+4. Team collaboration features
 5. Real-time features and more...

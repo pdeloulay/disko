@@ -4,9 +4,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{.title}}</title>
-    <link rel="icon" type="image/png" href="/static/images/logo.png">
+    <link rel="icon" type="image/png" href="/static/images/logo-sm.png">
     <link rel="stylesheet" href="/static/css/main.css">
-    <script src="https://unpkg.com/@clerk/clerk-js@latest/dist/clerk.browser.js"></script>
+    
+<script
+  async
+  crossorigin="anonymous"
+  data-clerk-publishable-key={{.clerkPublishableKey}}
+  src="https://unpkg.com/@clerk/clerk-js@5/dist/clerk.browser.js"
+  type="text/javascript"
+></script>
 </head>
 <body>
     <div id="app">
@@ -20,12 +27,25 @@
     <script src="/static/js/route-protection.js"></script>
     <script>
         // Initialize Clerk
+        console.log("Clerk Key = " + "{{.clerkPublishableKey}}");
         const clerkPublishableKey = "{{.clerkPublishableKey}}";
-        if (clerkPublishableKey) {
-            window.Clerk.load({
-                publishableKey: clerkPublishableKey
-            });
-        }
+        const clerkFrontendApiUrl = "{{.clerkFrontendApiUrl}}";
+        
+        // Make configuration globally available for auth.js
+        window.clerkPublishableKey = clerkPublishableKey;
+        window.clerkFrontendApiUrl = clerkFrontendApiUrl;
+        
+        // Base template logging
+        console.log('[Base] Page loaded at:', new Date().toISOString());
+        console.log('[Base] Page title:', document.title);
+        console.log('[Base] Clerk publishable key:', clerkPublishableKey ? 'Set' : 'Not set');
+        console.log('[Base] Clerk frontend API URL:', clerkFrontendApiUrl ? 'Set' : 'Not set');
+        
+        // Log when DOM is loaded
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('[Base] DOM loaded, initializing base template...');
+            console.log('[Base] Base template initialization complete');
+        });
     </script>
     {{template "scripts" .}}
 </body>

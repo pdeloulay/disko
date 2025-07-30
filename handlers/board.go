@@ -29,6 +29,7 @@ type UpdateBoardRequest struct {
 	Description    string   `json:"description,omitempty" binding:"max=500"`
 	VisibleColumns []string `json:"visibleColumns,omitempty"`
 	VisibleFields  []string `json:"visibleFields,omitempty"`
+	IsPublic       *bool    `json:"isPublic,omitempty"`
 }
 
 // BoardResponse represents the response format for board operations
@@ -459,6 +460,18 @@ func UpdateBoard(c *gin.Context) {
 			}
 		}
 		updateDoc["visible_fields"] = req.VisibleFields
+	}
+
+	// Handle isPublic field
+	if req.IsPublic != nil {
+		updateDoc["is_public"] = *req.IsPublic
+
+		// If setting to public, generate new public link for enhanced security
+		if *req.IsPublic {
+			newPublicLink := utils.GenerateShortUUID()
+			updateDoc["public_link"] = newPublicLink
+			log.Printf("[Handler] UpdateBoard - Generating new public link for board: %s, NewLink: %s", boardID, newPublicLink)
+		}
 	}
 
 	// Update board in MongoDB

@@ -84,6 +84,8 @@ class ReleaseTable {
 
         console.log('[ReleaseTable] Loading released ideas...');
         console.log('[ReleaseTable] Board ID:', this.boardId);
+        console.log('[ReleaseTable] Is Public:', this.isPublic);
+        console.log('[ReleaseTable] Public Link:', this.publicLink);
         console.log('[ReleaseTable] Current sort:', this.currentSort);
         console.log('[ReleaseTable] Current search:', this.currentSearch);
 
@@ -103,9 +105,15 @@ class ReleaseTable {
                 params.append('search', this.currentSearch);
             }
 
-            // Use the API utility for proper authentication
-            const endpoint = `/boards/${this.boardId}/release?${params}`;
-            console.log('[ReleaseTable] Making API call to:', endpoint);
+            // Use public endpoint if on public board, otherwise use protected endpoint
+            let endpoint;
+            if (this.isPublic && this.publicLink) {
+                endpoint = `/boards/${this.publicLink}/release/public?${params}`;
+                console.log('[ReleaseTable] Using public endpoint:', endpoint);
+            } else {
+                endpoint = `/boards/${this.boardId}/release?${params}`;
+                console.log('[ReleaseTable] Using protected endpoint:', endpoint);
+            }
             
             const response = await window.api.get(endpoint);
             console.log('[ReleaseTable] API response received:', response);

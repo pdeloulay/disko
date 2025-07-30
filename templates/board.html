@@ -48,6 +48,7 @@
                             {{if not .isPublic}}
                             <button id="board-settings-btn" class="btn btn-secondary">⚙️ Settings</button>
                             {{end}}
+                            <button id="publish-btn" class="btn btn-primary">🌐 Publish</button>
                             <button id="refresh-btn" class="btn btn-secondary">Refresh</button>
                         </div>
                     </div>
@@ -72,7 +73,7 @@
                             <div class="board-header-info">
                                 <h2>Board</h2>
                                 <div class="board-count-section">
-                                    <span id="ideas-count" class="ideas-count">Loading...</span>
+                                <span id="ideas-count" class="ideas-count">Loading...</span>
                                     {{if not .isPublic}}
                                     <button id="create-idea-btn" class="btn btn-primary create-idea-btn">Create Idea</button>
                                     {{end}}
@@ -106,7 +107,7 @@
                         <div id="release-table-container" class="release-table">
                             <!-- Release table will be loaded here -->
                                 <div class="release-loading">Loading released ideas...</div>
-                        </div>
+                            </div>
                         </div>
                     </div>
                 </div>

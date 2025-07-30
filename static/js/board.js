@@ -78,6 +78,18 @@ class BoardView {
         } else {
             console.log('[BoardView] Settings button not found or user not admin - Button exists:', !!settingsBtn, 'IsAdmin:', this.isAdmin);
         }
+
+        // Publish button (admin only)
+        const publishBtn = document.getElementById('publish-btn');
+        if (publishBtn && this.isAdmin) {
+            console.log('[BoardView] Adding publish button event listener - IsAdmin:', this.isAdmin);
+            publishBtn.addEventListener('click', async () => {
+                console.log('[BoardView] Publish button clicked');
+                await this.publishBoard();
+            });
+        } else {
+            console.log('[BoardView] Publish button not found or user not admin - Button exists:', !!publishBtn, 'IsAdmin:', this.isAdmin);
+        }
     }
 
     removeEventListeners() {
@@ -95,6 +107,11 @@ class BoardView {
         const settingsBtn = document.getElementById('board-settings-btn');
         if (settingsBtn) {
             settingsBtn.replaceWith(settingsBtn.cloneNode(true));
+        }
+
+        const publishBtn = document.getElementById('publish-btn');
+        if (publishBtn) {
+            publishBtn.replaceWith(publishBtn.cloneNode(true));
         }
     }
 
@@ -263,6 +280,94 @@ class BoardView {
             console.log('[BoardView] No drag-drop board available for refresh');
         }
         console.log('[BoardView] Board refresh complete');
+    }
+
+    async publishBoard() {
+        console.log('[BoardView] Publishing board...');
+        
+        const publishBtn = document.getElementById('publish-btn');
+        if (!publishBtn) {
+            console.error('[BoardView] Publish button not found');
+            return;
+        }
+
+        // Store original button state
+        const originalText = publishBtn.textContent;
+        const originalDisabled = publishBtn.disabled;
+
+        try {
+            // Update button state
+            publishBtn.disabled = true;
+            publishBtn.textContent = '🔄 Publishing...';
+
+            console.log('[BoardView] Making API call to set board as public');
+            const response = await window.api.put(`/boards/${this.boardId}`, {
+                isPublic: true
+            });
+            
+            console.log('[BoardView] Publish API response:', response);
+            
+            if (response && response.publicLink) {
+                // Update the board data with new public link
+                if (window.boardData) {
+                    window.boardData.publicLink = response.publicLink;
+                }
+                
+                // Show success message with public link
+                this.showSuccessMessage(`Board published successfully! New public link: ${response.publicLink}`, response.publicLink);
+                
+                console.log('[BoardView] Board published successfully with new public link:', response.publicLink);
+            } else {
+                throw new Error('No public link received from API');
+            }
+
+        } catch (error) {
+            console.error('[BoardView] Failed to publish board:', error);
+            this.showErrorMessage('Failed to publish board. Please try again.');
+        } finally {
+            // Restore button state
+            publishBtn.disabled = originalDisabled;
+            publishBtn.textContent = originalText;
+        }
+    }
+
+    showSuccessMessage(message, publicLink = null) {
+        // Create a temporary success message
+        const messageDiv = document.createElement('div');
+        messageDiv.className = 'message-toast success show';
+        
+        let messageContent = message;
+        
+        // Add view link if public link is provided
+        if (publicLink) {
+            const viewUrl = `${window.location.origin}/public/${publicLink}`;
+            messageContent += `<br><a href="${viewUrl}" target="_blank" class="toast-link">🔗 View Public Board</a>`;
+        }
+        
+        messageDiv.innerHTML = messageContent;
+        document.body.appendChild(messageDiv);
+
+        // Remove after 6 seconds (longer duration)
+        setTimeout(() => {
+            if (messageDiv.parentNode) {
+                messageDiv.parentNode.removeChild(messageDiv);
+            }
+        }, 6000);
+    }
+
+    showErrorMessage(message) {
+        // Create a temporary error message
+        const messageDiv = document.createElement('div');
+        messageDiv.className = 'message-toast error show';
+        messageDiv.textContent = message;
+        document.body.appendChild(messageDiv);
+
+        // Remove after 3 seconds
+        setTimeout(() => {
+            if (messageDiv.parentNode) {
+                messageDiv.parentNode.removeChild(messageDiv);
+            }
+        }, 3000);
     }
 
     // Method to check if drag-drop board is available

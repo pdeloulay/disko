@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{.title}} - Public Board</title>
+    <link rel="icon" type="image/png" href="/static/images/boom.png">
+    <link rel="stylesheet" href="/static/css/main.css">
+</head>
+<body>
+    <div class="board-page">
+        <header class="dashboard-header">
+            <div class="container">
+                <div class="dashboard-header-content">
+                    <div class="dashboard-logo">
+                        <a href="/" class="logo-link">
+                            <img src="/static/images/logo-sm.png" alt="Disko" class="logo-image">
+                        </a>
+                    </div>
+                    <div class="user-menu">
+                        <span class="version-display">v{{.version}}</span>
+                        <a href="/" class="btn btn-secondary">Back to Home</a>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <main class="dashboard-main">
+            <div class="container">
+                <!-- Board Info Section -->
+                <div class="board-info-section">
+                    <div class="board-info">
+                        <h1 id="board-title">Loading...</h1>
+                        <p id="board-description"></p>
+                        <div class="public-badge">🌐 Public Board</div>
+                    </div>
+                    <div class="board-actions">
+                        <button id="refresh-btn" class="btn btn-secondary">Refresh</button>
+                    </div>
+                </div>
+
+                <div class="board-container">
+                    <!-- Tab Navigation -->
+                    <div class="board-tabs">
+                        <button id="board-tab" class="tab-button active" data-tab="board">
+                            <span class="tab-icon">📋</span>
+                            Board
+                            <span id="board-ideas-count" class="tab-count">0</span>
+                        </button>
+                        <button id="release-tab" class="tab-button" data-tab="release">
+                            <span class="tab-icon">🚀</span>
+                            Release
+                            <span id="release-ideas-count" class="tab-count">0</span>
+                        </button>
+                    </div>
+
+                    <!-- Board View -->
+                    <div id="board-view" class="tab-content active">
+                        <div class="board-header-info">
+                            <h2>Board</h2>
+                            <div class="board-count-section">
+                                <span id="ideas-count" class="ideas-count">Loading...</span>
+                            </div>
+                        </div>
+                        <div id="drag-drop-board" class="drag-drop-board">
+                            <!-- Column layout will be loaded here -->
+                            <div class="board-loading">Loading board...</div>
+                        </div>
+                    </div>
+
+                    <!-- Release View -->
+                    <div id="release-view" class="tab-content">
+                        <div class="release-header">
+                            <h2>Released Ideas</h2>
+                            <div class="release-controls">
+                                <div class="search-container">
+                                    <input type="text" id="release-search" placeholder="Search released ideas..." class="search-input">
+                                    <button id="clear-search" class="clear-search-btn" title="Clear search">×</button>
+                                </div>
+                                <div class="sort-container">
+                                    <select id="release-sort" class="sort-select">
+                                        <option value="created_at:desc">Newest First</option>
+                                        <option value="created_at:asc">Oldest First</option>
+                                        <option value="name:asc">Name A-Z</option>
+                                        <option value="name:desc">Name Z-A</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="release-table-container" class="release-table">
+                            <!-- Release table will be loaded here -->
+                            <div class="release-loading">Loading released ideas...</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Common JavaScript -->
+    <script src="/static/js/api.js"></script>
+    <script src="/static/js/board-tabs.js"></script>
+    <script src="/static/js/release-table.js"></script>
+    <script src="/static/js/search-bar.js"></script>
+    <script src="/static/js/feedback-widget.js"></script>
+    
+    <script>
+        // Public board data from server
+        window.boardData = {
+            boardId: '{{.boardID}}',
+            isAdmin: false, // Public boards are read-only
+            publicLink: '{{.publicLink}}',
+            isPublic: true // This is a public board
+        };
+
+        // Public board view class (read-only with feedback only)
+        class PublicBoardView {
+            constructor() {
+                this.boardId = window.boardData.boardId;
+                this.isAdmin = false; // Public boards are ALWAYS read-only
+                this.ideas = [];
+                this.init();
+            }
+
+            init() {
+                console.log('[PublicBoardView] Initializing public board view...');
+                this.bindEvents();
+                this.loadBoardData();
+            }
+
+            bindEvents() {
+                // Refresh button
+                const refreshBtn = document.getElementById('refresh-btn');
+                if (refreshBtn) {
+                    refreshBtn.addEventListener('click', () => {
+                        console.log('[PublicBoardView] Refresh button clicked');
+                        this.refreshBoard();
+                    });
+                }
+
+                // Tab switching
+                const boardTab = document.getElementById('board-tab');
+                const releaseTab = document.getElementById('release-tab');
+                
+                if (boardTab) {
+                    boardTab.addEventListener('click', () => {
+                        this.switchTab('board');
+                    });
+                }
+                
+                if (releaseTab) {
+                    releaseTab.addEventListener('click', () => {
+                        this.switchTab('release');
+                    });
+                }
+            }
+
+            switchTab(tabName) {
+                // Hide all tab contents
+                const tabContents = document.querySelectorAll('.tab-content');
+                tabContents.forEach(content => content.classList.remove('active'));
+
+                // Remove active class from all tab buttons
+                const tabButtons = document.querySelectorAll('.tab-button');
+                tabButtons.forEach(button => button.classList.remove('active'));
+
+                // Show selected tab content
+                if (tabName === 'board') {
+                    document.getElementById('board-view').classList.add('active');
+                    document.getElementById('board-tab').classList.add('active');
+                } else if (tabName === 'release') {
+                    document.getElementById('release-view').classList.add('active');
+                    document.getElementById('release-tab').classList.add('active');
+                    
+                    // Load release table if available
+                    if (window.releaseTable) {
+                        window.releaseTable.refresh();
+                    }
+                }
+            }
+
+            async loadBoardData() {
+                console.log('[PublicBoardView] Loading public board data...');
+                try {
+                    // Use publicLink as the ID parameter for public endpoints
+                    const response = await window.api.get(`/boards/${window.boardData.publicLink}/public`);
+                    console.log('[PublicBoardView] Board data loaded:', response);
+                    
+                    if (response) {
+                        // Update board title and description
+                        const boardTitle = document.getElementById('board-title');
+                        const boardDescription = document.getElementById('board-description');
+                        
+                        if (boardTitle) {
+                            boardTitle.textContent = response.name || 'Untitled Board';
+                        }
+                        
+                        if (boardDescription) {
+                            boardDescription.textContent = response.description || '';
+                        }
+
+                        // Update page title
+                        document.title = `${response.name || 'Untitled Board'} - Public Board`;
+
+                        // Load ideas for the board
+                        await this.loadIdeas();
+                    }
+                } catch (error) {
+                    console.error('[PublicBoardView] Failed to load board data:', error);
+                    this.showErrorMessage('Failed to load board data. Please try again.');
+                }
+            }
+
+            async loadIdeas() {
+                console.log('[PublicBoardView] Loading ideas for public board...');
+                try {
+                    // Use publicLink as the ID parameter for public endpoints
+                    const response = await window.api.get(`/boards/${window.boardData.publicLink}/ideas/public`);
+                    console.log('[PublicBoardView] Ideas loaded:', response);
+                    
+                    if (response && response.ideas) {
+                        this.ideas = response.ideas;
+                        this.renderBoard();
+                        this.updateIdeasCount();
+                    }
+                } catch (error) {
+                    console.error('[PublicBoardView] Failed to load ideas:', error);
+                    this.showErrorMessage('Failed to load ideas. Please try again.');
+                }
+            }
+
+            renderBoard() {
+                console.log('[PublicBoardView] Rendering public board...');
+                const boardContainer = document.getElementById('drag-drop-board');
+                if (!boardContainer) {
+                    console.error('[PublicBoardView] Board container not found');
+                    return;
+                }
+
+                // Group ideas by column
+                const ideasByColumn = {};
+                this.ideas.forEach(idea => {
+                    const column = idea.column || 'parking';
+                    if (!ideasByColumn[column]) {
+                        ideasByColumn[column] = [];
+                    }
+                    ideasByColumn[column].push(idea);
+                });
+
+                // Define visible columns for public boards
+                const visibleColumns = [
+                    { id: 'now', name: 'Now', description: 'Currently working on' },
+                    { id: 'next', name: 'Next', description: 'Upcoming priorities' },
+                    { id: 'later', name: 'Later', description: 'Future considerations' },
+                    { id: 'release', name: 'Release', description: 'Completed and released' }
+                ];
+
+                // Generate HTML
+                let html = '<div class="board-columns">';
+                
+                visibleColumns.forEach(column => {
+                    const columnIdeas = ideasByColumn[column.id] || [];
+                    html += `
+                        <div class="board-column" data-column="${column.id}">
+                            <div class="column-header">
+                                <div class="column-title-section">
+                                    <h3 class="column-title">${column.name}</h3>
+                                    <span class="column-count">${columnIdeas.length}</span>
+                                </div>
+                            </div>
+                            <div class="column-ideas">
+                                ${columnIdeas.map(idea => this.createIdeaCard(idea)).join('')}
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                html += '</div>';
+                
+                boardContainer.innerHTML = html;
+                console.log('[PublicBoardView] Board rendered successfully');
+            }
+
+            createIdeaCard(idea) {
+                const shouldShowField = (field) => {
+                    // Show all fields for public boards (read-only)
+                    return true;
+                };
+
+                let cardHtml = `
+                    <div class="idea-card" data-idea-id="${idea.id}">
+                        <div class="idea-card-header">
+                            <h4 class="idea-title">${this.escapeHtml(idea.oneLiner)}</h4>
+                        </div>
+                        <div class="idea-content">
+                `;
+
+                // Add description if available
+                if (shouldShowField('description') && idea.description) {
+                    cardHtml += `<div class="idea-description">${this.escapeHtml(idea.description)}</div>`;
+                }
+
+                // Add value statement if available
+                if (shouldShowField('valueStatement') && idea.valueStatement) {
+                    cardHtml += `
+                        <div class="idea-value-statement">
+                            <strong>Value:</strong> ${this.escapeHtml(idea.valueStatement)}
+                        </div>
+                    `;
+                }
+
+                // Add RICE score if available
+                if (shouldShowField('riceScore') && idea.riceScore) {
+                    const riceScore = idea.riceScore;
+                    const calculatedScore = this.calculateRICEScore(riceScore);
+                    cardHtml += `
+                        <div class="idea-rice-score">
+                            <div class="rice-score-display">
+                                <span class="rice-label">RICE Score:</span>
+                                <span class="rice-value">${calculatedScore}</span>
+                            </div>
+                            <div class="rice-breakdown">
+                                <small>R: ${riceScore.reach} | I: ${riceScore.impact} | C: ${riceScore.confidence}% | E: ${riceScore.effort}</small>
+                            </div>
+                        </div>
+                    `;
+                }
+
+                // Add feedback section (thumbs up and emoji reactions)
+                cardHtml += `
+                        <div class="idea-feedback">
+                            <div class="feedback-actions">
+                                <button class="feedback-btn" data-idea-id="${idea.id}" data-type="thumbs-up">
+                                    👍 <span class="count">${idea.thumbsUp || 0}</span>
+                                </button>
+                                <div class="emoji-reactions">
+                                    <button class="emoji-reaction" data-idea-id="${idea.id}" data-emoji="🚀">🚀</button>
+                                    <button class="emoji-reaction" data-idea-id="${idea.id}" data-emoji="💡">💡</button>
+                                    <button class="emoji-reaction" data-idea-id="${idea.id}" data-emoji="🎯">🎯</button>
+                                    <button class="emoji-reaction" data-idea-id="${idea.id}" data-emoji="🔥">🔥</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                return cardHtml;
+            }
+
+            calculateRICEScore(riceScore) {
+                // RICE = (Reach × Impact × Confidence) / Effort
+                // Adjust R, I, C by dividing by 100
+                const reach = riceScore.reach / 100;
+                const impact = riceScore.impact / 100;
+                const confidence = riceScore.confidence / 100;
+                const effort = riceScore.effort;
+                
+                const score = (reach * impact * confidence) / effort;
+                return Math.round(score * 100) / 100;
+            }
+
+            escapeHtml(text) {
+                const div = document.createElement('div');
+                div.textContent = text;
+                return div.innerHTML;
+            }
+
+            updateIdeasCount() {
+                const ideasCount = document.getElementById('ideas-count');
+                const boardIdeasCount = document.getElementById('board-ideas-count');
+                
+                if (ideasCount) {
+                    ideasCount.textContent = `${this.ideas.length} idea${this.ideas.length !== 1 ? 's' : ''}`;
+                }
+                
+                if (boardIdeasCount) {
+                    boardIdeasCount.textContent = this.ideas.length;
+                }
+            }
+
+            async refreshBoard() {
+                console.log('[PublicBoardView] Refreshing board...');
+                await this.loadBoardData();
+            }
+
+            showErrorMessage(message) {
+                const messageDiv = document.createElement('div');
+                messageDiv.className = 'message-toast error show';
+                messageDiv.textContent = message;
+                document.body.appendChild(messageDiv);
+
+                setTimeout(() => {
+                    if (messageDiv.parentNode) {
+                        messageDiv.parentNode.removeChild(messageDiv);
+                    }
+                }, 3000);
+            }
+        }
+
+        // Initialize public board view when DOM is ready
+        document.addEventListener('DOMContentLoaded', function () {
+            console.log('[PublicBoardView] DOM loaded, initializing public board view...');
+            window.publicBoardView = new PublicBoardView();
+        });
+    </script>
+</body>
+</html> 

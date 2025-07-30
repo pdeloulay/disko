@@ -5,8 +5,11 @@ class API {
     }
 
     async request(endpoint, options = {}) {
-        // Wait for Clerk to be available before making requests
-        if (!window.Clerk) {
+        // Check if this is a public endpoint (doesn't require authentication)
+        const isPublicEndpoint = endpoint.includes('/public') || endpoint.includes('/health');
+        
+        // Only wait for Clerk if this is not a public endpoint
+        if (!isPublicEndpoint && !window.Clerk) {
             console.log('[API] Clerk not available, waiting...');
             await new Promise(resolve => {
                 const checkClerk = setInterval(() => {
@@ -32,65 +35,69 @@ class API {
             ...options
         };
 
-        // Add auth token if user is signed in
+        // Add auth token if user is signed in (skip for public endpoints)
         let token = null;
         
-        // First try to get token from localStorage (for board navigation)
-        const storedToken = localStorage.getItem('clerk-db-jwt');
-        if (storedToken && storedToken.length > 100) {
-            // Check if token is expired by trying to decode it
-            try {
-                const payload = JSON.parse(atob(storedToken.split('.')[1]));
-                const currentTime = Math.floor(Date.now() / 1000);
-                
-                if (payload.exp && payload.exp < currentTime) {
-                    console.warn('[API] Stored token is expired, clearing:', storedToken);
+        if (!isPublicEndpoint) {
+            // First try to get token from localStorage (for board navigation)
+            const storedToken = localStorage.getItem('clerk-db-jwt');
+            if (storedToken && storedToken.length > 100) {
+                // Check if token is expired by trying to decode it
+                try {
+                    const payload = JSON.parse(atob(storedToken.split('.')[1]));
+                    const currentTime = Math.floor(Date.now() / 1000);
+                    
+                    if (payload.exp && payload.exp < currentTime) {
+                        console.warn('[API] Stored token is expired, clearing:', storedToken);
+                        localStorage.removeItem('clerk-db-jwt');
+                    } else {
+                        token = storedToken;
+                        console.log('[API] Using stored auth token from localStorage, length:', token.length);
+                    }
+                } catch (error) {
+                    console.warn('[API] Failed to decode stored token, clearing:', error);
                     localStorage.removeItem('clerk-db-jwt');
-                } else {
-                    token = storedToken;
-                    console.log('[API] Using stored auth token from localStorage, length:', token.length);
                 }
-            } catch (error) {
-                console.warn('[API] Failed to decode stored token, clearing:', error);
+            } else if (storedToken) {
+                console.warn('[API] Stored token is invalid (too short), clearing:', storedToken);
                 localStorage.removeItem('clerk-db-jwt');
             }
-        } else if (storedToken) {
-            console.warn('[API] Stored token is invalid (too short), clearing:', storedToken);
-            localStorage.removeItem('clerk-db-jwt');
-        }
-        
-        // If no stored token, try to get from Clerk session
-        if (!token && window.Clerk) {
-            try {
-                // Wait for Clerk to be fully loaded
-                if (!window.Clerk.session) {
-                    console.log('[API] Waiting for Clerk session...');
-                    await new Promise(resolve => {
-                        const checkSession = setInterval(() => {
-                            if (window.Clerk.session) {
-                                clearInterval(checkSession);
-                                resolve();
-                            }
-                        }, 100);
-                    });
+            
+            // If no stored token, try to get from Clerk session
+            if (!token && window.Clerk) {
+                try {
+                    // Wait for Clerk to be fully loaded
+                    if (!window.Clerk.session) {
+                        console.log('[API] Waiting for Clerk session...');
+                        await new Promise(resolve => {
+                            const checkSession = setInterval(() => {
+                                if (window.Clerk.session) {
+                                    clearInterval(checkSession);
+                                    resolve();
+                                }
+                            }, 100);
+                        });
+                    }
+                    
+                    token = await window.Clerk.session.getToken();
+                    console.log('[API] Got auth token from Clerk session, length:', token ? token.length : 0);
+                    
+                    // Validate token format
+                    if (!token || token.length < 100) {
+                        console.error('[API] Invalid token from Clerk session:', token);
+                        token = null;
+                    }
+                } catch (error) {
+                    console.error('[API] Failed to get auth token from Clerk:', error);
                 }
-                
-                token = await window.Clerk.session.getToken();
-                console.log('[API] Got auth token from Clerk session, length:', token ? token.length : 0);
-                
-                // Validate token format
-                if (!token || token.length < 100) {
-                    console.error('[API] Invalid token from Clerk session:', token);
-                    token = null;
-                }
-            } catch (error) {
-                console.error('[API] Failed to get auth token from Clerk:', error);
             }
         }
         
         if (token) {
             config.headers.Authorization = `Bearer ${token}`;
             console.log('[API] Added auth token to request');
+        } else if (isPublicEndpoint) {
+            console.log('[API] Public endpoint, proceeding without auth');
         } else {
             console.log('[API] No auth token available, proceeding without auth');
         }

@@ -372,6 +372,7 @@ func main() {
 			protected.GET("/boards", handlers.GetBoards)
 			protected.GET("/boards/:id", handlers.GetBoard)
 			protected.PUT("/boards/:id", handlers.UpdateBoard)
+
 			protected.DELETE("/boards/:id", handlers.DeleteBoard)
 
 			// Idea management endpoints

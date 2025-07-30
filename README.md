@@ -78,6 +78,51 @@ The project is set up with:
 
 ## Changelog
 
+### [v0.3.0] - Public Board API Integration
+- **🔗 Leveraged Public Handlers**: Now using existing backend public handlers for board data
+- **📋 GetPublicBoard**: Uses `/boards/{publicLink}/public` for board information
+- **💡 GetPublicBoardIdeas**: Uses `/boards/{publicLink}/ideas/public` for ideas
+- **🚀 GetPublicReleasedIdeas**: Uses `/boards/{publicLink}/release/public` for released ideas
+- **🎯 Correct API Endpoints**: Public boards now use publicLink as ID parameter instead of boardId
+- **🔄 Release Table Integration**: Release table automatically detects public boards and uses public endpoints
+- **📊 Proper Data Flow**: All public board data flows through dedicated public handlers
+- **🛡️ Enhanced Security**: Public endpoints provide proper access control and data filtering
+
+### [v0.2.9] - Public Board Feedback Support
+- **👍 Thumbs Up Support**: Public boards support thumbs up reactions on ideas
+- **😊 Emoji Reactions**: Public boards support emoji reactions (🚀, 💡, 🎯, 🔥)
+- **🚫 No Drag & Drop**: Public boards are read-only with feedback only
+- **👁️ View-Only Access**: No editing, creating, or moving ideas in public boards
+- **🔄 Feedback Widget**: Integrated feedback-widget.js for public board interactions
+- **📊 RICE Score Display**: Public boards show RICE scores for ideas
+- **🎨 Consistent Styling**: Maintains same visual design as private boards
+
+### [v0.2.8] - Public Board View Template
+- **🌐 Public Board Template**: New `public.html` template for viewing public boards without authentication
+- **🔓 No Clerk Integration**: Public boards can be accessed without user authentication
+- **📋 Same UI/UX**: Maintains identical styling and functionality as private boards
+- **👁️ Read-Only Access**: Public boards are view-only (no editing capabilities)
+- **🔄 Public API Support**: Updated API.js to handle public endpoints without authentication
+- **🎨 Public Badge**: Added visual indicator showing "🌐 Public Board" status
+- **📱 Responsive Design**: Works seamlessly on all devices
+- **🔗 Direct Access**: Public boards accessible via `/public/{publicLink}` URLs
+
+### [v0.2.7] - Enhanced Publish Toast
+- **⏰ Extended Duration**: Publish success toast now stays visible for 6 seconds (doubled from 3 seconds)
+- **🔗 Clickable View Link**: Added "View Public Board" link in the success toast
+- **🎯 Direct Access**: Click the link to open the public board in a new tab
+- **🎨 Styled Link**: Toast link has hover effects and proper styling
+- **📱 Responsive**: Link works well on both desktop and mobile devices
+
+### [v0.2.6] - Board Publishing Feature (Corrected)
+- **🌐 Publish Button**: Added "Publish" button next to "Refresh" button for admin users
+- **🔄 Public Link Regeneration**: Uses existing PUT `/api/boards/:id` API with `isPublic: true`
+- **🔐 Admin-Only Access**: Only board owners can publish/regenerate public links
+- **📝 Success Feedback**: Shows success message with new public link
+- **⚡ Real-time Updates**: Updates board data immediately after publishing
+- **🛡️ Enhanced Security**: Backend automatically regenerates public link when `isPublic` is set to true
+- **🔧 Simplified API**: Leverages existing board update endpoint instead of custom publish endpoint
+
 ### [v0.2.4] - Release Table Styling Enhancement
 - **🎨 Professional Table Design**: Added comprehensive styling for the release table with proper spacing, borders, and typography
 - **📱 Responsive Layout**: Optimized table layout for mobile devices with adjusted column widths

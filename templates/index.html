@@ -1,113 +1,126 @@
-{{template "base.html" .}}
-
-{{define "content"}}
-<div class="landing-page">
-    <!-- Clerk Popup Container -->
-    <div id="my-popup" class="clerk-popup-container"></div>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{.title}}</title>
+    <link rel="icon" type="image/png" href="/static/images/boom.png">
+    <link rel="stylesheet" href="/static/css/main.css">
     
-    <!-- Navigation -->
-    <nav class="navbar">
-        <div class="container">
-            <div class="nav-brand">
-                <a href="/" class="logo-link">
-                    <img src="/static/images/logo-sm.png" alt="Disko" class="logo-image">
-                    
-                </a>
-            </div>
-            <div class="nav-actions">
-                <div id="auth-buttons">
-                    <button id="sign-in-btn" class="btn btn-ghost">Sign In</button>
-                    <button id="sign-up-btn" class="btn btn-primary">Get Started</button>
-                    <button id="dashboard-btn" class="btn btn-primary" style="display: none;">Dashboard</button>
-                    <button id="sign-out-btn" class="btn btn-ghost" style="display: none;">Sign Out</button>
+    <!-- Initialize Clerk -->
+    <script
+        async
+        crossorigin="anonymous"
+        data-clerk-publishable-key="{{.clerkPublishableKey}}"
+        src="{{.clerkFrontendApiUrl}}/npm/@clerk/clerk-js@5/dist/clerk.browser.js"
+        type="text/javascript"
+    ></script>
+</head>
+<body>
+    <div class="landing-page">
+        <!-- Navigation -->
+        <nav class="navbar">
+            <div class="container">
+                <div class="nav-brand">
+                    <a href="/" class="logo-link">
+                        <img src="/static/images/logo-sm.png" alt="Disko" class="logo-image">
+                    </a>
+                </div>
+                <div class="nav-actions">
+                    <div id="auth-buttons">
+                        <button id="sign-in-btn" class="btn btn-ghost">Sign In</button>
+                        <button id="sign-up-btn" class="btn btn-primary">Get Started</button>
+                        <button id="dashboard-btn" class="btn btn-primary" style="display: none;">Dashboard</button>
+                        <button id="sign-out-btn" class="btn btn-ghost" style="display: none;">Sign Out</button>
+                    </div>
                 </div>
             </div>
-        </div>
-    </nav>
+        </nav>
 
-    <!-- Hero Section -->
-    <section class="hero">
-        <div class="container">
-            <div class="hero-content">
-                <div class="hero-text">
-                    <h1 class="hero-title">
-                        Show customers your 
-                        <span class="accent-text">work in progress</span>
-                    </h1>
-                    <p class="hero-subtitle">
-                        Create beautiful project boards that let your customers see exactly what you're working on, vote on ideas, and stay engaged with your progress.
-                    </p>
-                    
-                    <div class="hero-quote">
-                        <blockquote>
-                            <p>"Product discovery is about building the right product for the right customer at the right time. When you get this wrong, you waste months of development time on features that don't matter."</p>
-                            <cite>— Marty Cagan, <em>Inspired</em></cite>
-                        </blockquote>
-                    </div>
-                    
-                    <div class="hero-actions">
-                        <button id="get-started-btn" class="btn btn-primary btn-large">
-                            Start Free
-                        </button>
-                        <button id="demo-btn" class="btn btn-ghost btn-large">
-                            See Demo
-                        </button>
-                    </div>
-                </div>
-                
-                <div class="hero-visual">
-                    <div class="board-preview">
-                        <div class="preview-header">
-                            <h3>Website Redesign Project</h3>
-                            <span class="status-badge">Live</span>
+        <!-- Hero Section -->
+        <section class="hero">
+            <div class="container">
+                <div class="hero-content">
+                    <div class="hero-text">
+                        <h1 class="hero-title">
+                            Show customers your 
+                            <span class="accent-text">work in progress</span>
+                        </h1>
+                        <p class="hero-subtitle">
+                            Create beautiful project boards that let your customers see exactly what you're working on, vote on ideas, and stay engaged with your progress.
+                        </p>
+                        
+                        <div class="hero-quote">
+                            <blockquote>
+                                <p>"Product discovery is about building the right product for the right customer at the right time. When you get this wrong, you waste months of development time on features that don't matter."</p>
+                                <cite>— Marty Cagan, <em>Inspired</em></cite>
+                            </blockquote>
                         </div>
                         
-                        <div class="preview-columns">
-                            <div class="preview-column">
-                                <div class="column-header">
-                                    <h4>Now</h4>
-                                    <span class="column-count">2</span>
-                                </div>
-                                <div class="preview-idea active">
-                                    <h5>Homepage Design</h5>
-                                    <p>Creating the hero section and navigation</p>
-                                    <div class="idea-meta">
-                                        <span class="feedback-count">👍 8 votes</span>
-                                    </div>
-                                </div>
-                                <div class="preview-idea active">
-                                    <h5>Mobile Responsive</h5>
-                                    <p>Optimizing for mobile devices</p>
-                                    <div class="idea-meta">
-                                        <span class="feedback-count">👍 12 votes</span>
-                                    </div>
-                                </div>
+                        <div class="hero-actions">
+                            <button id="get-started-btn" class="btn btn-primary btn-large">
+                                Start Free
+                            </button>
+                            <button id="demo-btn" class="btn btn-ghost btn-large">
+                                See Demo
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="hero-visual">
+                        <div class="board-preview">
+                            <div class="preview-header">
+                                <h3>Website Redesign Project</h3>
+                                <span class="status-badge">Live</span>
                             </div>
                             
-                            <div class="preview-column">
-                                <div class="column-header">
-                                    <h4>Next</h4>
-                                    <span class="column-count">1</span>
-                                </div>
-                                <div class="preview-idea">
-                                    <h5>Contact Form</h5>
-                                    <p>Building the contact page with form</p>
-                                    <div class="idea-meta">
-                                        <span class="feedback-count">👍 5 votes</span>
+                            <div class="preview-columns">
+                                <div class="preview-column">
+                                    <div class="column-header">
+                                        <h4>Now</h4>
+                                        <span class="column-count">2</span>
+                                    </div>
+                                    <div class="preview-idea active">
+                                        <h5>Homepage Design</h5>
+                                        <p>Creating the hero section and navigation</p>
+                                        <div class="idea-meta">
+                                            <span class="feedback-count">👍 8 votes</span>
+                                        </div>
+                                    </div>
+                                    <div class="preview-idea active">
+                                        <h5>Mobile Responsive</h5>
+                                        <p>Optimizing for mobile devices</p>
+                                        <div class="idea-meta">
+                                            <span class="feedback-count">👍 12 votes</span>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-                            
-                            <div class="preview-column">
-                                <div class="column-header">
-                                    <h4>Later</h4>
-                                    <span class="column-count">1</span>
+                                
+                                <div class="preview-column">
+                                    <div class="column-header">
+                                        <h4>Next</h4>
+                                        <span class="column-count">1</span>
+                                    </div>
+                                    <div class="preview-idea">
+                                        <h5>Contact Form</h5>
+                                        <p>Building the contact page with form</p>
+                                        <div class="idea-meta">
+                                            <span class="feedback-count">👍 5 votes</span>
+                                        </div>
+                                    </div>
                                 </div>
-                                <div class="preview-idea">
-                                    <h5>Blog Section</h5>
-                                    <p>Adding blog functionality</p>
-                                    <div class="idea-meta">
-                                        <span class="feedback-count">👍 3 votes</span>
+                                
+                                <div class="preview-column">
+                                    <div class="column-header">
+                                        <h4>Later</h4>
+                                        <span class="column-count">1</span>
+                                    </div>
+                                    <div class="preview-idea">
+                                        <h5>Blog Section</h5>
+                                        <p>Adding blog functionality</p>
+                                        <div class="idea-meta">
+                                            <span class="feedback-count">👍 3 votes</span>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -115,182 +128,273 @@
                     </div>
                 </div>
             </div>
-        </div>
-    </section>
+        </section>
 
-    <!-- Features Section -->
-    <section class="features">
-        <div class="container">
-            <div class="section-header">
-                <h2>Built for solopreneurs who want to build trust</h2>
-                <p>Stop wondering if your clients are happy. Show them exactly what you're working on and get real feedback.</p>
+        <!-- Features Section -->
+        <section class="features">
+            <div class="container">
+                <div class="section-header">
+                    <h2>Built for solopreneurs who want to build trust</h2>
+                    <p>Stop wondering if your clients are happy. Show them exactly what you're working on and get real feedback.</p>
+                </div>
+                
+                <div class="features-grid">
+                    <div class="feature-card primary">
+                        <div class="feature-icon">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M9 12L11 14L15 10M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                        </div>
+                        <h3>End status update calls forever</h3>
+                        <p>Your clients see your progress in real-time. No more weekly "what are you working on?" calls or wondering if you're actually working.</p>
+                        <div class="feature-benefit">
+                            <span>Save 2-3 hours per week</span>
+                        </div>
+                    </div>
+                    
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M9 19V13C9 11.8954 9.89543 11 11 11H13C14.1046 11 15 11.8954 15 13V19M9 19H15M9 19H7C5.89543 19 5 18.1046 5 17V7C5 5.89543 5.89543 5 7 5H17C18.1046 5 19 5.89543 19 7V17C19 18.1046 18.1046 19 17 19H15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                        </div>
+                        <h3>Prioritize with confidence</h3>
+                        <p>Use RICE scoring to show clients why you're working on certain features first. They'll understand your decisions and trust your process.</p>
+                        <div class="feature-benefit">
+                            <span>Build client confidence</span>
+                        </div>
+                    </div>
+                    
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M14 9V5C14 3.89543 13.1046 3 12 3C10.8954 3 10 3.89543 10 5V9M14 9H10M14 9L12 11L10 9M7 21H17C18.1046 21 19 20.1046 19 19V15C19 13.8954 18.1046 13 17 13H7C5.89543 13 5 13.8954 5 15V19C5 20.1046 5.89543 21 7 21Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                        </div>
+                        <h3>Get feedback without meetings</h3>
+                        <p>Clients can vote on ideas and leave feedback directly on your board. No more scheduling calls for every small decision.</p>
+                        <div class="feature-benefit">
+                            <span>Reduce meetings by 70%</span>
+                        </div>
+                    </div>
+                    
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M8 9L12 5L16 9M12 5V19" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                        </div>
+                        <h3>Move work with drag & drop</h3>
+                        <p>Update priorities and status by simply dragging ideas between columns. Your clients see changes instantly.</p>
+                        <div class="feature-benefit">
+                            <span>Update in seconds</span>
+                        </div>
+                    </div>
+                    
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M13.828 10.172L16.657 7.343L18.071 8.757L13.828 13L9.586 8.757L10.999 7.343L13.828 10.172ZM12 2C13.1 2 14 2.9 14 4C14 5.1 13.1 6 12 6C10.9 6 10 5.1 10 4C10 2.9 10.9 2 12 2ZM12 18C10.9 18 10 18.9 10 20C10 21.1 10.9 22 12 22C13.1 22 14 21.1 14 20C14 18.9 13.1 18 12 18Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                        </div>
+                        <h3>Share with one link</h3>
+                        <p>Generate a unique URL for each project. Clients can view and interact without creating accounts or downloading apps.</p>
+                        <div class="feature-benefit">
+                            <span>Zero friction for clients</span>
+                        </div>
+                    </div>
+                    
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M12 18H12.01M8 21H16C17.1046 21 18 20.1046 18 19V5C18 3.89543 17.1046 3 16 3H8C6.89543 3 6 3.89543 6 5V19C6 20.1046 6.89543 21 8 21Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                        </div>
+                        <h3>Works on any device</h3>
+                        <p>Perfect for sharing during client calls or letting clients check progress on their phones. No app downloads needed.</p>
+                        <div class="feature-benefit">
+                            <span>Mobile-first design</span>
+                        </div>
+                    </div>
+                </div>
             </div>
-            
-            <div class="features-grid">
-                <div class="feature-card primary">
-                    <div class="feature-icon">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M9 12L11 14L15 10M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                        </svg>
-                    </div>
-                    <h3>End status update calls forever</h3>
-                    <p>Your clients see your progress in real-time. No more weekly "what are you working on?" calls or wondering if you're actually working.</p>
-                    <div class="feature-benefit">
-                        <span>Save 2-3 hours per week</span>
-                    </div>
-                </div>
-                
-                <div class="feature-card">
-                    <div class="feature-icon">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M9 19V13C9 11.8954 9.89543 11 11 11H13C14.1046 11 15 11.8954 15 13V19M9 19H15M9 19H7C5.89543 19 5 18.1046 5 17V7C5 5.89543 5.89543 5 7 5H17C18.1046 5 19 5.89543 19 7V17C19 18.1046 18.1046 19 17 19H15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                        </svg>
-                    </div>
-                    <h3>Prioritize with confidence</h3>
-                    <p>Use RICE scoring to show clients why you're working on certain features first. They'll understand your decisions and trust your process.</p>
-                    <div class="feature-benefit">
-                        <span>Build client confidence</span>
-                    </div>
-                </div>
-                
-                <div class="feature-card">
-                    <div class="feature-icon">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M14 9V5C14 3.89543 13.1046 3 12 3C10.8954 3 10 3.89543 10 5V9M14 9H10M14 9L12 11L10 9M7 21H17C18.1046 21 19 20.1046 19 19V15C19 13.8954 18.1046 13 17 13H7C5.89543 13 5 13.8954 5 15V19C5 20.1046 5.89543 21 7 21Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                        </svg>
-                    </div>
-                    <h3>Get feedback without meetings</h3>
-                    <p>Clients can vote on ideas and leave feedback directly on your board. No more scheduling calls for every small decision.</p>
-                    <div class="feature-benefit">
-                        <span>Reduce meetings by 70%</span>
-                    </div>
-                </div>
-                
-                <div class="feature-card">
-                    <div class="feature-icon">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M8 9L12 5L16 9M12 5V19" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                        </svg>
-                    </div>
-                    <h3>Move work with drag & drop</h3>
-                    <p>Update priorities and status by simply dragging ideas between columns. Your clients see changes instantly.</p>
-                    <div class="feature-benefit">
-                        <span>Update in seconds</span>
-                    </div>
-                </div>
-                
-                <div class="feature-card">
-                    <div class="feature-icon">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M13.828 10.172L16.657 7.343L18.071 8.757L13.828 13L9.586 8.757L10.999 7.343L13.828 10.172ZM12 2C13.1 2 14 2.9 14 4C14 5.1 13.1 6 12 6C10.9 6 10 5.1 10 4C10 2.9 10.9 2 12 2ZM12 18C10.9 18 10 18.9 10 20C10 21.1 10.9 22 12 22C13.1 22 14 21.1 14 20C14 18.9 13.1 18 12 18Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                        </svg>
-                    </div>
-                    <h3>Share with one link</h3>
-                    <p>Generate a unique URL for each project. Clients can view and interact without creating accounts or downloading apps.</p>
-                    <div class="feature-benefit">
-                        <span>Zero friction for clients</span>
-                    </div>
-                </div>
-                
-                <div class="feature-card">
-                    <div class="feature-icon">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M12 18H12.01M8 21H16C17.1046 21 18 20.1046 18 19V5C18 3.89543 17.1046 3 16 3H8C6.89543 3 6 3.89543 6 5V19C6 20.1046 6.89543 21 8 21Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                        </svg>
-                    </div>
-                    <h3>Works on any device</h3>
-                    <p>Perfect for sharing during client calls or letting clients check progress on their phones. No app downloads needed.</p>
-                    <div class="feature-benefit">
-                        <span>Mobile-first design</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
+        </section>
 
-    <!-- CTA Section -->
-    <section class="cta-section">
-        <div class="container">
-            <div class="cta-content">
-                <h2>Stop losing clients to poor communication</h2>
-                <p>Join hundreds of solopreneurs who use Disko to build trust, reduce meetings, and keep clients happy.</p>
-                
-                <div class="cta-actions">
-                    <button id="cta-signup-btn" class="btn btn-primary btn-large">
-                        Start Free Today
-                    </button>
-                    <button id="cta-demo-btn" class="btn btn-ghost btn-large">
-                        Schedule Demo
-                    </button>
-                </div>
-                
-                <div class="cta-features">
-                    <div class="cta-feature">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M9 12L11 14L15 10M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                        </svg>
-                        <span>No credit card required</span>
+        <!-- CTA Section -->
+        <section class="cta-section">
+            <div class="container">
+                <div class="cta-content">
+                    <h2>Stop losing clients to poor communication</h2>
+                    <p>Join hundreds of solopreneurs who use Disko to build trust, reduce meetings, and keep clients happy.</p>
+                    
+                    <div class="cta-actions">
+                        <button id="cta-signup-btn" class="btn btn-primary btn-large">
+                            Start Free Today
+                        </button>
+                        <button id="cta-demo-btn" class="btn btn-ghost btn-large">
+                            Schedule Demo
+                        </button>
                     </div>
-                    <div class="cta-feature">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M9 12L11 14L15 10M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                        </svg>
-                        <span>Setup in under 5 minutes</span>
-                    </div>
-                    <div class="cta-feature">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M9 12L11 14L15 10M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                        </svg>
-                        <span>Unlimited boards & ideas</span>
+                    
+                    <div class="cta-features">
+                        <div class="cta-feature">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M9 12L11 14L15 10M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                            <span>No credit card required</span>
+                        </div>
+                        <div class="cta-feature">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M9 12L11 14L15 10M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                            <span>Setup in under 5 minutes</span>
+                        </div>
+                        <div class="cta-feature">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M9 12L11 14L15 10M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                            <span>Unlimited boards & ideas</span>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
-    </section>
+        </section>
 
-    <!-- Footer -->
-    <footer class="footer">
-        <div class="container">
-            <div class="footer-content">
-                <div class="footer-section">
-                    <div class="footer-logo">
-                        <img src="/static/images/logo-sm-white.png" alt="Disko" class="logo-image">
+        <!-- Footer -->
+        <footer class="footer">
+            <div class="container">
+                <div class="footer-content">
+                    <div class="footer-section">
+                        <div class="footer-logo">
+                            <img src="/static/images/logo-sm-white.png" alt="Disko" class="logo-image">
+                        </div>
+                        <p>Empowering entrepreneurs to share progress and build trust with customers through beautiful, interactive project boards.</p>
                     </div>
-                    <p>Empowering entrepreneurs to share progress and build trust with customers through beautiful, interactive project boards.</p>
+                    <div class="footer-section">
+                        <h4>Product</h4>
+                        <ul>
+                            <li><a href="#features">Features</a></li>
+                            <li><a href="#pricing">Pricing</a></li>
+                            <li><a href="#demo">Demo</a></li>
+                        </ul>
+                    </div>
+                    <div class="footer-section">
+                        <h4>Support</h4>
+                        <ul>
+                            <li><a href="#help">Help Center</a></li>
+                            <li><a href="#contact">Contact</a></li>
+                            <li><a href="#docs">Documentation</a></li>
+                        </ul>
+                    </div>
+                    <div class="footer-section">
+                        <h4>Company</h4>
+                        <ul>
+                            <li><a href="#about">About</a></li>
+                            <li><a href="#blog">Blog</a></li>
+                            <li><a href="#privacy">Privacy</a></li>
+                        </ul>
+                    </div>
                 </div>
-                <div class="footer-section">
-                    <h4>Product</h4>
-                    <ul>
-                        <li><a href="#features">Features</a></li>
-                        <li><a href="#pricing">Pricing</a></li>
-                        <li><a href="#demo">Demo</a></li>
-                    </ul>
-                </div>
-                <div class="footer-section">
-                    <h4>Support</h4>
-                    <ul>
-                        <li><a href="#help">Help Center</a></li>
-                        <li><a href="#contact">Contact</a></li>
-                        <li><a href="#docs">Documentation</a></li>
-                    </ul>
-                </div>
-                <div class="footer-section">
-                    <h4>Company</h4>
-                    <ul>
-                        <li><a href="#about">About</a></li>
-                        <li><a href="#blog">Blog</a></li>
-                        <li><a href="#privacy">Privacy</a></li>
-                    </ul>
+                <div class="footer-bottom">
+                    <p>&copy; 2025 Disko. A Nomadis Service. All rights reserved. | v{{.version}}</p>
                 </div>
             </div>
-            <div class="footer-bottom">
-                <p>&copy; 2025 Disko. A Nomadis Service. All rights reserved. | v{{.version}}</p>
-            </div>
-        </div>
-    </footer>
-</div>
-{{end}}
+        </footer>
+    </div>
 
-{{define "scripts"}}
-<script src="/static/js/landing.js"></script>
-{{end}}
+    <!-- Common JavaScript -->
+    <script src="/static/js/api.js"></script>
+    
+    <script>
+        // Wait for Clerk to be available
+        function waitForClerk(timeout = 10000) {
+            const start = Date.now();
+            return new Promise((resolve, reject) => {
+                function checkClerk() {
+                    if (window.Clerk === undefined) {
+                        if (Date.now() - start > timeout) {
+                            console.error('Clerk failed to load within timeout');
+                            reject(new Error('Timeout waiting for Clerk to load'));
+                            return;
+                        }
+                        setTimeout(checkClerk, 100);
+                        return;
+                    }
+                    console.log('Clerk loaded successfully');
+                    resolve(window.Clerk);
+                }
+                checkClerk();
+            });
+        }
+
+        // Initialize Clerk and handle authentication
+        document.addEventListener('DOMContentLoaded', async function () {
+            try {
+                console.log('Initializing Clerk...');
+                const Clerk = await waitForClerk();
+                
+                if (!Clerk) {
+                    throw new Error('Clerk failed to initialize');
+                }
+
+                await Clerk.load({
+                    afterLoad: (Clerk) => {
+                        console.log('Clerk loaded, setting up authentication...');
+                    }
+                });
+
+                // Check if user is already signed in
+                const user = await Clerk.user;
+                if (user) {
+                    console.log('User is signed in, redirecting to dashboard...');
+                    window.location.href = '/dashboard';
+                    return;
+                }
+
+                // Setup auth button handlers
+                const signInBtn = document.getElementById('sign-in-btn');
+                const signUpBtn = document.getElementById('sign-up-btn');
+                const getStartedBtn = document.getElementById('get-started-btn');
+                const ctaSignupBtn = document.getElementById('cta-signup-btn');
+
+                if (signInBtn) {
+                    signInBtn.addEventListener('click', () => {
+                        Clerk.openSignIn();
+                    });
+                }
+
+                if (signUpBtn) {
+                    signUpBtn.addEventListener('click', () => {
+                        Clerk.openSignUp();
+                    });
+                }
+
+                if (getStartedBtn) {
+                    getStartedBtn.addEventListener('click', () => {
+                        Clerk.openSignUp();
+                    });
+                }
+
+                if (ctaSignupBtn) {
+                    ctaSignupBtn.addEventListener('click', () => {
+                        Clerk.openSignUp();
+                    });
+                }
+
+                // Listen for authentication state changes
+                Clerk.addListener(({ user }) => {
+                    if (user) {
+                        console.log('User signed in, redirecting to dashboard...');
+                        window.location.href = '/dashboard';
+                    }
+                });
+
+                console.log('Landing page authentication setup complete');
+
+            } catch (error) {
+                console.error('Failed to initialize Clerk:', error.message);
+            }
+        });
+    </script>
+</body>
+</html>

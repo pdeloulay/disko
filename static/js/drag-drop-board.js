@@ -128,14 +128,18 @@ class DragDropBoard {
             const response = await window.api.get(endpoint);
             console.log('[DragDropBoard] Ideas API response received:', response);
             const data = response.data || response;
+            console.log('[DragDropBoard] Ideas data:', data);
             
             this.ideas = data.ideas || [];
+            console.log('[DragDropBoard] Processed ideas array:', this.ideas);
+            console.log('[DragDropBoard] Ideas array length:', this.ideas.length);
 
             // Update ideas count
             const ideasCount = document.getElementById('ideas-count');
             if (ideasCount) {
                 const count = this.ideas.length;
                 ideasCount.textContent = `${count} ${count === 1 ? 'idea' : 'ideas'}`;
+                console.log('[DragDropBoard] Updated ideas count display:', count);
             }
 
             // Update tab counts
@@ -159,30 +163,48 @@ class DragDropBoard {
     }
 
     renderBoard() {
+        console.log('[DragDropBoard] renderBoard called');
+        console.log('[DragDropBoard] Ideas count:', this.ideas.length);
+        console.log('[DragDropBoard] Ideas:', this.ideas);
+        
         const boardContainer = document.getElementById('drag-drop-board');
+        console.log('[DragDropBoard] Board container found:', !!boardContainer);
+        
+        if (!boardContainer) {
+            console.error('[DragDropBoard] Board container not found!');
+            return;
+        }
         
         if (this.ideas.length === 0) {
+            console.log('[DragDropBoard] No ideas, showing empty state');
             boardContainer.innerHTML = this.createEmptyState();
             return;
         }
 
         // Group ideas by column
         const ideasByColumn = this.groupIdeasByColumn();
+        console.log('[DragDropBoard] Ideas grouped by column:', ideasByColumn);
         
         // Filter columns based on visibility settings
         const visibleColumns = this.getVisibleColumns();
+        console.log('[DragDropBoard] Visible columns:', visibleColumns);
         
         // Render only visible columns
-        const columnsHtml = visibleColumns.map(column => 
-            this.createColumnView(column, ideasByColumn[column.id] || [])
-        ).join('');
+        const columnsHtml = visibleColumns.map(column => {
+            const columnIdeas = ideasByColumn[column.id] || [];
+            console.log(`[DragDropBoard] Column ${column.id} has ${columnIdeas.length} ideas`);
+            return this.createColumnView(column, columnIdeas);
+        }).join('');
         
+        console.log('[DragDropBoard] Generated HTML length:', columnsHtml.length);
         boardContainer.innerHTML = columnsHtml;
         
         // Make idea cards draggable if admin
         if (this.isAdmin) {
             this.makeDraggable();
         }
+        
+        console.log('[DragDropBoard] Board rendering complete');
     }
 
     getVisibleColumns() {

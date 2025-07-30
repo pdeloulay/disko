@@ -2,27 +2,30 @@
 
 ## Overview
 
-The Disko application uses Clerk for authentication, providing secure JWT-based authentication for admin users. The system includes both frontend and backend components for managing user authentication and authorization.
+The Disko application uses a comprehensive authentication system built with Clerk, providing secure JWT-based authentication for admin users. The system includes both frontend and backend components for managing user authentication and authorization.
 
 ## Architecture
 
 ### Frontend Components
 
 1. **Auth Class** (`static/js/auth.js`)
-   - Manages Clerk integration
-   - Handles sign-in/sign-up flows
-   - Provides authentication state management
-   - Offers token retrieval for API calls
+   - Manages Clerk integration with improved error handling
+   - Handles sign-in/sign-up flows with better user experience
+   - Provides authentication state management with reactive updates
+   - Offers token retrieval for API calls with validation
+   - Includes comprehensive logging and debugging capabilities
 
 2. **User Context** (`static/js/user-context.js`)
-   - Centralized user state management
-   - Reactive user information updates
+   - Centralized user state management with reactive updates
    - Consistent user data across components
+   - Enhanced error handling and validation
+   - Debug tools for troubleshooting
 
 3. **Route Protection** (`static/js/route-protection.js`)
    - Automatic route-based authentication checks
-   - Redirects unauthenticated users
+   - Redirects unauthenticated users with stored destination
    - Handles post-authentication routing
+   - Configurable protected and public routes
 
 ### Backend Components
 
@@ -30,6 +33,28 @@ The Disko application uses Clerk for authentication, providing secure JWT-based 
    - JWT token validation using Clerk
    - User context injection
    - Protected route enforcement
+   - Comprehensive logging
+
+## Features
+
+### Enhanced Authentication Flow
+- **Improved Error Handling**: Better error messages and user feedback
+- **Configurable Timeouts**: Adjustable retry logic and timeout settings
+- **Comprehensive Logging**: Detailed logging for debugging and monitoring
+- **Reactive Updates**: Real-time UI updates based on authentication state
+- **Token Validation**: JWT token validation with expiration checking
+
+### User Context Management
+- **Centralized State**: Single source of truth for user information
+- **Reactive Listeners**: Automatic updates when user state changes
+- **Safe Property Access**: Null-safe property access methods
+- **Debug Tools**: Built-in debugging and status methods
+
+### Route Protection
+- **Flexible Configuration**: Easy to add/remove protected routes
+- **Stored Redirects**: Remembers intended destination after authentication
+- **Status Monitoring**: Real-time route protection status
+- **Debug Information**: Comprehensive debugging tools
 
 ## Usage
 
@@ -59,12 +84,36 @@ window.userContext.addListener((user) => {
 // Get current user
 const currentUser = window.userContext.getUser();
 const displayName = window.userContext.getDisplayName();
+const email = window.userContext.getEmail();
 ```
 
 #### Route Protection
 Routes are automatically protected based on configuration in `RouteProtection` class:
 - Protected routes: `/dashboard`, `/board/*`
 - Public routes: `/`
+
+```javascript
+// Check if current route is protected
+const isProtected = window.routeProtection.isProtectedRoute();
+
+// Check if user can access current route
+const canAccess = window.routeProtection.canAccessRoute();
+
+// Get route protection status
+const status = window.routeProtection.getRouteStatus();
+```
+
+#### Debugging Authentication
+```javascript
+// Debug authentication system
+window.auth.debug();
+
+// Debug user context
+window.userContext.debug();
+
+// Debug route protection
+window.routeProtection.debug();
+```
 
 ### Backend Authentication
 
@@ -73,137 +122,148 @@ Routes are automatically protected based on configuration in `RouteProtection` c
 // Apply authentication middleware
 protected := api.Group("/")
 protected.Use(middleware.AuthMiddleware())
-{
-    protected.GET("/user", func(c *gin.Context) {
-        userID, err := middleware.GetUserID(c)
-        if err != nil {
-            // Handle error
-            return
-        }
-        // Use userID for business logic
-    })
+
+// Get user ID from context
+userID, err := middleware.GetUserID(c)
+if err != nil {
+    c.JSON(http.StatusUnauthorized, gin.H{"error": "User not authenticated"})
+    return
 }
 ```
 
-#### Optional Authentication
-```go
-// Apply optional authentication middleware
-optional := api.Group("/")
-optional.Use(middleware.OptionalAuthMiddleware())
-{
-    optional.GET("/public-with-context", func(c *gin.Context) {
-        if middleware.RequireAuth(c) {
-            // User is authenticated
-            userID, _ := middleware.GetUserID(c)
-            // Provide authenticated experience
-        } else {
-            // User is not authenticated
-            // Provide public experience
-        }
-    })
-}
+#### Token Validation
+The middleware automatically validates JWT tokens and extracts user information:
+- Validates token format and expiration
+- Extracts user ID and session ID
+- Stores claims in request context
+- Provides helper functions for accessing user data
+
+## Configuration
+
+### Frontend Configuration
+The authentication system uses global variables set in `base.html`:
+```html
+<script>
+    window.clerkPublishableKey = '{{ .ClerkPublishableKey }}';
+    window.clerkFrontendApiUrl = '{{ .ClerkFrontendApiUrl }}';
+</script>
 ```
 
-## API Endpoints
-
-### Authentication Endpoints
-
-#### GET /api/user
-**Protected**: Yes  
-**Description**: Get current user information  
-**Response**:
-```json
-{
-    "userID": "user_123",
-    "sessionID": "sess_456"
-}
-```
-
-#### GET /api/protected
-**Protected**: Yes  
-**Description**: Test protected endpoint  
-**Response**:
-```json
-{
-    "message": "This is a protected endpoint",
-    "userID": "user_123"
-}
-```
-
-## Environment Variables
-
-Required environment variables for authentication:
-
-```env
-# Clerk Configuration
-CLERK_SECRET_KEY=your_clerk_secret_key_here
-CLERK_PUBLISHABLE_KEY=your_clerk_publishable_key_here
+### Backend Configuration
+Environment variables required:
+```bash
+CLERK_SECRET_KEY=your_clerk_secret_key
+CLERK_PUBLISHABLE_KEY=your_clerk_publishable_key
 ```
 
 ## Error Handling
 
 ### Frontend Errors
-- Network errors: Automatic retry with exponential backoff
-- Authentication errors: Redirect to sign-in
-- Token expiration: Automatic token refresh
+- **Authentication Not Ready**: Handled with user-friendly messages
+- **Token Validation**: Automatic token validation with expiration checking
+- **Network Errors**: Graceful handling of network issues
+- **User Feedback**: Clear error messages for users
 
 ### Backend Errors
-- Missing authorization header: `401 UNAUTHORIZED`
-- Invalid token format: `401 UNAUTHORIZED`
-- Expired/invalid token: `401 UNAUTHORIZED`
-
-Example error response:
-```json
-{
-    "error": {
-        "code": "UNAUTHORIZED",
-        "message": "Authorization header is required"
-    }
-}
-```
+- **Invalid Tokens**: Proper error responses for invalid JWT tokens
+- **Missing Headers**: Clear error messages for missing authorization headers
+- **Expired Tokens**: Automatic detection and rejection of expired tokens
+- **Logging**: Comprehensive logging for debugging and monitoring
 
 ## Security Features
 
-1. **JWT Validation**: All tokens are validated against Clerk's public keys
-2. **Secure Headers**: Authorization headers use Bearer token format
-3. **Context Isolation**: User context is properly isolated per request
-4. **Route Protection**: Automatic protection of sensitive routes
-5. **Token Refresh**: Automatic token refresh handling
+### JWT Token Security
+- **Automatic Validation**: All tokens are validated on the backend
+- **Expiration Checking**: Tokens are checked for expiration
+- **Format Validation**: Token format is validated before processing
+- **Secure Storage**: Tokens are handled securely in memory
 
-## Testing
+### Route Protection
+- **Automatic Redirects**: Unauthenticated users are redirected to sign-in
+- **Stored Destinations**: Intended destinations are remembered after authentication
+- **Session Management**: Proper session handling and cleanup
+- **Access Control**: Fine-grained control over route access
 
-### Running Authentication Tests
-```bash
-# Run middleware tests
-go test ./middleware -v
+## Performance Optimizations
 
-# Run all tests
-go test ./... -v
+### Frontend Optimizations
+- **Configurable Timeouts**: Adjustable retry logic for better performance
+- **Efficient Listeners**: Optimized event listener management
+- **Lazy Loading**: Authentication components load only when needed
+- **Memory Management**: Proper cleanup of listeners and resources
+
+### Backend Optimizations
+- **Efficient Token Validation**: Fast JWT token validation
+- **Context Caching**: User context is cached for performance
+- **Minimal Database Calls**: Authentication doesn't require database queries
+- **Async Processing**: Non-blocking authentication checks
+
+## Troubleshooting
+
+### Common Issues
+
+#### Authentication Not Working
+1. Check browser console for error messages
+2. Verify Clerk configuration in `base.html`
+3. Ensure environment variables are set correctly
+4. Check network connectivity to Clerk services
+
+#### Route Protection Issues
+1. Verify route configuration in `RouteProtection` class
+2. Check authentication state with `window.auth.isSignedIn()`
+3. Review browser console for error messages
+4. Use debug methods to inspect current state
+
+#### Token Issues
+1. Check token format and expiration
+2. Verify Clerk secret key configuration
+3. Review backend logs for token validation errors
+4. Ensure proper authorization headers are sent
+
+### Debug Tools
+```javascript
+// Debug authentication system
+window.auth.debug();
+
+// Debug user context
+window.userContext.debug();
+
+// Debug route protection
+window.routeProtection.debug();
+
+// Check authentication status
+console.log('Auth ready:', window.auth.isReady());
+console.log('User signed in:', window.auth.isSignedIn());
+console.log('User context loading:', window.userContext.isContextLoading());
 ```
 
-### Test Coverage
-- Authentication middleware validation
-- Token parsing and validation
-- User context extraction
-- Route protection logic
-- Error handling scenarios
+## Migration Guide
 
-## Integration with Clerk
+### From Previous Version
+The new authentication system is backward compatible but includes several improvements:
 
-### Setup Requirements
-1. Create a Clerk application
-2. Configure allowed origins and redirect URLs
-3. Set up environment variables
-4. Initialize Clerk in both frontend and backend
+1. **Enhanced Error Handling**: Better error messages and user feedback
+2. **Improved Logging**: More detailed logging for debugging
+3. **Better Performance**: Optimized authentication flow
+4. **Debug Tools**: Built-in debugging capabilities
+5. **Cleaner Code**: More maintainable and readable code structure
 
-### Clerk Configuration
-- **Frontend**: Clerk JavaScript SDK loaded via CDN
-- **Backend**: Clerk Go SDK for JWT validation
-- **Token Format**: Standard JWT with Clerk-specific claims
+### Breaking Changes
+- None - the new system maintains the same public API
+- All existing code should continue to work without changes
+- New features are additive and don't break existing functionality
 
 ## Future Enhancements
 
-1. **Role-based Access Control**: Extend middleware for role-based permissions
-2. **Session Management**: Enhanced session handling and cleanup
-3. **Multi-factor Authentication**: Integration with Clerk's MFA features
-4. **Audit Logging**: Track authentication events and user actions
+### Planned Features
+- **Multi-factor Authentication**: Support for MFA
+- **Role-based Access Control**: Fine-grained permissions
+- **Session Management**: Advanced session handling
+- **Audit Logging**: Comprehensive audit trail
+- **API Rate Limiting**: Protection against abuse
+
+### Performance Improvements
+- **Caching**: Token and user data caching
+- **Lazy Loading**: On-demand authentication components
+- **Optimized Validation**: Faster token validation
+- **Reduced Network Calls**: Minimized API requests

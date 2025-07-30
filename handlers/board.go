@@ -714,8 +714,11 @@ type PublicBoardResponse struct {
 
 // GetBoard handles GET /api/boards/:id (for authenticated users)
 func GetBoard(c *gin.Context) {
+
 	startTime := time.Now()
 	boardID := c.Param("id")
+	log.Printf("[Handler] GetBoard - BoardID: %s", boardID)
+
 	userAgent := c.GetHeader("User-Agent")
 	referer := c.GetHeader("Referer")
 
@@ -734,7 +737,6 @@ func GetBoard(c *gin.Context) {
 
 	log.Printf("[Handler] GetBoard started - BoardID: %s, UserID: %s, IP: %s, UserAgent: %s, Referer: %s",
 		boardID, userID, c.ClientIP(), userAgent, referer)
-	log.Printf("[Handler] GetBoard - Request headers: %+v", c.Request.Header)
 	log.Printf("[Handler] GetBoard - Authorization header: %s", c.GetHeader("Authorization"))
 
 	// Get database connection

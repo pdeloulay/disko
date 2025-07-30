@@ -78,6 +78,46 @@ The project is set up with:
 
 ## Changelog
 
+### [v0.2.0] - Simplified Authentication System
+- **🔐 Direct Clerk Integration**: Removed complex auth.js file and implemented direct Clerk integration like numi project
+- **🎯 Simplified Flow**: Clean authentication flow with direct Clerk initialization in HTML templates
+- **🛡️ Server-side Protection**: Authentication handled primarily through server-side middleware
+- **📝 Cleaner Code**: Removed unnecessary complexity and auth-related JavaScript files
+- **🔧 Better Performance**: Faster page loads with less JavaScript overhead
+- **⚡ Direct Integration**: Clerk initialized directly in templates following numi pattern
+- **🎨 Consistent UI**: Unified authentication experience across all pages
+- **📱 Mobile Friendly**: Simplified auth flow works better on mobile devices
+
+### [v0.1.5] - Board ID Template Debugging
+- **🔍 Template Debugging**: Added console logging to debug board ID template variable rendering
+- **🐛 Issue Investigation**: Investigating why board ID is showing as "undefined" in API calls
+- **📝 Debug Logging**: Added template variable debugging to identify template rendering issues
+- **🔧 Variable Tracking**: Tracking board ID, public link, and ownership flags from server-side template
+
+### [v0.1.4] - Board Page Header & Layout Consistency
+- **🎨 Header Consistency**: Updated board page header to match dashboard header structure
+- **📱 Layout Improvements**: Moved board info and actions to main content area for better organization
+- **🎯 Visual Hierarchy**: Cleaner header with logo and user menu, board details in content section
+- **📝 Responsive Design**: Added responsive styling for board info section on mobile devices
+- **🔧 WebSocket Status**: Enhanced WebSocket status indicator styling with proper color coding
+- **⚡ Performance**: Simplified header structure for faster rendering
+
+### [v0.1.3] - Frontend Authentication & Modal Styling
+- **🔓 Route Access**: Removed AuthMiddleware from `/board/:id` route to allow frontend authentication handling
+- **🎨 Modal Styling**: Enhanced Create New Board modal with professional styling and proper form layout
+- **📱 Responsive Design**: Improved modal responsiveness and form element spacing
+- **🎯 Frontend Auth**: Board pages now handle authentication through JavaScript instead of route-level protection
+- **🔧 Form Actions**: Better styling for modal action buttons with proper background and spacing
+- **📝 CSS Variables**: Added missing success colors and improved design system consistency
+
+### [v0.1.2] - Authentication Loop Fixes & Token Management
+- **🔐 Token Validation**: Enhanced JWT token validation with length and expiration checks
+- **🔄 Retry Logic**: Implemented retry limits to prevent infinite authentication loops
+- **🧹 Token Cleanup**: Automatic clearing of invalid/expired tokens from localStorage and sessionStorage
+- **🎯 Error Handling**: Better error messages and user feedback for authentication issues
+- **🔧 Debug Logging**: Comprehensive logging for token validation and authentication flow
+- **⚡ Performance**: Improved authentication performance with proper token caching
+
 ### [v0.1.1] - Code Organization & Handler Cleanup
 - **🧹 Code Cleanup**: Removed all inline handlers from main.go and moved them to proper handler files
 - **📁 Better Organization**: Created dedicated handler files for different concerns (user.go, health.go)

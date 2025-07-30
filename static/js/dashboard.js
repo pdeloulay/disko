@@ -3,21 +3,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     console.log('[Dashboard] DOM loaded, initializing dashboard...');
     
     try {
-        // Wait for auth to be ready
-        console.log('[Dashboard] Waiting for auth to be ready...');
-        await window.auth.waitForReady();
-        console.log('[Dashboard] Auth is ready');
-        
-        // Load user info and boards
-        await loadUserInfo();
-        await loadBoards();
+        // Load user info (boards will be loaded after Clerk initialization)
         
     } catch (error) {
         console.error('[Dashboard] Error during initialization:', error);
-        // If auth fails to initialize, still show the dashboard with demo content
-        console.log('[Dashboard] Auth initialization failed, showing demo mode...');
-        await loadUserInfo();
-        await loadBoards();
+        console.log('[Dashboard] Showing demo mode...');
     }
 
     // Create board button
@@ -25,11 +15,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (createBoardBtn) {
         createBoardBtn.addEventListener('click', () => {
             console.log('[Dashboard] Create board button clicked');
-            if (!window.auth || !window.auth.isSignedIn()) {
-                console.log('[Dashboard] User not authenticated, opening sign in...');
-                window.auth.signIn();
-                return;
-            }
             openCreateBoardModal();
         });
     }
@@ -75,45 +60,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     console.log('[Dashboard] Dashboard initialization complete');
 });
 
-async function loadUserInfo() {
-    try {
-        // Check if user is authenticated
-        if (!window.auth || !window.auth.isSignedIn()) {
-            console.log('[Dashboard] User not authenticated, redirecting to sign in...');
-            window.auth.signIn();
-            return;
-        }
 
-        // Get user info from Clerk
-        const userInfo = window.auth.getUserInfo();
-        if (userInfo) {
-            const userName = document.getElementById('user-name');
-            if (userName) {
-                const displayName = userInfo.fullName || `${userInfo.firstName || ''} ${userInfo.lastName || ''}`.trim() || userInfo.email || 'User';
-                userName.textContent = displayName;
-            }
-            console.log('[Dashboard] User info loaded:', userInfo);
-        }
-
-        // Test the protected API endpoint
-        const response = await window.api.get('/user');
-        console.log('User API response:', response);
-        
-    } catch (error) {
-        console.error('Failed to load user info:', error);
-        
-        // If it's an authentication error, redirect to sign in
-        if (error.message && error.message.includes('401')) {
-            console.log('[Dashboard] Authentication error in loadUserInfo, redirecting to sign in...');
-            window.auth.signIn();
-        } else {
-            const userName = document.getElementById('user-name');
-            if (userName) {
-                userName.textContent = '👤 User';
-            }
-        }
-    }
-}
 
 // Update dashboard stats
 function updateDashboardStats(boardsCount = 0, ideasCount = 0) {
@@ -141,8 +88,8 @@ async function loadBoards() {
         console.error('[Dashboard] Too many board load attempts, stopping retry loop');
         boardsList.innerHTML = `
             <div class="error-state">
-                <h3>Authentication Issue</h3>
-                <p>There seems to be an authentication problem. Please refresh the page and try again.</p>
+                <h3>Failed to load boards</h3>
+                <p>There was an error loading your boards. Please try again.</p>
                 <button class="btn btn-primary" onclick="location.reload()">Refresh Page</button>
             </div>
         `;
@@ -154,22 +101,8 @@ async function loadBoards() {
     try {
         console.log('[Dashboard] Starting loadBoards function... (attempt', window.boardLoadAttempts, ')');
         boardsList.innerHTML = '<div class="loading">Loading your boards...</div>';
-        console.log('[Dashboard] Checking authentication status...');
-        console.log('[Dashboard] window.auth:', window.auth);
-        console.log('[Dashboard] window.auth.isSignedIn():', window.auth ? window.auth.isSignedIn() : 'auth not available');
+        console.log('[Dashboard] Making API call to /boards...');
 
-        // Check if user is signed in
-        if (!window.auth || !window.auth.isSignedIn()) {
-            console.log('[Dashboard] User not authenticated, redirecting to sign in...');
-            window.auth.signIn();
-            return;
-        }
-        
-        // Clear any stored tokens to force fresh authentication
-        localStorage.removeItem('clerk-db-jwt');
-        sessionStorage.removeItem('clerk-jwt-token');
-        
-        console.log('[Dashboard] User is authenticated, making API call to /boards...');
         const response = await window.api.get('/boards');
         console.log('[Dashboard] API response received:', response);
         
@@ -206,23 +139,14 @@ async function loadBoards() {
             response: error.response
         });
         
-        // If it's an authentication error, redirect to sign in
-        if (error.message && error.message.includes('401')) {
-            console.log('[Dashboard] Authentication error, redirecting to sign in...');
-            // Clear invalid token and force re-authentication
-            localStorage.removeItem('clerk-db-jwt');
-            sessionStorage.removeItem('clerk-jwt-token');
-            window.auth.signIn();
-        } else {
-            updateDashboardStats(0, 0);
-            boardsList.innerHTML = `
-                <div class="error-state">
-                    <h3>Failed to load boards</h3>
-                    <p>There was an error loading your boards. Please try again.</p>
-                    <button class="btn btn-primary" onclick="loadBoards()">Retry</button>
-                </div>
-            `;
-        }
+        updateDashboardStats(0, 0);
+        boardsList.innerHTML = `
+            <div class="error-state">
+                <h3>Failed to load boards</h3>
+                <p>There was an error loading your boards. Please try again.</p>
+                <button class="btn btn-primary" onclick="loadBoards()">Retry</button>
+            </div>
+        `;
     }
 }
 
@@ -353,34 +277,12 @@ async function viewBoard(boardId) {
     console.log('[Dashboard] View board clicked:', boardId);
     
     try {
-        // Check if user is authenticated
-        if (!window.auth || !window.auth.isSignedIn()) {
-            console.log('[Dashboard] User not authenticated, redirecting to sign in...');
-            window.auth.signIn();
-            return;
-        }
-        
-        // Get auth token
-        const token = await window.auth.getToken();
-        console.log('[Dashboard] Got auth token, redirecting to board page...');
-        
-        // Store the token in localStorage for the board page to use
-        localStorage.setItem('clerk-db-jwt', token);
-        
         // Redirect to the board page
         window.location.href = `/board/${boardId}`;
         
     } catch (error) {
         console.error('[Dashboard] Failed to redirect to board:', error);
-        
-        let errorMessage = 'Failed to access board. Please try again.';
-        if (error.message && error.message.includes('401')) {
-            errorMessage = 'You are not authorized to access this board.';
-        } else if (error.message && error.message.includes('404')) {
-            errorMessage = 'Board not found.';
-        }
-        
-        showErrorMessage(errorMessage);
+        showErrorMessage('Failed to access board. Please try again.');
     }
 }
 

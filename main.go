@@ -208,74 +208,37 @@ func main() {
 		log.Printf("[Template] Dashboard rendered successfully - Duration: %v, IP: %s", duration, c.ClientIP())
 	})
 
-	// Private board route with JWT enforcement (for board owners only)
-	router.GET("/board/:id", middleware.AuthMiddleware(), func(c *gin.Context) {
+	// Board route - authentication handled by frontend
+	router.GET("/board/:id", func(c *gin.Context) {
 		startTime := time.Now()
 		boardID := c.Param("id")
 		userAgent := c.GetHeader("User-Agent")
 		referer := c.GetHeader("Referer")
 		acceptLanguage := c.GetHeader("Accept-Language")
 
-		log.Printf("[Template] Private Board route accessed - BoardID: %s, IP: %s, UserAgent: %s, Referer: %s, AcceptLanguage: %s",
+		log.Printf("[Template] Board route accessed - BoardID: %s, IP: %s, UserAgent: %s, Referer: %s, AcceptLanguage: %s",
 			boardID, c.ClientIP(), userAgent, referer, acceptLanguage)
-		log.Printf("[Template] Private Board - Authorization header: %s", c.GetHeader("Authorization"))
-
-		// Get authenticated user ID (required by AuthMiddleware)
-		userID, err := middleware.GetUserID(c)
-		if err != nil {
-			log.Printf("[Template] Private Board route - Auth error: %v", err)
-			c.JSON(http.StatusUnauthorized, gin.H{
-				"error": gin.H{
-					"code":    "UNAUTHORIZED",
-					"message": "Authentication required",
-				},
-			})
-			return
-		}
-
-		log.Printf("[Template] Private Board route - User authenticated: %s", userID)
 
 		// Log environment variables for debugging
 		clerkKey := os.Getenv("CLERK_PUBLISHABLE_KEY")
 		clerkApiUrl := os.Getenv("CLERK_FRONTEND_API_URL")
-		log.Printf("[Template] Private Board environment - ClerkKey: %s, ClerkApiUrl: %s",
+		log.Printf("[Template] Board environment - ClerkKey: %s, ClerkApiUrl: %s",
 			clerkKey != "", clerkApiUrl != "")
-
-		// Check if user owns this board
-		collection := models.GetCollection(models.BoardsCollection)
-		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-		defer cancel()
-
-		filter := bson.M{"_id": boardID, "user_id": userID}
-		var board models.Board
-		if err := collection.FindOne(ctx, filter).Decode(&board); err != nil {
-			log.Printf("[Template] Private Board route - User does not own board: %s, BoardID: %s, Error: %v", userID, boardID, err)
-			c.HTML(http.StatusNotFound, "error.html", gin.H{
-				"title":   "Board Not Found - Disko",
-				"message": "This board does not exist or you don't have permission to access it.",
-			})
-			return
-		}
-
-		log.Printf("[Template] Private Board route - User owns board: %s, BoardID: %s, PublicLink: %s", userID, boardID, board.PublicLink)
 
 		// Get app version
 		version := getAppVersion()
 
 		c.HTML(http.StatusOK, "board.html", gin.H{
 			"title":               "Board - Disko",
-			"publicLink":          board.PublicLink,
-			"isPublic":            false, // Always false for private route
 			"boardID":             boardID,
-			"isOwner":             true, // User is always owner in authenticated route
 			"clerkPublishableKey": clerkKey,
 			"clerkFrontendApiUrl": clerkApiUrl,
 			"version":             version,
 		})
 
 		duration := time.Since(startTime)
-		log.Printf("[Template] Private Board rendered successfully - BoardID: %s, UserID: %s, Duration: %v, IP: %s",
-			boardID, userID, duration, c.ClientIP())
+		log.Printf("[Template] Board rendered successfully - BoardID: %s, Duration: %v, IP: %s",
+			boardID, duration, c.ClientIP())
 	})
 
 	// Public board route with rate limiting (for public access)

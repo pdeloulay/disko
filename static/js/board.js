@@ -163,7 +163,7 @@ class BoardView {
         // Refresh the board to show updates
         if (window.dragDropBoard) {
             console.log('[BoardView] Refreshing drag-drop board for idea update');
-            window.dragDropBoard.loadBoardData();
+            window.dragDropBoard.loadBoard();
         } else {
             console.log('[BoardView] Refreshing board for idea update');
             this.refreshBoard();

@@ -992,13 +992,13 @@ class DragDropBoard {
         // If this is an update from another client, refresh the board
         // to show the new position
         if (detail.ideaId !== this.draggedIdeaId) {
-            this.loadBoardData();
+            this.loadBoard();
         }
     }
 
     handleStatusUpdate(detail) {
         // Refresh the board to show status changes
-        this.loadBoardData();
+        this.loadBoard();
     }
 }
 

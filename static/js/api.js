@@ -5,6 +5,19 @@ class API {
     }
 
     async request(endpoint, options = {}) {
+        // Wait for Clerk to be available before making requests
+        if (!window.Clerk) {
+            console.log('[API] Clerk not available, waiting...');
+            await new Promise(resolve => {
+                const checkClerk = setInterval(() => {
+                    if (window.Clerk) {
+                        clearInterval(checkClerk);
+                        resolve();
+                    }
+                }, 100);
+            });
+        }
+        
         const url = `${this.baseURL}${endpoint}`;
         
         console.log('[API] Making request to:', url);
@@ -47,8 +60,21 @@ class API {
         }
         
         // If no stored token, try to get from Clerk session
-        if (!token && window.Clerk && window.Clerk.user) {
+        if (!token && window.Clerk) {
             try {
+                // Wait for Clerk to be fully loaded
+                if (!window.Clerk.session) {
+                    console.log('[API] Waiting for Clerk session...');
+                    await new Promise(resolve => {
+                        const checkSession = setInterval(() => {
+                            if (window.Clerk.session) {
+                                clearInterval(checkSession);
+                                resolve();
+                            }
+                        }, 100);
+                    });
+                }
+                
                 token = await window.Clerk.session.getToken();
                 console.log('[API] Got auth token from Clerk session, length:', token ? token.length : 0);
                 

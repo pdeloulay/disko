@@ -143,7 +143,39 @@ func main() {
 	utils.InitWebSocketManager()
 
 	// Initialize Gin router
+	gin.SetMode(gin.DebugMode)
 	router := gin.Default()
+
+	// Add custom request logging middleware
+	router.Use(func(c *gin.Context) {
+		start := time.Now()
+		path := c.Request.URL.Path
+		raw := c.Request.URL.RawQuery
+
+		// Process request
+		c.Next()
+
+		// Log after request is processed
+		latency := time.Since(start)
+		statusCode := c.Writer.Status()
+		clientIP := c.ClientIP()
+		method := c.Request.Method
+		userAgent := c.Request.UserAgent()
+
+		if raw != "" {
+			path = path + "?" + raw
+		}
+
+		log.Printf("[GIN] %s | %3d | %13v | %15s | %-7s %s | %s",
+			time.Now().Format("2006/01/02 - 15:04:05"),
+			statusCode,
+			latency,
+			clientIP,
+			method,
+			path,
+			userAgent,
+		)
+	})
 
 	// Load HTML templates
 	router.LoadHTMLGlob("templates/*")

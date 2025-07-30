@@ -243,19 +243,33 @@ async function handleCreateBoard(e) {
 
 // Board card creation
 function createBoardCard(board) {
+    console.log('[Dashboard] Creating board card for:', board);
+    
+    // Check what fields are available in the board object
+    console.log('[Dashboard] Board fields:', Object.keys(board));
+    console.log('[Dashboard] Board ID field:', board.id);
+    console.log('[Dashboard] Board ID type:', typeof board.id);
+    
     const createdDate = new Date(board.createdAt).toLocaleDateString();
     const publicUrl = `${window.location.origin}/board/${board.publicLink}`;
     
+    // Ensure we have a valid board ID
+    const boardId = board.id || board._id || board.boardId;
+    if (!boardId) {
+        console.error('[Dashboard] No valid board ID found:', board);
+        return ''; // Return empty string to skip this board
+    }
+    
     return `
-        <div class="board-card" data-board-id="${board.id}">
+        <div class="board-card" data-board-id="${boardId}">
             <div class="board-card-header">
                 <h3>${escapeHtml(board.name)}</h3>
                 <div class="board-card-menu">
-                    <button class="btn-menu" onclick="toggleBoardMenu('${board.id}')">⋮</button>
-                    <div class="board-menu" id="menu-${board.id}" style="display: none;">
-                        <button onclick="editBoard('${board.id}')">Edit</button>
+                    <button class="btn-menu" onclick="toggleBoardMenu('${boardId}')">⋮</button>
+                    <div class="board-menu" id="menu-${boardId}" style="display: none;">
+                        <button onclick="editBoard('${boardId}')">Edit</button>
                         <button onclick="copyPublicLink('${publicUrl}')">Copy Public Link</button>
-                        <button onclick="confirmDeleteBoard('${board.id}', '${escapeHtml(board.name)}')">Delete</button>
+                        <button onclick="confirmDeleteBoard('${boardId}', '${escapeHtml(board.name)}')">Delete</button>
                     </div>
                 </div>
             </div>
@@ -265,7 +279,7 @@ function createBoardCard(board) {
                 <span class="board-columns">${board.visibleColumns.length} columns</span>
             </div>
             <div class="board-actions">
-                <button class="btn btn-primary" onclick="viewBoard('${board.id}')">Open Board</button>
+                <button class="btn btn-primary" onclick="viewBoard('${boardId}')">Open Board</button>
                 <button class="btn btn-secondary" onclick="copyPublicLink('${publicUrl}')">Share</button>
             </div>
         </div>
@@ -275,6 +289,13 @@ function createBoardCard(board) {
 // Board actions
 async function viewBoard(boardId) {
     console.log('[Dashboard] View board clicked:', boardId);
+    
+    // Validate boardId
+    if (!boardId || boardId === 'undefined' || boardId === 'null') {
+        console.error('[Dashboard] Invalid boardId:', boardId);
+        showErrorMessage('Invalid board ID. Please try again.');
+        return;
+    }
     
     try {
         // Redirect to the board page

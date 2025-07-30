@@ -294,7 +294,6 @@ func GetBoardIdeas(c *gin.Context) {
 	log.Printf("[Handler] GetBoardIdeas called - BoardID: %s, IP: %s, UserAgent: %s, Referer: %s",
 		boardID, c.ClientIP(), userAgent, referer)
 	log.Printf("[Handler] GetBoardIdeas - Request method: %s, URL: %s", c.Request.Method, c.Request.URL.String())
-	log.Printf("[Handler] GetBoardIdeas - Request headers: %+v", c.Request.Header)
 
 	// Get user ID from auth middleware
 	userID, err := middleware.GetUserID(c)
@@ -310,7 +309,6 @@ func GetBoardIdeas(c *gin.Context) {
 	}
 
 	log.Printf("[Handler] GetBoardIdeas - User authenticated successfully - UserID: %s, BoardID: %s", userID, boardID)
-	log.Printf("[Handler] GetBoardIdeas - Authorization header: %s", c.GetHeader("Authorization"))
 
 	// Get board ID from URL parameter
 	if boardID == "" {

@@ -12,6 +12,7 @@ class BoardView {
         console.log('[BoardView] Board data:', this.boardData);
         
         this.init();
+        // loadBoardData() will be called after Clerk is initialized
     }
 
     init() {
@@ -24,6 +25,9 @@ class BoardView {
     }
 
     bindEvents() {
+        // Remove existing event listeners to prevent duplicates
+        this.removeEventListeners();
+        
         // Refresh button
         const refreshBtn = document.getElementById('refresh-btn');
         if (refreshBtn) {
@@ -46,12 +50,36 @@ class BoardView {
         // Board settings button (admin only)
         const settingsBtn = document.getElementById('board-settings-btn');
         if (settingsBtn && this.isAdmin) {
+            console.log('[BoardView] Adding settings button event listener - IsAdmin:', this.isAdmin);
             settingsBtn.addEventListener('click', () => {
+                console.log('[BoardView] Settings button clicked');
                 if (window.boardSettingsManager) {
                     window.boardSettingsManager.setBoardId(this.boardId);
                     window.boardSettingsManager.openSettingsModal();
+                } else {
+                    console.error('[BoardView] Board settings manager not available');
                 }
             });
+        } else {
+            console.log('[BoardView] Settings button not found or user not admin - Button exists:', !!settingsBtn, 'IsAdmin:', this.isAdmin);
+        }
+    }
+
+    removeEventListeners() {
+        // Remove existing event listeners to prevent duplicates
+        const refreshBtn = document.getElementById('refresh-btn');
+        if (refreshBtn) {
+            refreshBtn.replaceWith(refreshBtn.cloneNode(true));
+        }
+
+        const createIdeaBtn = document.getElementById('create-idea-btn');
+        if (createIdeaBtn) {
+            createIdeaBtn.replaceWith(createIdeaBtn.cloneNode(true));
+        }
+
+        const settingsBtn = document.getElementById('board-settings-btn');
+        if (settingsBtn) {
+            settingsBtn.replaceWith(settingsBtn.cloneNode(true));
         }
     }
 
@@ -124,6 +152,90 @@ class BoardView {
         } else {
             console.log('[BoardView] Refreshing board for idea update');
             this.refreshBoard();
+        }
+    }
+
+    async loadBoardData() {
+        console.log('[BoardView] Loading board data...');
+        
+        // Wait for Clerk to be available
+        if (!window.Clerk) {
+            console.log('[BoardView] Clerk not available, waiting...');
+            await new Promise(resolve => {
+                const checkClerk = setInterval(() => {
+                    if (window.Clerk) {
+                        clearInterval(checkClerk);
+                        resolve();
+                    }
+                }, 100);
+            });
+        }
+        
+        try {
+            const authToken = await this.getAuthToken();
+            if (!authToken) {
+                console.error('[BoardView] No auth token available');
+                return;
+            }
+            
+            const response = await fetch(`/api/boards/${this.boardId}`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${authToken}`
+                }
+            });
+
+            if (response.ok) {
+                const boardData = await response.json();
+                console.log('[BoardView] Board data loaded:', boardData);
+                
+                // Update board data
+                this.boardData = boardData;
+                this.isAdmin = boardData.isAdmin || false;
+                this.publicLink = boardData.publicLink;
+                
+                // Update window.boardData for other components
+                window.boardData = this.boardData;
+                
+                console.log('[BoardView] Updated board data - IsAdmin:', this.isAdmin, 'PublicLink:', this.publicLink);
+                
+                // Re-bind events with updated admin status
+                this.bindEvents();
+            } else {
+                console.error('[BoardView] Failed to load board data:', response.status);
+            }
+        } catch (error) {
+            console.error('[BoardView] Error loading board data:', error);
+        }
+    }
+
+    async getAuthToken() {
+        if (!window.Clerk) {
+            console.log('[BoardView] Clerk not available for auth token');
+            return null;
+        }
+        
+        try {
+            // Wait for Clerk to be fully loaded
+            if (!window.Clerk.session) {
+                console.log('[BoardView] Waiting for Clerk session...');
+                await new Promise(resolve => {
+                    const checkSession = setInterval(() => {
+                        if (window.Clerk.session) {
+                            clearInterval(checkSession);
+                            resolve();
+                        }
+                    }, 100);
+                });
+            }
+            
+            const token = await window.Clerk.session.getToken();
+            console.log('[BoardView] Auth token obtained successfully');
+            return token;
+        } catch (error) {
+            console.error('[BoardView] Error getting auth token:', error);
+            return null;
         }
     }
 

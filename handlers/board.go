@@ -39,6 +39,7 @@ type BoardResponse struct {
 	PublicLink     string    `json:"publicLink"`
 	IsPublic       bool      `json:"isPublic"`
 	UserID         string    `json:"userId"`
+	IsAdmin        bool      `json:"isAdmin"`
 	VisibleColumns []string  `json:"visibleColumns"`
 	VisibleFields  []string  `json:"visibleFields"`
 	IdeasCount     int       `json:"ideasCount"`
@@ -737,7 +738,6 @@ func GetBoard(c *gin.Context) {
 
 	log.Printf("[Handler] GetBoard started - BoardID: %s, UserID: %s, IP: %s, UserAgent: %s, Referer: %s",
 		boardID, userID, c.ClientIP(), userAgent, referer)
-	log.Printf("[Handler] GetBoard - Authorization header: %s", c.GetHeader("Authorization"))
 
 	// Get database connection
 	if models.DB == nil {
@@ -791,6 +791,7 @@ func GetBoard(c *gin.Context) {
 		PublicLink:     board.PublicLink,
 		IsPublic:       board.IsPublic,
 		UserID:         board.UserID,
+		IsAdmin:        board.UserID == userID, // User is admin if they own the board
 		VisibleColumns: board.VisibleColumns,
 		VisibleFields:  board.VisibleFields,
 		CreatedAt:      board.CreatedAt,

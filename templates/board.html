@@ -3,111 +3,111 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{.title}}</title>
+    <title>{{.title}} - Board {{.boardId}}</title>
     <link rel="icon" type="image/png" href="/static/images/boom.png">
     <link rel="stylesheet" href="/static/css/main.css">
     
     <!-- Initialize Clerk -->
     <script
-        async
-        crossorigin="anonymous"
+      async
+      crossorigin="anonymous"
         data-clerk-publishable-key="{{.clerkPublishableKey}}"
         src="{{.clerkFrontendApiUrl}}/npm/@clerk/clerk-js@5/dist/clerk.browser.js"
-        type="text/javascript"
+      type="text/javascript"
     ></script>
 </head>
 <body>
-    <div class="board-page">
-        <header class="dashboard-header">
-            <div class="container">
-                <div class="dashboard-header-content">
-                    <div class="dashboard-logo">
-                        <a href="/" class="logo-link">
-                            <img src="/static/images/logo-sm.png" alt="Disko" class="logo-image">
-                        </a>
-                    </div>
-                    <div class="user-menu">
-                        <span id="user-name">👤 User</span>
-                        <div id="clerk-user-button"></div>
-                        <button id="sign-out-btn" class="btn btn-secondary">Sign Out</button>
-                        <span class="version-display">v{{.version}}</span>
-                    </div>
-                </div>
-            </div>
-        </header>
-
-        <main class="dashboard-main">
-            <div class="container">
-                <!-- Board Info Section -->
-                <div class="board-info-section">
-                    <div class="board-info">
-                        <h1 id="board-title">Loading...</h1>
-                        <p id="board-description"></p>
-                        <div id="ws-status" class="ws-status reconnecting">Connecting...</div>
-                    </div>
-                    <div class="board-actions">
-                        {{if not .isPublic}}
-                        <button id="board-settings-btn" class="btn btn-secondary">⚙️ Settings</button>
-                        <button id="create-idea-btn" class="btn btn-primary create-idea-btn">Create Idea</button>
-                        {{end}}
-                        <button id="refresh-btn" class="btn btn-secondary">Refresh</button>
-                    </div>
-                </div>
-
-                <div class="board-container">
-                    <!-- Tab Navigation -->
-                    <div class="board-tabs">
-                        <button id="board-tab" class="tab-button active" data-tab="board">
-                            <span class="tab-icon">📋</span>
-                            Board
-                            <span id="board-ideas-count" class="tab-count">0</span>
-                        </button>
-                        <button id="release-tab" class="tab-button" data-tab="release">
-                            <span class="tab-icon">🚀</span>
-                            Release
-                            <span id="release-ideas-count" class="tab-count">0</span>
-                        </button>
-                    </div>
-
-                    <!-- Board View -->
-                    <div id="board-view" class="tab-content active">
-                        <div class="board-header-info">
-                            <h2>Board</h2>
-                            <span id="ideas-count" class="ideas-count">Loading...</span>
+        <div class="board-page">
+            <header class="dashboard-header">
+                <div class="container">
+                    <div class="dashboard-header-content">
+                        <div class="dashboard-logo">
+                            <a href="/" class="logo-link">
+                                <img src="/static/images/logo-sm.png" alt="Disko" class="logo-image">
+                            </a>
                         </div>
-                        <div id="drag-drop-board" class="drag-drop-board">
-                            <!-- Column layout will be loaded here -->
-                            <div class="board-loading">Loading board...</div>
+                        <div class="user-menu">
+                            <span id="user-name">👤 User</span>
+                            <div id="clerk-user-button"></div>
+                            <button id="sign-out-btn" class="btn btn-secondary">Sign Out</button>
+                            <span class="version-display">v{{.version}}</span>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <main class="dashboard-main">
+                <div class="container">
+                    <!-- Board Info Section -->
+                    <div class="board-info-section">
+                        <div class="board-info">
+                            <h1 id="board-title">Loading...</h1>
+                            <p id="board-description"></p>
+                            <div id="ws-status" class="ws-status reconnecting">Connecting...</div>
+                        </div>
+                        <div class="board-actions">
+                            {{if not .isPublic}}
+                            <button id="board-settings-btn" class="btn btn-secondary">⚙️ Settings</button>
+                            <button id="create-idea-btn" class="btn btn-primary create-idea-btn">Create Idea</button>
+                            {{end}}
+                            <button id="refresh-btn" class="btn btn-secondary">Refresh</button>
                         </div>
                     </div>
 
-                    <!-- Release View -->
-                    <div id="release-view" class="tab-content">
-                        <div class="release-header">
-                            <h2>Released Ideas</h2>
-                            <div class="release-controls">
-                                <div class="search-container">
-                                    <input type="text" id="release-search" placeholder="Search released ideas..." class="search-input">
-                                    <button id="clear-search" class="clear-search-btn" title="Clear search">×</button>
-                                </div>
-                                <div class="sort-container">
-                                    <select id="release-sort" class="sort-select">
-                                        <option value="created_at:desc">Newest First</option>
-                                        <option value="created_at:asc">Oldest First</option>
-                                        <option value="name:asc">Name A-Z</option>
-                                        <option value="name:desc">Name Z-A</option>
-                                    </select>
+                    <div class="board-container">
+                        <!-- Tab Navigation -->
+                        <div class="board-tabs">
+                            <button id="board-tab" class="tab-button active" data-tab="board">
+                                <span class="tab-icon">📋</span>
+                                Board
+                                <span id="board-ideas-count" class="tab-count">0</span>
+                            </button>
+                            <button id="release-tab" class="tab-button" data-tab="release">
+                                <span class="tab-icon">🚀</span>
+                                Release
+                                <span id="release-ideas-count" class="tab-count">0</span>
+                            </button>
+                        </div>
+
+                        <!-- Board View -->
+                        <div id="board-view" class="tab-content active">
+                            <div class="board-header-info">
+                                <h2>Board</h2>
+                                <span id="ideas-count" class="ideas-count">Loading...</span>
+                            </div>
+                            <div id="drag-drop-board" class="drag-drop-board">
+                                <!-- Column layout will be loaded here -->
+                                <div class="board-loading">Loading board...</div>
+                            </div>
+                        </div>
+
+                        <!-- Release View -->
+                        <div id="release-view" class="tab-content">
+                            <div class="release-header">
+                                <h2>Released Ideas</h2>
+                                <div class="release-controls">
+                                    <div class="search-container">
+                                        <input type="text" id="release-search" placeholder="Search released ideas..." class="search-input">
+                                        <button id="clear-search" class="clear-search-btn" title="Clear search">×</button>
+                                    </div>
+                                    <div class="sort-container">
+                                        <select id="release-sort" class="sort-select">
+                                            <option value="created_at:desc">Newest First</option>
+                                            <option value="created_at:asc">Oldest First</option>
+                                            <option value="name:asc">Name A-Z</option>
+                                            <option value="name:desc">Name Z-A</option>
+                                        </select>
                                 </div>
                             </div>
                         </div>
                         <div id="release-table" class="release-table">
                             <!-- Release table will be loaded here -->
-                            <div class="release-loading">Loading released ideas...</div>
+                                <div class="release-loading">Loading released ideas...</div>
+                        </div>
                         </div>
                     </div>
                 </div>
-            </div>
-        </main>
+            </main>
     </div>
 
     <!-- Common JavaScript -->
@@ -122,6 +122,13 @@
     <script src="/static/js/websocket-manager.js"></script>
     
     <script>
+        // Board data from server
+        window.boardData = {
+            boardId: '{{.boardID}}',
+            isAdmin: false, // Will be determined by API call
+            publicLink: null
+        };
+
         // Wait for Clerk to be available
         function waitForClerk(timeout = 10000) {
             const start = Date.now();
@@ -216,6 +223,16 @@
                 });
 
                 console.log('Board page authentication setup complete');
+
+                // Initialize board components AFTER Clerk is ready
+                console.log('Initializing board components...');
+                if (window.boardView) {
+                    console.log('Board view already initialized, triggering board data load...');
+                    await window.boardView.loadBoardData();
+                } else {
+                    console.log('Creating new board view...');
+                    window.boardView = new BoardView();
+                }
 
             } catch (error) {
                 console.error('Failed to initialize Clerk:', error.message);

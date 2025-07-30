@@ -76,6 +76,29 @@ class BoardSettingsManager {
                     <div class="modal-body">
                         <form id="board-settings-form">
                             <div class="settings-section">
+                                <h4>Board Information</h4>
+                                <p class="section-description">Update your board details.</p>
+                                <div class="form-group">
+                                    <label for="board-name">Board Name</label>
+                                    <input type="text" 
+                                           id="board-name" 
+                                           name="name" 
+                                           value="${this.escapeHtml(board.name || '')}" 
+                                           placeholder="Enter board name"
+                                           maxlength="100"
+                                           required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="board-description">Description</label>
+                                    <textarea id="board-description" 
+                                              name="description" 
+                                              placeholder="Enter board description"
+                                              maxlength="500"
+                                              rows="3">${this.escapeHtml(board.description || '')}</textarea>
+                                </div>
+                            </div>
+
+                            <div class="settings-section">
                                 <h4>Column Visibility</h4>
                                 <p class="section-description">Choose which columns are visible to public users on your board.</p>
                                 <div class="column-visibility-grid">
@@ -206,12 +229,24 @@ class BoardSettingsManager {
         
         const formData = new FormData(e.target);
         
+        // Get board information
+        const boardName = formData.get('name') || '';
+        const boardDescription = formData.get('description') || '';
+        
         // Get selected columns and fields
         const visibleColumns = formData.getAll('visibleColumns');
         const visibleFields = formData.getAll('visibleFields');
 
+        console.log('[BoardSettings] Form data - BoardName:', boardName);
+        console.log('[BoardSettings] Form data - BoardDescription:', boardDescription);
         console.log('[BoardSettings] Form data - VisibleColumns:', visibleColumns);
         console.log('[BoardSettings] Form data - VisibleFields:', visibleFields);
+
+        // Validate board name
+        if (!boardName.trim()) {
+            this.showErrorMessage('Board name is required.');
+            return;
+        }
 
         // Ensure oneLiner is always included
         if (!visibleFields.includes('oneLiner')) {
@@ -220,6 +255,8 @@ class BoardSettingsManager {
         }
 
         const settingsData = {
+            name: boardName.trim(),
+            description: boardDescription.trim(),
             visibleColumns,
             visibleFields
         };

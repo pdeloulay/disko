@@ -76,6 +76,11 @@ class ReleaseTable {
         const container = document.getElementById('release-table-container');
         if (!container) return;
 
+        console.log('[ReleaseTable] Loading released ideas...');
+        console.log('[ReleaseTable] Board ID:', this.boardId);
+        console.log('[ReleaseTable] Current sort:', this.currentSort);
+        console.log('[ReleaseTable] Current search:', this.currentSearch);
+
         // Show loading state
         container.innerHTML = '<div class="release-loading">Loading released ideas...</div>';
 
@@ -92,29 +97,26 @@ class ReleaseTable {
                 params.append('search', this.currentSearch);
             }
 
-            // Determine the endpoint based on whether this is public or admin access
-            let endpoint;
-            let headers = {};
+            // Use the API utility for proper authentication
+            const endpoint = `/boards/${this.boardId}/release?${params}`;
+            console.log('[ReleaseTable] Making API call to:', endpoint);
             
-            endpoint = `/api/boards/${this.boardId}/release?${params}`;
-            // Add auth header if available
-            const token = localStorage.getItem('clerk-db-jwt');
-            if (token) {
-                headers['Authorization'] = `Bearer ${token}`;
-            }
+            const response = await window.api.get(endpoint);
+            console.log('[ReleaseTable] API response received:', response);
 
-            const response = await fetch(endpoint, { headers });
+            const data = response.data || response;
+            console.log('[ReleaseTable] Processed data:', data);
 
-            if (!response.ok) {
-                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-            }
-
-            const data = await response.json();
             this.renderReleasedIdeas(data);
             this.renderPagination(data);
 
         } catch (error) {
-            console.error('Error loading released ideas:', error);
+            console.error('[ReleaseTable] Error loading released ideas:', error);
+            console.error('[ReleaseTable] Error details:', {
+                message: error.message,
+                status: error.response?.status,
+                data: error.response?.data
+            });
             container.innerHTML = `
                 <div class="error-message">
                     <p>Failed to load released ideas. Please try again.</p>
@@ -128,7 +130,12 @@ class ReleaseTable {
         const container = document.getElementById('release-table-container');
         if (!container) return;
 
+        console.log('[ReleaseTable] Rendering released ideas with data:', data);
+        console.log('[ReleaseTable] Ideas array:', data.ideas);
+        console.log('[ReleaseTable] Ideas count:', data.ideas?.length);
+
         if (!data.ideas || data.ideas.length === 0) {
+            console.log('[ReleaseTable] No ideas found, showing empty state');
             container.innerHTML = `
                 <div class="empty-state">
                     <div class="empty-icon">🚀</div>
@@ -138,6 +145,8 @@ class ReleaseTable {
             `;
             return;
         }
+
+        console.log('[ReleaseTable] Rendering table with', data.ideas.length, 'ideas');
 
         // Create table
         const table = document.createElement('table');
@@ -282,14 +291,18 @@ class ReleaseTable {
 
     // Method to refresh the release table (called from other components)
     refresh() {
-        this.loadReleasedIdeas();
+        if (this.boardId) {
+            this.loadReleasedIdeas();
+        } else {
+            console.log('[ReleaseTable] Not initialized yet, waiting for board data...');
+        }
     }
 }
 
 // Initialize release table when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
     // Only initialize if we're on a board page
-    if (window.boardData && document.getElementById('release-view')) {
+    if (document.getElementById('release-view')) {
         window.releaseTable = new ReleaseTable();
     }
 });

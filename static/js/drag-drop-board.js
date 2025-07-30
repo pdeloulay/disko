@@ -97,6 +97,9 @@ class DragDropBoard {
                 boardDescription.style.display = board.description ? 'block' : 'none';
             }
 
+            // Update page title
+            document.title = `${board.name || 'Untitled Board'} - Board ${this.boardId}`;
+
             // Update board settings manager with current board data
             if (window.boardSettingsManager) {
                 window.boardSettingsManager.setBoard(board);

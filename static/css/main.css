@@ -973,6 +973,41 @@ a:hover {
     font-size: 0.875rem;
 }
 
+/* Board Information Form Styling */
+.settings-section .form-group {
+    margin-bottom: var(--space-4);
+}
+
+.settings-section .form-group label {
+    display: block;
+    margin-bottom: var(--space-2);
+    color: var(--gray-700);
+    font-weight: 500;
+    font-size: 0.875rem;
+}
+
+.settings-section .form-group input,
+.settings-section .form-group textarea {
+    width: 100%;
+    padding: var(--space-3);
+    border: 1px solid var(--gray-300);
+    border-radius: var(--radius);
+    font-size: 0.875rem;
+    transition: border-color 0.2s ease;
+}
+
+.settings-section .form-group input:focus,
+.settings-section .form-group textarea:focus {
+    outline: none;
+    border-color: var(--primary-500);
+    box-shadow: 0 0 0 3px var(--primary-100);
+}
+
+.settings-section .form-group textarea {
+    resize: vertical;
+    min-height: 80px;
+}
+
 
 
 /* ===== FORMS ===== */

@@ -78,6 +78,20 @@ The project is set up with:
 
 ## Changelog
 
+### [v0.2.2] - Board Settings Enhancement
+- **✏️ Board Name Editing**: Added ability to rename boards through the board settings modal
+- **📝 Board Description**: Added board description editing in settings
+- **🎨 Enhanced UI**: Added proper form styling for board information fields
+- **🔄 Real-time Updates**: Board title and page title update immediately after saving
+- **✅ Form Validation**: Added validation for required board name field
+- **📱 Responsive Design**: Board settings form works well on mobile devices
+
+### [v0.2.1] - Release Table Loading Fix
+- **🔧 Async Initialization**: Fixed release table initialization to wait for board data
+- **📊 Proper Loading**: Release ideas now load correctly when switching to Release tab
+- **🔄 Data Synchronization**: Ensured release table waits for board data before making API calls
+- **🐛 Bug Fixes**: Resolved issues with undefined board ID in release table API calls
+
 ### [v0.2.0] - Simplified Authentication System
 - **🔐 Direct Clerk Integration**: Removed complex auth.js file and implemented direct Clerk integration like numi project
 - **🎯 Simplified Flow**: Clean authentication flow with direct Clerk initialization in HTML templates

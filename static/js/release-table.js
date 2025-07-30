@@ -1,6 +1,7 @@
 // Release Table functionality
 class ReleaseTable {
     constructor() {
+        console.log('[ReleaseTable] Constructor called');
         this.boardData = null;
         this.boardId = null;
         this.publicLink = null;
@@ -73,8 +74,13 @@ class ReleaseTable {
     }
 
     async loadReleasedIdeas() {
+        console.log('[ReleaseTable] loadReleasedIdeas started');
+        
         const container = document.getElementById('release-table-container');
-        if (!container) return;
+        if (!container) {
+            console.error('[ReleaseTable] release-table-container not found');
+            return;
+        }
 
         console.log('[ReleaseTable] Loading released ideas...');
         console.log('[ReleaseTable] Board ID:', this.boardId);
@@ -291,18 +297,32 @@ class ReleaseTable {
 
     // Method to refresh the release table (called from other components)
     refresh() {
+        console.log('[ReleaseTable] Refresh called');
+        console.log('[ReleaseTable] Current boardId:', this.boardId);
+        console.log('[ReleaseTable] Current boardData:', this.boardData);
+        
         if (this.boardId) {
+            console.log('[ReleaseTable] BoardId available, calling loadReleasedIdeas');
             this.loadReleasedIdeas();
         } else {
             console.log('[ReleaseTable] Not initialized yet, waiting for board data...');
+            // Wait for board data to be available
+            this.waitForBoardData().then(() => {
+                console.log('[ReleaseTable] Board data now available, calling loadReleasedIdeas');
+                this.loadReleasedIdeas();
+            });
         }
     }
 }
 
 // Initialize release table when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
+    console.log('[ReleaseTable] DOM loaded, checking for release-view element');
     // Only initialize if we're on a board page
     if (document.getElementById('release-view')) {
+        console.log('[ReleaseTable] Release view found, creating ReleaseTable instance');
         window.releaseTable = new ReleaseTable();
+    } else {
+        console.log('[ReleaseTable] Release view not found, skipping initialization');
     }
 });

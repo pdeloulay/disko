@@ -49,11 +49,18 @@ class BoardTabs {
 
         // Load content for the active tab
         if (tabName === 'release') {
+            console.log('[BoardTabs] Switching to release tab');
+            console.log('[BoardTabs] Release table available:', !!window.releaseTable);
             // Load release table if not already loaded
             if (window.releaseTable) {
+                console.log('[BoardTabs] Calling release table refresh');
                 window.releaseTable.refresh();
+            } else {
+                console.log('[BoardTabs] Release table not available, creating new instance');
+                window.releaseTable = new ReleaseTable();
             }
         } else if (tabName === 'board') {
+            console.log('[BoardTabs] Switching to board tab');
             // Refresh board if needed
             if (window.dragDropBoard) {
                 window.dragDropBoard.refreshBoard();

@@ -1746,6 +1746,196 @@ a:hover {
     min-height: 200px;
 }
 
+/* Release Table Styling */
+.release-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: white;
+    border-radius: var(--radius);
+    overflow: hidden;
+    box-shadow: var(--shadow);
+    margin-top: var(--space-4);
+}
+
+.release-table thead {
+    background: var(--gray-50);
+    border-bottom: 1px solid var(--gray-200);
+}
+
+.release-table th {
+    padding: var(--space-3) var(--space-4);
+    text-align: left;
+    font-weight: 600;
+    font-size: 0.875rem;
+    color: var(--gray-700);
+    border-bottom: 1px solid var(--gray-200);
+}
+
+.release-table td {
+    padding: var(--space-4);
+    border-bottom: 1px solid var(--gray-100);
+    vertical-align: top;
+}
+
+.release-table tbody tr:hover {
+    background: var(--gray-50);
+}
+
+.release-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+/* Column specific styling */
+.release-table .col-name {
+    width: 25%;
+    font-weight: 600;
+    color: var(--gray-900);
+}
+
+.release-table .col-description {
+    width: 25%;
+    color: var(--gray-700);
+}
+
+.release-table .col-value {
+    width: 20%;
+    color: var(--gray-700);
+}
+
+.release-table .col-rice {
+    width: 10%;
+    text-align: center;
+    font-weight: 600;
+    color: var(--primary-600);
+}
+
+.release-table .col-feedback {
+    width: 15%;
+    text-align: center;
+}
+
+.release-table .col-date {
+    width: 15%;
+    text-align: center;
+    color: var(--gray-500);
+    font-size: 0.875rem;
+}
+
+/* Cell content styling */
+.release-table .idea-title {
+    font-weight: 600;
+    color: var(--gray-900);
+    margin-bottom: var(--space-1);
+}
+
+.release-table .idea-description,
+.release-table .idea-value {
+    color: var(--gray-600);
+    font-size: 0.875rem;
+    line-height: 1.4;
+}
+
+.release-table .rice-score {
+    font-weight: 600;
+    color: var(--primary-600);
+    font-size: 0.875rem;
+}
+
+.release-table .feedback-display {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-2);
+}
+
+.release-table .thumbs-up {
+    color: var(--yellow-600);
+    font-weight: 500;
+}
+
+.release-table .emoji-reactions {
+    display: flex;
+    gap: var(--space-1);
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.release-table .emoji-reaction {
+    background: var(--gray-100);
+    padding: var(--space-1) var(--space-2);
+    border-radius: var(--radius);
+    font-size: 0.75rem;
+    color: var(--gray-700);
+}
+
+.release-table .release-date {
+    color: var(--gray-500);
+    font-size: 0.875rem;
+}
+
+/* Empty state styling */
+.release-table .empty-state {
+    text-align: center;
+    padding: var(--space-8);
+    color: var(--gray-500);
+}
+
+.release-table .empty-icon {
+    font-size: 3rem;
+    margin-bottom: var(--space-4);
+}
+
+.release-table .empty-state h3 {
+    margin-bottom: var(--space-2);
+    color: var(--gray-700);
+}
+
+.release-table .empty-state p {
+    color: var(--gray-500);
+}
+
+/* Error state styling */
+.release-table .error-message {
+    text-align: center;
+    padding: var(--space-6);
+    color: var(--red-600);
+}
+
+.release-table .error-message p {
+    margin-bottom: var(--space-3);
+}
+
+/* Pagination styling */
+.pagination {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-4);
+    margin-top: var(--space-6);
+    padding: var(--space-4);
+}
+
+.pagination-btn {
+    padding: var(--space-2) var(--space-3);
+    border: 1px solid var(--gray-300);
+    background: white;
+    border-radius: var(--radius);
+    color: var(--gray-700);
+    font-size: 0.875rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.pagination-btn:hover {
+    background: var(--gray-50);
+    border-color: var(--gray-400);
+}
+
+.pagination-info {
+    color: var(--gray-600);
+    font-size: 0.875rem;
+}
+
 .release-loading {
     display: flex;
     align-items: center;
@@ -1784,6 +1974,40 @@ a:hover {
     .tab-button {
         padding: var(--space-3) var(--space-4);
         font-size: 0.875rem;
+    }
+    
+    /* Release table responsive */
+    .release-table {
+        font-size: 0.875rem;
+    }
+    
+    .release-table th,
+    .release-table td {
+        padding: var(--space-2) var(--space-3);
+    }
+    
+    .release-table .col-name {
+        width: 30%;
+    }
+    
+    .release-table .col-description {
+        width: 25%;
+    }
+    
+    .release-table .col-value {
+        width: 20%;
+    }
+    
+    .release-table .col-rice {
+        width: 10%;
+    }
+    
+    .release-table .col-feedback {
+        width: 10%;
+    }
+    
+    .release-table .col-date {
+        width: 15%;
     }
     
     /* Board Settings Modal Responsive */

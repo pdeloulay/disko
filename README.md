@@ -78,6 +78,21 @@ The project is set up with:
 
 ## Changelog
 
+### [v0.2.4] - Release Table Styling Enhancement
+- **🎨 Professional Table Design**: Added comprehensive styling for the release table with proper spacing, borders, and typography
+- **📱 Responsive Layout**: Optimized table layout for mobile devices with adjusted column widths
+- **🎯 Visual Hierarchy**: Clear distinction between headers, content, and interactive elements
+- **✨ Hover Effects**: Added subtle hover effects for better user interaction
+- **📊 Column Alignment**: Proper alignment for different data types (text, numbers, dates)
+- **🎨 Color Coding**: Consistent color scheme with primary colors for important data
+- **📋 Empty States**: Styled empty state messages for when no released ideas exist
+- **🔢 Pagination**: Clean pagination controls for large datasets
+
+### [v0.2.3] - Drag & Drop Error Fixes
+- **🐛 Fixed Method References**: Corrected `loadBoardData()` to `loadBoard()` method calls
+- **🔧 WebSocket Integration**: Fixed real-time updates for idea position and status changes
+- **⚡ Performance**: Improved error handling and method resolution
+
 ### [v0.2.2] - Board Settings Enhancement
 - **✏️ Board Name Editing**: Added ability to rename boards through the board settings modal
 - **📝 Board Description**: Added board description editing in settings

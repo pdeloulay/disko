@@ -16,7 +16,6 @@ import (
 type ContactRequest struct {
 	Subject string `json:"subject" binding:"required"`
 	Email   string `json:"email" binding:"required,email"`
-	Name    string `json:"name"`
 	Message string `json:"message" binding:"required"`
 }
 
@@ -41,11 +40,48 @@ func HandleContactPage(c *gin.Context) {
 	})
 }
 
+// Simple in-memory rate limiting for contact form
+var contactRateLimitStore = make(map[string]time.Time)
+
+// isContactRateLimited checks if an IP is rate limited for contact form
+func isContactRateLimited(ip string) bool {
+	if lastRequest, exists := contactRateLimitStore[ip]; exists {
+		// Rate limit: 1 contact form submission per hour per IP
+		if time.Since(lastRequest) < time.Hour {
+			return true
+		}
+	}
+	return false
+}
+
+// setContactRateLimit sets the rate limit for an IP
+func setContactRateLimit(ip string) {
+	contactRateLimitStore[ip] = time.Now()
+
+	// Clean up old entries after 2 hours
+	go func() {
+		time.Sleep(2 * time.Hour)
+		delete(contactRateLimitStore, ip)
+	}()
+}
+
 // HandleContactSubmit handles contact form submissions
 func HandleContactSubmit(c *gin.Context) {
+	clientIP := c.ClientIP()
+
+	// Check rate limiting
+	if isContactRateLimited(clientIP) {
+		log.Printf("[Contact] Rate limited contact form submission from IP: %s", clientIP)
+		c.JSON(http.StatusTooManyRequests, ContactResponse{
+			Success: false,
+			Message: "Too many contact form submissions. Please wait at least 1 hour before submitting another message.",
+		})
+		return
+	}
+
 	var req ContactRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		log.Printf("[Contact] Invalid request data: %v", err)
+		log.Printf("[Contact] Invalid request data from IP %s: %v", clientIP, err)
 		c.JSON(http.StatusBadRequest, ContactResponse{
 			Success: false,
 			Message: "Invalid request data",
@@ -62,9 +98,12 @@ func HandleContactSubmit(c *gin.Context) {
 		return
 	}
 
+	// Set rate limit before processing
+	setContactRateLimit(clientIP)
+
 	// Send email notification
 	if err := sendContactEmail(req); err != nil {
-		log.Printf("[Contact] Failed to send contact email: %v", err)
+		log.Printf("[Contact] Failed to send contact email from IP %s: %v", clientIP, err)
 		c.JSON(http.StatusInternalServerError, ContactResponse{
 			Success: false,
 			Message: "Failed to send message. Please try again later.",
@@ -72,7 +111,7 @@ func HandleContactSubmit(c *gin.Context) {
 		return
 	}
 
-	log.Printf("[Contact] Contact form submitted successfully from %s", req.Email)
+	log.Printf("[Contact] Contact form submitted successfully from IP %s, Email: %s", clientIP, req.Email)
 	c.JSON(http.StatusOK, ContactResponse{
 		Success: true,
 		Message: "Thank you for your message! We'll get back to you soon.",
@@ -97,7 +136,7 @@ func sendContactEmail(req ContactRequest) error {
 	m := gomail.NewMessage()
 	m.SetHeader("From", smtpUser)
 	m.SetHeader("To", adminEmail)
-	m.SetHeader("Subject", fmt.Sprintf("[Disko Contact] %s - %s", req.Subject, req.Email))
+	m.SetHeader("Subject", fmt.Sprintf("[Disko][Contact] %s - %s", req.Subject, req.Email))
 
 	// Set email body
 	body := generateContactEmailBody(req)
@@ -148,20 +187,16 @@ func generateContactEmailBody(req ContactRequest) string {
                 <div class="value">%s</div>
             </div>
             <div class="field">
-                <div class="label">Name:</div>
-                <div class="value">%s</div>
-            </div>
-            <div class="field">
                 <div class="label">Message:</div>
                 <div class="value">%s</div>
             </div>
             <div class="footer">
-                <p>This message was sent from the Disko contact form.</p>
+                <p>This message was sent from the Disko App.</p>
             </div>
         </div>
     </div>
 </body>
-</html>`, now, req.Subject, req.Email, req.Name, req.Message)
+</html>`, now, req.Subject, req.Email, req.Message)
 
 	return html
 }

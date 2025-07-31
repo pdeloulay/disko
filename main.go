@@ -378,6 +378,19 @@ func main() {
 	// Contact page route
 	router.GET("/contact", handlers.HandleContactPage)
 
+	// About page route
+	router.GET("/about", func(c *gin.Context) {
+		log.Printf("[Template] About page route accessed - IP: %s", c.ClientIP())
+
+		// Get app version
+		version := getAppVersion()
+
+		c.HTML(http.StatusOK, "about.html", gin.H{
+			"title":   "About Disko",
+			"version": version,
+		})
+	})
+
 	// API routes group
 	api := router.Group("/api")
 	{

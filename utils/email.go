@@ -434,7 +434,7 @@ func generateInviteEmailHTML(board models.Board, message string) string {
                 <a href="{{.AboutURL}}">About Disko</a>
                 <a href="{{.PrivacyURL}}">Privacy Policy</a>
                 <a href="{{.TermsURL}}">Terms of Service</a>
-                <a href="mailto:support@disko.app">Support</a>
+					 <a href="{{.ContactURL}}">Contact Us</a>
             </div>
         </div>
     </div>
@@ -455,6 +455,7 @@ func generateInviteEmailHTML(board models.Board, message string) string {
 		AboutURL         string
 		PrivacyURL       string
 		TermsURL         string
+		ContactURL       string
 		Message          string // Added Message field
 	}{
 		BoardName:        board.Name,
@@ -469,6 +470,7 @@ func generateInviteEmailHTML(board models.Board, message string) string {
 		AboutURL:         fmt.Sprintf("%s/about", os.Getenv("APP_URL")),
 		PrivacyURL:       fmt.Sprintf("%s/privacy", os.Getenv("APP_URL")),
 		TermsURL:         fmt.Sprintf("%s/terms", os.Getenv("APP_URL")),
+		ContactURL:       fmt.Sprintf("%s/contact", os.Getenv("APP_URL")),
 		Message:          message, // Pass the message to the template
 	}
 

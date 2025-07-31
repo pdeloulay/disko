@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>About Disko</title>
+    <link rel="stylesheet" href="/static/css/main.css">
+    <style>
+        .about-container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 2rem;
+            line-height: 1.6;
+        }
+        .about-header {
+            text-align: center;
+            margin-bottom: 3rem;
+            border-bottom: 2px solid #e1e5e9;
+            padding-bottom: 1rem;
+        }
+        .about-section {
+            margin-bottom: 2rem;
+        }
+        .about-section h2 {
+            color: #2563eb;
+            margin-bottom: 1rem;
+        }
+        .about-section h3 {
+            color: #374151;
+            margin-bottom: 0.5rem;
+        }
+        .about-section ul {
+            padding-left: 1.5rem;
+            margin: 1rem 0;
+        }
+        .about-section li {
+            margin-bottom: 0.5rem;
+            line-height: 1.6;
+        }
+        .back-link {
+            display: inline-block;
+            margin-bottom: 2rem;
+            color: #2563eb;
+            text-decoration: none;
+        }
+        .back-link:hover {
+            text-decoration: underline;
+        }
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin: 1.5rem 0;
+        }
+        .feature-card {
+            background: #f8fafc;
+            border: 1px solid #e1e5e9;
+            border-radius: 8px;
+            padding: 1.5rem;
+            text-align: center;
+        }
+        .feature-icon {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+        }
+        .feature-card h4 {
+            color: #1e293b;
+            margin-bottom: 0.5rem;
+        }
+        .feature-card p {
+            color: #64748b;
+            font-size: 0.875rem;
+        }
+        .quote-section {
+            background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+            color: white;
+            padding: 2rem;
+            border-radius: 12px;
+            margin: 2rem 0;
+            text-align: center;
+        }
+        .quote-text {
+            font-size: 1.25rem;
+            font-style: italic;
+            margin-bottom: 1rem;
+        }
+        .quote-author {
+            font-weight: 600;
+            opacity: 0.9;
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            margin: 1.5rem 0;
+        }
+        .stat-card {
+            background: white;
+            border: 1px solid #e1e5e9;
+            border-radius: 8px;
+            padding: 1rem;
+            text-align: center;
+        }
+        .stat-number {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #3b82f6;
+            display: block;
+        }
+        .stat-label {
+            color: #64748b;
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .team-section {
+            background: #f8fafc;
+            border-radius: 12px;
+            padding: 2rem;
+            margin: 2rem 0;
+        }
+        .contact-cta {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            padding: 2rem;
+            border-radius: 12px;
+            text-align: center;
+            margin: 2rem 0;
+        }
+        .contact-cta h3 {
+            margin-bottom: 1rem;
+        }
+        .contact-cta .btn {
+            background: white;
+            color: #059669;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            display: inline-block;
+            margin-top: 1rem;
+        }
+        .contact-cta .btn:hover {
+            background: #f0fdf4;
+        }
+    </style>
+</head>
+<body>
+    <div class="about-container">
+        <a href="/" class="back-link">← Back to Disko</a>
+        
+        <div class="about-header">
+            <h1>About Disko</h1>
+            <p>Product discovery done right</p>
+        </div>
+
+        <div class="about-section">
+            <h2>Our Mission</h2>
+            <p>Disko was born from a simple observation: Solopreneurs & freelancers spend too much time explaining what they're working on instead of actually building. We believe that transparency builds trust, and trust builds better customer relationships.</p>
+            
+            <p>Our mission is to bridge the gap between product discovery principles and practical customer communication. We help SaaS companies show their progress, not just their promises.</p>
+        </div>
+
+        <div class="about-section">
+            <h2>The Problem We Solve</h2>
+            <p>Traditional project management tools are built for internal teams, not for customer relationships. They're too complex, require training, and create barriers between you and your customers. This leads to:</p>
+            <ul>
+                <li>Endless status update calls</li>
+                <li>Customer uncertainty about progress</li>
+                <li>Scope creep from misaligned expectations</li>
+                <li>Lost trust and potential customer churn</li>
+            </ul>
+        </div>
+
+        <div class="about-section">
+            <h2>Our Solution</h2>
+            <p>Disko transforms your product roadmap into customer confidence through beautiful, interactive project boards that customers can view without creating accounts or downloading apps.</p>
+            
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">🚀</div>
+                    <h4>Real-time Progress</h4>
+                    <p>Customers see your work as it happens, eliminating the need for status calls</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">💡</div>
+                    <h4>RICE Scoring</h4>
+                    <p>Show customers why you're prioritizing certain features using proven methodology</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">👍</div>
+                    <h4>Customer Feedback</h4>
+                    <p>Let customers vote on ideas and provide feedback without friction</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">📱</div>
+                    <h4>Mobile-First</h4>
+                    <p>Perfect for sharing during calls or letting customers check progress on their phones</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🔗</div>
+                    <h4>One-Link Sharing</h4>
+                    <p>Generate unique URLs for each project that work on any device</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">⚡</div>
+                    <h4>Zero Setup</h4>
+                    <p>Customers can view and interact without creating accounts or downloading apps</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="about-section">
+            <h2>The Power of Early Feedback Loops</h2>
+            <p>One of the most critical principles in product discovery is getting feedback as early as possible. Traditional development cycles often wait until features are fully built before seeking customer input, leading to wasted time and resources on solutions that don't solve real problems.</p>
+            
+            <p>Disko enables continuous feedback loops by allowing customers to see and react to your ideas while they're still in the planning and prioritization phase. This early validation helps you:</p>
+            
+            <ul>
+                <li><strong>Validate Assumptions:</strong> Test your hypotheses before investing significant development time</li>
+                <li><strong>Prioritize Wisely:</strong> Use real customer feedback to determine what to build next</li>
+                <li><strong>Reduce Risk:</strong> Catch potential issues before they become expensive mistakes</li>
+                <li><strong>Build Confidence:</strong> Move forward with certainty that you're solving real customer problems</li>
+                <li><strong>Accelerate Learning:</strong> Learn faster by getting feedback on ideas, not just finished products</li>
+            </ul>
+            
+            <p>By making your product discovery process transparent and interactive, you create a continuous conversation with your customers that guides your development decisions and ensures you're always building what matters most.</p>
+        </div>
+
+        <div class="quote-section">
+            <div class="quote-text">
+                "Product discovery is about building the right product for the right customer at the right time. When you get this wrong, you waste months of development time on features that don't matter."
+            </div>
+            <div class="quote-author">— Marty Cagan, <em>Inspired</em></div>
+        </div>
+
+        <div class="about-section">
+            <h2>Built for Solopreneurs and small teams</h2>
+            <p>Disko is specifically designed for solopreneurs, founders, product teams, and growth marketers who need to build trust with their customers. We understand that your time is valuable and that every interaction with a customer is an opportunity to strengthen your relationship.</p>
+            
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <span class="stat-number">70%</span>
+                    <span class="stat-label">Reduction in meetings</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-number">2-3</span>
+                    <span class="stat-label">Hours saved per week</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-number">100%</span>
+                    <span class="stat-label">Customer transparency</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-number">0</span>
+                    <span class="stat-label">Setup required</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="about-section">
+            <h2>Our Values</h2>
+            <ul>
+                <li><strong>Transparency First:</strong> We believe that open communication builds stronger relationships</li>
+                <li><strong>Simplicity Wins:</strong> Complex tools create barriers. We keep things simple and intuitive</li>
+                <li><strong>Customer-Centric:</strong> Every feature is designed with the customer experience in mind</li>
+                <li><strong>Trust Through Action:</strong> Show your work, don't just talk about it</li>
+                <li><strong>Continuous Improvement:</strong> We're always learning and evolving based on user feedback</li>
+            </ul>
+        </div>
+
+        <div class="about-section">
+            <h2>Join the Movement</h2>
+            <p>Stop losing customers to poor communication. Join hundreds of teams who use Disko to build trust, reduce meetings, and keep customers happy.</p>
+            
+            <p>Whether you're a SaaS founder, a product manager, a growth marketer, or any team that works with customers, Disko can help you build stronger relationships through transparency.</p>
+        </div>
+
+        <div class="contact-cta">
+            <h3>Ready to Transform Your Customer Relationships?</h3>
+            <p>Start building trust through transparency today. No credit card required, setup in under 5 minutes.</p>
+            <a href="/" class="btn">Get Started Free</a>
+        </div>
+
+
+    </div>
+</body>
+</html> 

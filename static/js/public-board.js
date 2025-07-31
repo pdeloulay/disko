@@ -130,7 +130,19 @@ class PublicBoardView {
         
         if (!response.ok) {
             const errorData = await response.json();
-            throw new Error(errorData.error?.message || 'Failed to fetch board');
+            const errorCode = errorData.error?.code;
+            const errorMessage = errorData.error?.message;
+            
+            // Handle specific error cases with more helpful messages
+            if (errorCode === 'BOARD_NOT_FOUND') {
+                throw new Error('This board is no longer publicly accessible. The board owner may have made it private or changed the public link.');
+            } else if (errorCode === 'INVALID_PUBLIC_LINK') {
+                throw new Error('Invalid public link. Please check the URL and try again.');
+            } else if (response.status === 404) {
+                throw new Error('This board is no longer publicly accessible. The board owner may have made it private or changed the public link.');
+            } else {
+                throw new Error(errorMessage || 'Failed to fetch board');
+            }
         }
 
         return await response.json();
@@ -141,7 +153,19 @@ class PublicBoardView {
         
         if (!response.ok) {
             const errorData = await response.json();
-            throw new Error(errorData.error?.message || 'Failed to fetch ideas');
+            const errorCode = errorData.error?.code;
+            const errorMessage = errorData.error?.message;
+            
+            // Handle specific error cases with more helpful messages
+            if (errorCode === 'BOARD_NOT_FOUND') {
+                throw new Error('This board is no longer publicly accessible. The board owner may have made it private or changed the public link.');
+            } else if (errorCode === 'INVALID_PUBLIC_LINK') {
+                throw new Error('Invalid public link. Please check the URL and try again.');
+            } else if (response.status === 404) {
+                throw new Error('This board is no longer publicly accessible. The board owner may have made it private or changed the public link.');
+            } else {
+                throw new Error(errorMessage || 'Failed to fetch ideas');
+            }
         }
 
         return await response.json();
@@ -310,13 +334,44 @@ class PublicBoardView {
     showError(message) {
         const boardContainer = document.getElementById('drag-drop-board');
         if (boardContainer) {
-            boardContainer.innerHTML = `
-                <div class="board-error">
-                    <h3>Error Loading Board</h3>
-                    <p>${this.escapeHtml(message)}</p>
-                    <button onclick="window.location.reload()" class="btn btn-primary">Try Again</button>
-                </div>
-            `;
+            // Check if it's a board access error
+            const isBoardAccessError = message.includes('no longer publicly accessible') || 
+                                     message.includes('made it private') || 
+                                     message.includes('changed the public link');
+            
+            if (isBoardAccessError) {
+                boardContainer.innerHTML = `
+                    <div class="board-error board-access-error">
+                        <div class="error-icon">🔒</div>
+                        <h3>Board No Longer Accessible</h3>
+                        <p>${this.escapeHtml(message)}</p>
+                        <div class="error-actions">
+                            <button onclick="window.location.reload()" class="btn btn-secondary">Try Again</button>
+                            <button onclick="window.history.back()" class="btn btn-primary">Go Back</button>
+                        </div>
+                        <div class="error-help">
+                            <p><strong>What happened?</strong></p>
+                            <ul>
+                                <li>The board owner may have made this board private</li>
+                                <li>The public link may have been changed</li>
+                                <li>The board may have been deleted</li>
+                            </ul>
+                            <p>If you believe this is an error, please contact the board owner.</p>
+                        </div>
+                    </div>
+                `;
+            } else {
+                boardContainer.innerHTML = `
+                    <div class="board-error">
+                        <div class="error-icon">⚠️</div>
+                        <h3>Error Loading Board</h3>
+                        <p>${this.escapeHtml(message)}</p>
+                        <div class="error-actions">
+                            <button onclick="window.location.reload()" class="btn btn-primary">Try Again</button>
+                        </div>
+                    </div>
+                `;
+            }
         }
     }
 

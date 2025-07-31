@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 	"strconv"
+	"strings"
 	"text/template"
 	"time"
 
@@ -212,6 +213,26 @@ func generateInviteEmailHTML(board models.Board) string {
             text-transform: uppercase;
             letter-spacing: 0.5px;
         }
+        .emoji-recaps {
+            margin-top: 20px;
+            padding: 16px;
+            background-color: #f8fafc;
+            border-radius: 8px;
+            text-align: center;
+            border: 1px solid #e2e8f0;
+        }
+        .recaps-label {
+            display: block;
+            font-size: 12px;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+        }
+        .recaps-emojis {
+            font-size: 24px;
+            letter-spacing: 8px;
+        }
         .recent-ideas {
             margin-bottom: 30px;
         }
@@ -265,10 +286,12 @@ func generateInviteEmailHTML(board models.Board) string {
             font-size: 14px;
         }
         .footer-logo {
-            font-size: 20px;
-            font-weight: 700;
-            color: #3b82f6;
             margin-bottom: 16px;
+            text-align: center;
+        }
+        .footer-logo img {
+            max-width: 120px;
+            height: auto;
         }
         .footer p {
             margin: 0 0 8px 0;
@@ -323,13 +346,14 @@ func generateInviteEmailHTML(board models.Board) string {
                         <span class="stat-label">Ideas</span>
                     </div>
                     <div class="stat-item">
-                        <span class="stat-number">{{.ColumnsCount}}</span>
-                        <span class="stat-label">Columns</span>
-                    </div>
-                    <div class="stat-item">
                         <span class="stat-number">{{.UpdatedAgo}}</span>
                         <span class="stat-label">Updated</span>
                     </div>
+                </div>
+                
+                <div class="emoji-recaps">
+                    <span class="recaps-label">Board Highlights:</span>
+                    <span class="recaps-emojis">{{.EmojiRecaps}}</span>
                 </div>
             </div>
             
@@ -346,7 +370,9 @@ func generateInviteEmailHTML(board models.Board) string {
         </div>
         
         <div class="footer">
-            <div class="footer-logo">🚀 Disko</div>
+            <div class="footer-logo">
+                <img src="{{.AppURL}}/static/images/logo-sm.png" alt="Disko" width="120" height="30" style="border: 0; display: block;">
+            </div>
             <p>This invitation was sent from <a href="{{.AppURL}}">Disko</a></p>
             <p>If you didn't expect this invitation, you can safely ignore this email.</p>
             <div class="footer-links">
@@ -365,8 +391,8 @@ func generateInviteEmailHTML(board models.Board) string {
 		BoardName        string
 		BoardDescription string
 		IdeasCount       int
-		ColumnsCount     int
 		UpdatedAgo       string
+		EmojiRecaps      string
 		RecentIdeasHTML  string
 		PublicURL        string
 		AppURL           string
@@ -377,8 +403,8 @@ func generateInviteEmailHTML(board models.Board) string {
 		BoardName:        board.Name,
 		BoardDescription: board.Description,
 		IdeasCount:       ideasCount,
-		ColumnsCount:     len(board.VisibleColumns),
 		UpdatedAgo:       formatTimeAgo(board.UpdatedAt),
+		EmojiRecaps:      generateEmojiRecaps(board),
 		RecentIdeasHTML:  generateRecentIdeasHTML(recentIdeas),
 		PublicURL:        publicURL,
 		AppURL:           os.Getenv("APP_URL"),
@@ -411,6 +437,35 @@ func getBoardIdeasCount(boardID string) int {
 	// This would typically query the database
 	// For now, return a placeholder
 	return 12 // Placeholder
+}
+
+// generateEmojiRecaps creates emoji recaps for the board
+func generateEmojiRecaps(board models.Board) string {
+	// Create emoji recaps based on board activity and content
+	recaps := []string{}
+
+	// Add emoji based on board activity
+	if len(board.VisibleColumns) > 0 {
+		recaps = append(recaps, "📊") // Board structure
+	}
+
+	// Add emoji based on recent activity
+	if time.Since(board.UpdatedAt) < 24*time.Hour {
+		recaps = append(recaps, "🔥") // Recently updated
+	}
+
+	// Add emoji based on board type/description
+	if board.Description != "" {
+		recaps = append(recaps, "💡") // Has description
+	}
+
+	// Add default emoji if no specific ones
+	if len(recaps) == 0 {
+		recaps = append(recaps, "🚀") // Default Disko emoji
+	}
+
+	// Join emojis with spaces
+	return strings.Join(recaps, " ")
 }
 
 func getRecentIdeas(boardID string, limit int) []models.Idea {

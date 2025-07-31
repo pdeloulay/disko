@@ -31,8 +31,12 @@
     --success-600: #059669;
     --warning-500: #f59e0b;
     --warning-600: #d97706;
+    --error-50: #fef2f2;
+    --error-100: #fee2e2;
+    --error-200: #fecaca;
     --error-500: #ef4444;
     --error-600: #dc2626;
+    --error-700: #b91c1c;
     
     /* Accent Colors */
     --accent-500: #8b5cf6;
@@ -1427,6 +1431,113 @@ a:hover {
     height: 200px;
     color: var(--gray-500);
     font-size: 0.875rem;
+}
+
+.board-error {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: var(--space-8);
+    text-align: center;
+    min-height: 300px;
+    background-color: var(--gray-50);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--gray-200);
+}
+
+.board-error .error-icon {
+    font-size: 3rem;
+    margin-bottom: var(--space-4);
+}
+
+.board-error h3 {
+    color: var(--gray-900);
+    margin-bottom: var(--space-3);
+    font-size: 1.5rem;
+    font-weight: 600;
+}
+
+.board-error p {
+    color: var(--gray-600);
+    margin-bottom: var(--space-6);
+    max-width: 500px;
+    line-height: 1.6;
+}
+
+.board-error .error-actions {
+    display: flex;
+    gap: var(--space-3);
+    margin-bottom: var(--space-6);
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.board-error .error-actions .btn {
+    min-width: 120px;
+}
+
+.board-error .error-help {
+    text-align: left;
+    max-width: 500px;
+    background-color: var(--gray-100);
+    padding: var(--space-4);
+    border-radius: var(--radius);
+    border-left: 4px solid var(--primary-500);
+}
+
+.board-error .error-help p {
+    margin-bottom: var(--space-3);
+    color: var(--gray-700);
+}
+
+.board-error .error-help strong {
+    color: var(--gray-900);
+    font-weight: 600;
+}
+
+.board-error .error-help ul {
+    margin: var(--space-3) 0;
+    padding-left: var(--space-4);
+    color: var(--gray-700);
+}
+
+.board-error .error-help li {
+    margin-bottom: var(--space-2);
+}
+
+.board-access-error {
+    background-color: var(--error-50);
+    border-color: var(--error-200);
+}
+
+.board-access-error .error-icon {
+    color: var(--error-500);
+}
+
+.board-access-error h3 {
+    color: var(--error-700);
+}
+
+@media (max-width: 768px) {
+    .board-error {
+        padding: var(--space-6);
+        min-height: 250px;
+    }
+    
+    .board-error .error-actions {
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .board-error .error-actions .btn {
+        width: 100%;
+        max-width: 200px;
+    }
+    
+    .board-error .error-help {
+        margin: 0 var(--space-2);
+    }
 }
 
 /* Board Columns */

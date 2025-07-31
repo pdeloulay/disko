@@ -117,6 +117,26 @@ Once configured, the invite button will be enabled for published boards, allowin
 
 ## Changelog
 
+### [v0.3.28] - Email Footer Logo Update
+- **🖼️ Professional Logo**: Updated email footer to use the official Disko logo image
+- **📱 Responsive Design**: Logo scales properly across different email clients
+- **🎨 Brand Consistency**: Maintains consistent branding with the main application
+- **📐 Proper Sizing**: Logo is sized appropriately for email footer display
+
+### [v0.3.27] - Email Template Improvements
+- **📊 Removed Columns Stat**: Removed the "Columns" statistic from email content for cleaner design
+- **🎨 Added Emoji Recaps**: Added dynamic emoji highlights that show board activity and features
+- **🔥 Smart Emoji Selection**: Emojis are chosen based on board activity (recent updates, descriptions, etc.)
+- **📱 Better Visual Balance**: Improved email layout with better spacing and visual hierarchy
+- **✨ Enhanced Engagement**: More engaging email content with visual emoji highlights
+
+### [v0.3.26] - Public Board Error Handling
+- **🔒 Better Error Messages**: Improved error handling for public boards when they're no longer accessible
+- **📱 Enhanced UX**: Added specific error messages for different scenarios (board made private, link changed, etc.)
+- **🎨 Visual Improvements**: Added styled error pages with helpful information and action buttons
+- **📋 User Guidance**: Added helpful explanations and suggested actions for users
+- **🔄 Action Buttons**: Added "Try Again" and "Go Back" buttons for better user experience
+
 ### [v0.3.25] - Email Improvements and Branding
 - **📧 Clerk Integration**: Added support for using Clerk user email in From field
 - **🚀 Disko Branding**: Enhanced email template with Disko logo and branding

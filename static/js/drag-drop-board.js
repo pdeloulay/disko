@@ -26,6 +26,15 @@ class DragDropBoard {
         ];
         this.draggedElement = null;
         this.draggedIdeaId = null;
+        
+        // Store bound event handlers as instance properties
+        this.boundHandleDragStart = this.handleDragStart.bind(this);
+        this.boundHandleDragEnd = this.handleDragEnd.bind(this);
+        this.boundHandleDragOver = this.handleDragOver.bind(this);
+        this.boundHandleDrop = this.handleDrop.bind(this);
+        this.boundHandleDragEnter = this.handleDragEnter.bind(this);
+        this.boundHandleDragLeave = this.handleDragLeave.bind(this);
+        
         this.init();
     }
 
@@ -36,16 +45,8 @@ class DragDropBoard {
     }
 
     setupEventListeners() {
-        // Global event listeners for drag and drop (only for admin users)
-        if (this.isAdmin) {
-            document.addEventListener('dragstart', this.handleDragStart.bind(this));
-            document.addEventListener('dragend', this.handleDragEnd.bind(this));
-            document.addEventListener('dragover', this.handleDragOver.bind(this));
-            document.addEventListener('drop', this.handleDrop.bind(this));
-            document.addEventListener('dragenter', this.handleDragEnter.bind(this));
-            document.addEventListener('dragleave', this.handleDragLeave.bind(this));
-        }
-
+        this.setupGlobalEventListeners();
+        
         // Click outside to close menus
         document.addEventListener('click', (e) => {
             if (!e.target.closest('.idea-card-menu')) {
@@ -62,6 +63,27 @@ class DragDropBoard {
             document.addEventListener('ideaUpdated', (event) => {
                 this.handleIdeaUpdate(event.detail);
             });
+        }
+    }
+
+    setupGlobalEventListeners() {
+        console.log('[DragDropBoard] Setting up global event listeners - IsAdmin:', this.isAdmin);
+        
+        // Remove existing global event listeners
+        document.removeEventListener('dragover', this.boundHandleDragOver);
+        document.removeEventListener('drop', this.boundHandleDrop);
+        document.removeEventListener('dragenter', this.boundHandleDragEnter);
+        document.removeEventListener('dragleave', this.boundHandleDragLeave);
+        
+        // Add global event listeners for drag and drop (only for admin users)
+        if (this.isAdmin) {
+            document.addEventListener('dragover', this.boundHandleDragOver);
+            document.addEventListener('drop', this.boundHandleDrop);
+            document.addEventListener('dragenter', this.boundHandleDragEnter);
+            document.addEventListener('dragleave', this.boundHandleDragLeave);
+            console.log('[DragDropBoard] Global event listeners added for admin user');
+        } else {
+            console.log('[DragDropBoard] Global event listeners not added - user not admin');
         }
     }
 
@@ -88,6 +110,8 @@ class DragDropBoard {
             // Update admin status based on board data (only for private boards)
             if (!this.isPublic) {
                 this.isAdmin = board.isAdmin || false;
+                // Re-setup global event listeners when admin status changes
+                this.setupGlobalEventListeners();
             }
             
             // Update window.boardData for consistency across components
@@ -402,10 +426,19 @@ class DragDropBoard {
         
         const ideaCards = document.querySelectorAll('.idea-card[draggable="true"]');
         
+        // Remove any existing event listeners first
         ideaCards.forEach((card) => {
-            card.addEventListener('dragstart', this.handleDragStart.bind(this));
-            card.addEventListener('dragend', this.handleDragEnd.bind(this));
+            card.removeEventListener('dragstart', this.boundHandleDragStart);
+            card.removeEventListener('dragend', this.boundHandleDragEnd);
         });
+        
+        // Add event listeners to each card
+        ideaCards.forEach((card) => {
+            card.addEventListener('dragstart', this.boundHandleDragStart);
+            card.addEventListener('dragend', this.boundHandleDragEnd);
+        });
+        
+        console.log('[DragDropBoard] Made', ideaCards.length, 'cards draggable');
     }
 
     // Drag and Drop Event Handlers
@@ -418,9 +451,25 @@ class DragDropBoard {
             return;
         }
         
+        // Only allow dragging if the target is the idea card itself or its direct children
         const ideaCard = e.target.closest('.idea-card');
         if (!ideaCard) {
             console.log('[DragDropBoard] No idea card found in drag target');
+            return;
+        }
+        
+        // Prevent dragging if clicking on interactive elements within the card
+        const interactiveElements = e.target.closest('button, a, input, select, textarea, .idea-card-menu');
+        if (interactiveElements) {
+            console.log('[DragDropBoard] Drag blocked - clicking on interactive element');
+            e.preventDefault();
+            return;
+        }
+        
+        // Only allow dragging if the target is the card itself or non-interactive elements
+        if (e.target !== ideaCard && !ideaCard.contains(e.target)) {
+            console.log('[DragDropBoard] Drag blocked - target not the card itself');
+            e.preventDefault();
             return;
         }
         
@@ -933,6 +982,12 @@ class DragDropBoard {
 
     // Method to sort ideas within a specific column
     sortColumn(columnId, sortType) {
+        // Don't sort if there's an active drag operation
+        if (this.draggedElement) {
+            console.log('[DragDropBoard] Column sort blocked - active drag operation');
+            return;
+        }
+
         if (!sortType) {
             // Reset to default order (by position)
             this.renderBoard();
@@ -981,15 +1036,26 @@ class DragDropBoard {
         if (columnElement) {
             columnElement.innerHTML = columnIdeas.map(idea => this.createIdeaCard(idea)).join('');
             
-            // Re-enable dragging if admin
-            if (this.isAdmin) {
-                this.makeDraggable();
+            // Re-enable dragging if admin and not public board with a small delay
+            if (this.isAdmin && !this.isPublic) {
+                console.log('[DragDropBoard] Re-enabling dragging after column sort...');
+                setTimeout(() => {
+                    this.makeDraggable();
+                    // Test drag and drop functionality after sorting
+                    this.testDragAndDrop();
+                }, 10);
             }
         }
     }
 
     // Method to sort all columns with the same sort type
     sortAllColumns(sortType) {
+        // Don't sort if there's an active drag operation
+        if (this.draggedElement) {
+            console.log('[DragDropBoard] Sort blocked - active drag operation');
+            return;
+        }
+
         if (!sortType) {
             // Reset to default order (by position)
             this.renderBoard();
@@ -1042,9 +1108,14 @@ class DragDropBoard {
                 columnElement.innerHTML =
                     columnIdeas.map(idea => this.createIdeaCard(idea)).join('');
                 
-                // Re-enable dragging if admin
-                if (this.isAdmin) {
-                    this.makeDraggable();
+                // Re-enable dragging if admin and not public board with a small delay
+                if (this.isAdmin && !this.isPublic) {
+                    console.log('[DragDropBoard] Re-enabling dragging after global sort...');
+                    setTimeout(() => {
+                        this.makeDraggable();
+                        // Test drag and drop functionality after sorting
+                        this.testDragAndDrop();
+                    }, 10);
                 }
             }
         });
@@ -1146,6 +1217,28 @@ class DragDropBoard {
     handleStatusUpdate(detail) {
         // Refresh the board to show status changes
         this.loadBoard();
+    }
+
+    testDragAndDrop() {
+        console.log('[DragDropBoard] Testing drag and drop functionality...');
+        console.log('[DragDropBoard] IsAdmin:', this.isAdmin, 'IsPublic:', this.isPublic);
+        
+        const ideaCards = document.querySelectorAll('.idea-card[draggable="true"]');
+        console.log('[DragDropBoard] Found', ideaCards.length, 'draggable idea cards');
+        
+        ideaCards.forEach((card, index) => {
+            console.log(`[DragDropBoard] Card ${index + 1}:`, {
+                id: card.dataset.ideaId,
+                draggable: card.draggable,
+                column: card.dataset.column,
+                hasDragStartListener: card.ondragstart !== null || card.addEventListener !== undefined
+            });
+        });
+        
+        const hasGlobalListeners = document.ondragover !== null || document.ondrop !== null;
+        console.log('[DragDropBoard] Global drag listeners active:', hasGlobalListeners);
+        
+        return ideaCards.length > 0;
     }
 }
 

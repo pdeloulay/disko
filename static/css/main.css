@@ -238,6 +238,12 @@ a:hover {
     transform: translateY(-1px);
 }
 
+.btn-pressed {
+    transform: translateY(2px) !important;
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2) !important;
+    transition: all var(--transition-fast);
+}
+
 .btn-large {
     padding: var(--space-4) var(--space-8);
     font-size: 1rem;
@@ -372,6 +378,30 @@ a:hover {
     color: var(--success-400);
 }
 
+.hero-content-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-8);
+    align-items: start;
+    margin: var(--space-8) 0;
+}
+
+.hero-content-row .hero-quote {
+    margin: 0;
+}
+
+.hero-content-row .board-preview {
+    max-width: 100%;
+    margin: 0;
+}
+
+@media (max-width: 768px) {
+    .hero-content-row {
+        grid-template-columns: 1fr;
+        gap: var(--space-6);
+    }
+}
+
 .hero-actions {
     display: flex;
     gap: var(--space-4);
@@ -499,10 +529,11 @@ a:hover {
 .idea-date {
     color: var(--gray-400);
     font-size: 0.7rem;
-    position: absolute;
-    right: 0;
-    top: 50%;
-    transform: translateY(-50%);
+    font-style: italic;
+    position: static;
+    right: auto;
+    top: auto;
+    transform: none;
 }
 
 .feedback-count {
@@ -686,6 +717,95 @@ a:hover {
 .ws-status.disconnected {
     background: var(--error-50);
     color: var(--error-600);
+}
+
+/* Board Status Indicator */
+.board-status {
+    margin: var(--space-3) 0;
+}
+
+.status-indicator {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: var(--space-2) var(--space-3);
+    border-radius: var(--radius);
+    font-size: 0.875rem;
+    font-weight: 500;
+    border: 1px solid;
+}
+
+.status-indicator.public {
+    background-color: var(--success-50);
+    border-color: var(--success-200);
+    color: var(--success-700);
+}
+
+.status-indicator.private {
+    background-color: var(--gray-50);
+    border-color: var(--gray-200);
+    color: var(--gray-700);
+}
+
+.status-icon {
+    font-size: 1rem;
+}
+
+.status-text {
+    font-weight: 600;
+}
+
+.public-link {
+    margin-top: var(--space-2);
+    padding-top: var(--space-2);
+    border-top: 1px solid var(--success-200);
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    flex-wrap: wrap;
+}
+
+.link-label {
+    font-size: 0.75rem;
+    color: var(--success-600);
+    font-weight: 500;
+}
+
+.link-url {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    color: var(--success-700);
+    text-decoration: none;
+    background-color: var(--success-100);
+    padding: var(--space-1) var(--space-2);
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--success-200);
+}
+
+.link-url:hover {
+    background-color: var(--success-200);
+    text-decoration: none;
+}
+
+.view-link-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--space-1);
+    border-radius: var(--radius-sm);
+    color: var(--success-600);
+    font-size: 0.75rem;
+    text-decoration: none;
+    transition: all var(--transition-fast);
+    border: 1px solid var(--success-200);
+    background-color: var(--success-50);
+}
+
+.view-link-btn:hover {
+    background-color: var(--success-100);
+    color: var(--success-700);
+    text-decoration: none;
+    transform: translateY(-1px);
 }
 
 .public-badge {
@@ -1793,24 +1913,32 @@ a:hover {
 
 /* RICE Score Form Styles */
 .rice-score-section {
-    margin-bottom: var(--space-6);
+    margin-bottom: var(--space-4);
 }
 
 .rice-score-section h4 {
-    margin-bottom: var(--space-3);
+    margin-bottom: var(--space-2);
     color: var(--gray-700);
-    font-size: 1rem;
+    font-size: 0.875rem;
+    font-weight: 600;
 }
 
 .rice-grid {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
-    gap: var(--space-3);
-    margin-bottom: var(--space-3);
+    gap: var(--space-2);
+    margin-bottom: var(--space-2);
+    align-items: start;
 }
 
 .rice-grid .form-group {
-    margin-bottom: 0;
+    margin-bottom: 0 !important;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    height: 100%;
+    justify-content: flex-start;
+    padding: 0;
 }
 
 .rice-grid .form-group label {
@@ -1818,28 +1946,45 @@ a:hover {
     font-weight: 600;
     color: var(--gray-700);
     margin-bottom: var(--space-1);
+    line-height: 1;
+    display: block;
 }
 
 .rice-grid .form-group input,
 .rice-grid .form-group select {
     font-size: 0.875rem;
-    padding: var(--space-2);
-    height: auto;
+    padding: var(--space-1) var(--space-2);
+    height: 32px;
+    width: 100%;
+    border: 1px solid var(--gray-300);
+    border-radius: var(--radius);
+    background-color: white;
+    box-sizing: border-box;
+}
+
+.rice-grid .form-group input:focus,
+.rice-grid .form-group select:focus {
+    outline: none;
+    border-color: var(--primary-500);
+    box-shadow: 0 0 0 3px var(--primary-100);
 }
 
 .rice-grid .form-group .form-help {
     font-size: 0.625rem;
     margin-top: var(--space-1);
+    color: var(--gray-500);
+    line-height: 1.2;
 }
 
 .rice-score-display {
     background: var(--primary-50);
     border: 1px solid var(--primary-200);
     border-radius: var(--radius);
-    padding: var(--space-2) var(--space-3);
+    padding: var(--space-2);
     text-align: center;
     font-weight: 600;
     color: var(--primary-700);
+    font-size: 0.875rem;
 }
 
 /* Responsive RICE Grid */
@@ -1920,6 +2065,10 @@ a:hover {
     color: var(--gray-400);
     font-size: 0.7rem;
     font-style: italic;
+    position: static;
+    right: auto;
+    top: auto;
+    transform: none;
 }
 
 /* Empty State */
@@ -2491,4 +2640,119 @@ a:hover {
     .cta-actions .btn {
         min-width: 100%;
     }
+} 
+
+/* Toggle Switch Styles */
+.toggle-switch {
+    position: relative;
+    display: inline-block;
+    width: 40px;
+    height: 20px;
+    cursor: pointer;
+    margin: 0 var(--space-2);
+}
+
+.toggle-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.toggle-slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: var(--gray-300);
+    transition: 0.3s;
+    border-radius: 20px;
+}
+
+.toggle-slider:before {
+    position: absolute;
+    content: "";
+    height: 14px;
+    width: 14px;
+    left: 3px;
+    bottom: 3px;
+    background-color: white;
+    transition: 0.3s;
+    border-radius: 50%;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.toggle-switch input:checked + .toggle-slider {
+    background-color: var(--primary-500);
+}
+
+.toggle-switch input:checked + .toggle-slider:before {
+    transform: translateX(20px);
+}
+
+.toggle-switch input:focus + .toggle-slider {
+    box-shadow: 0 0 1px var(--primary-500);
+}
+
+.toggle-label {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--gray-700);
+    user-select: none;
+}
+
+/* Status indicator toggle integration */
+.status-indicator {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+}
+
+.status-indicator .toggle-switch {
+    margin: 0 var(--space-2);
+}
+
+.status-indicator .toggle-label {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--gray-600);
+    user-select: none;
+    transition: color 0.3s ease;
+}
+
+/* Active state for labels based on toggle state */
+.status-indicator.public .toggle-label:last-of-type {
+    color: var(--primary-600);
+    font-weight: 600;
+}
+
+.status-indicator.private .toggle-label:first-of-type {
+    color: var(--gray-800);
+    font-weight: 600;
+}
+
+/* Disabled state */
+.toggle-switch.disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.toggle-switch.disabled .toggle-slider {
+    cursor: not-allowed;
+}
+
+/* Loading state */
+.toggle-switch.loading .toggle-slider {
+    opacity: 0.7;
+}
+
+.toggle-switch.loading .toggle-slider:before {
+    animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.5; }
+    100% { opacity: 1; }
 } 

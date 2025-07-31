@@ -42,15 +42,15 @@
                         <div class="board-info">
                             <h1 id="board-title">Loading...</h1>
                             <p id="board-description"></p>
+                            <div id="board-status" class="board-status">
+                                <!-- Status indicator will be populated by JavaScript -->
+                            </div>
                             <div id="ws-status" class="ws-status reconnecting">Connecting...</div>
                         </div>
                         <div class="board-actions">
                             {{if not .isPublic}}
                             <button id="board-settings-btn" class="btn btn-secondary">⚙️ Settings</button>
                             {{end}}
-                            <button id="publish-btn" class="btn btn-primary" data-published="{{.isPublic}}">
-                                {{if .isPublic}}🔒 Unpublish{{else}}🌐 Publish{{end}}
-                            </button>
                             <button id="invite-btn" class="btn btn-secondary" disabled>📧 Invite</button>
                             <button id="refresh-btn" class="btn btn-secondary">Refresh</button>
                         </div>

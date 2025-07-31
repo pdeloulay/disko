@@ -21,6 +21,13 @@ class BoardView {
         this.setupIdeaManager();
         this.setupWebSocket();
         this.setupSearchBar();
+        
+        // Set initial status indicator based on available data
+        if (this.boardData) {
+            const isPublished = this.boardData.isPublic || this.boardData.publicLink;
+            this.updateStatusIndicator(isPublished);
+        }
+        
         console.log('[BoardView] Board view initialization complete');
     }
 
@@ -79,17 +86,8 @@ class BoardView {
             console.log('[BoardView] Settings button not found or user not admin - Button exists:', !!settingsBtn, 'IsAdmin:', this.isAdmin);
         }
 
-        // Publish button (admin only)
-        const publishBtn = document.getElementById('publish-btn');
-        if (publishBtn && this.isAdmin) {
-            console.log('[BoardView] Adding publish button event listener - IsAdmin:', this.isAdmin);
-            publishBtn.addEventListener('click', async () => {
-                console.log('[BoardView] Publish button clicked');
-                await this.publishBoard();
-            });
-        } else {
-            console.log('[BoardView] Publish button not found or user not admin - Button exists:', !!publishBtn, 'IsAdmin:', this.isAdmin);
-        }
+        // Publish toggle (admin only) - will be handled in updateStatusIndicator
+        console.log('[BoardView] Publish toggle will be handled in updateStatusIndicator - IsAdmin:', this.isAdmin);
 
         // Invite button (admin only, enabled only when board is published)
         const inviteBtn = document.getElementById('invite-btn');
@@ -254,11 +252,18 @@ class BoardView {
                 console.log('[BoardView] Updated board data - IsAdmin:', this.isAdmin, 'PublicLink:', this.publicLink);
                 
                 // Update invite button state based on board publication status
+                const isPublished = boardData.isPublic || boardData.publicLink;
+                
                 if (this.isAdmin) {
-                    const isPublished = boardData.isPublic || boardData.publicLink;
                     this.updateInviteButtonState(isPublished);
                     this.updatePublishButtonState(isPublished);
+                } else {
+                    // For non-admin users, still show the status indicator
+                    this.updateStatusIndicator(isPublished);
                 }
+                
+                // Always update status indicator for all users
+                this.updateStatusIndicator(isPublished);
                 
                 // Re-bind events with updated admin status
                 this.bindEvents();
@@ -310,29 +315,28 @@ class BoardView {
         console.log('[BoardView] Board refresh complete');
     }
 
-    async publishBoard() {
+    async publishBoard(isPublished = null) {
         console.log('[BoardView] Toggling board publish state...');
         
-        const publishBtn = document.getElementById('publish-btn');
-        if (!publishBtn) {
-            console.error('[BoardView] Publish button not found');
+        const publishToggle = document.getElementById('publish-toggle');
+        if (!publishToggle) {
+            console.error('[BoardView] Publish toggle not found');
             return;
         }
 
         // Get current publish state
-        const isCurrentlyPublished = publishBtn.getAttribute('data-published') === 'true';
-        const newPublishState = !isCurrentlyPublished;
+        const isCurrentlyPublished = publishToggle.checked;
+        const newPublishState = isPublished !== null ? isPublished : !isCurrentlyPublished;
         
         console.log('[BoardView] Current publish state:', isCurrentlyPublished, 'New state:', newPublishState);
 
-        // Store original button state
-        const originalText = publishBtn.textContent;
-        const originalDisabled = publishBtn.disabled;
+        // Store original toggle state
+        const originalChecked = publishToggle.checked;
 
         try {
-            // Update button state
-            publishBtn.disabled = true;
-            publishBtn.textContent = newPublishState ? '🔄 Publishing...' : '🔄 Unpublishing...';
+            // Add loading state
+            publishToggle.disabled = true;
+            publishToggle.parentElement.classList.add('loading');
 
             console.log('[BoardView] Making API call to toggle board public state');
             const response = await window.api.put(`/boards/${this.boardId}`, {
@@ -348,21 +352,15 @@ class BoardView {
                     window.boardData.isPublic = newPublishState;
                 }
                 
-                // Update button state and text
-                publishBtn.setAttribute('data-published', newPublishState.toString());
-                publishBtn.textContent = newPublishState ? '🔒 Unpublish' : '🌐 Publish';
-                
-                // Update button styling
-                if (newPublishState) {
-                    publishBtn.classList.remove('btn-primary');
-                    publishBtn.classList.add('btn-warning');
-                } else {
-                    publishBtn.classList.remove('btn-warning');
-                    publishBtn.classList.add('btn-primary');
-                }
+                // Update toggle state
+                publishToggle.checked = newPublishState;
+                console.log('[BoardView] Updated publish toggle state to:', publishToggle.checked);
                 
                 // Update invite button state
                 this.updateInviteButtonState(newPublishState);
+                
+                // Update status indicator with the new public link
+                this.updateStatusIndicator(newPublishState, response.publicLink);
                 
                 // Show success message
                 if (newPublishState) {
@@ -379,10 +377,13 @@ class BoardView {
         } catch (error) {
             console.error('[BoardView] Failed to toggle board publish state:', error);
             this.showErrorMessage(`Failed to ${newPublishState ? 'publish' : 'unpublish'} board. Please try again.`);
+            
+            // Restore toggle state only on error
+            publishToggle.checked = originalChecked;
         } finally {
-            // Restore button state
-            publishBtn.disabled = originalDisabled;
-            publishBtn.textContent = originalText;
+            // Remove loading state
+            publishToggle.disabled = false;
+            publishToggle.parentElement.classList.remove('loading');
         }
     }
 
@@ -401,22 +402,80 @@ class BoardView {
     }
 
     updatePublishButtonState(isPublished) {
-        const publishBtn = document.getElementById('publish-btn');
-        if (publishBtn) {
+        const publishToggle = document.getElementById('publish-toggle');
+        if (publishToggle) {
+            console.log('[BoardView] updatePublishButtonState called - IsPublished:', isPublished);
+            
+            // Update toggle state
+            publishToggle.checked = isPublished;
+            
             // Update data attribute
-            publishBtn.setAttribute('data-published', isPublished.toString());
+            publishToggle.setAttribute('data-published', isPublished.toString());
             
-            // Update button text
-            publishBtn.textContent = isPublished ? '🔒 Unpublish' : '🌐 Publish';
-            
-            // Update button styling
-            if (isPublished) {
-                publishBtn.classList.remove('btn-primary');
-                publishBtn.classList.add('btn-warning');
-            } else {
-                publishBtn.classList.remove('btn-warning');
-                publishBtn.classList.add('btn-primary');
-            }
+            console.log('[BoardView] Updated publish toggle state to:', publishToggle.checked);
+        } else {
+            console.error('[BoardView] Publish toggle not found in updatePublishButtonState');
+        }
+
+        // Update status indicator
+        this.updateStatusIndicator(isPublished);
+    }
+
+    updateStatusIndicator(isPublished, publicLink = null) {
+        const statusContainer = document.getElementById('board-status');
+        if (!statusContainer) return;
+
+        // Use the provided publicLink or fall back to boardData
+        const linkToUse = publicLink || (this.boardData ? this.boardData.publicLink : null);
+        
+        console.log('[BoardView] Updating status indicator - IsPublished:', isPublished, 'PublicLink:', linkToUse, 'BoardData:', this.boardData);
+
+        if (isPublished && linkToUse) {
+            // Create public status indicator with toggle and view icon
+            statusContainer.innerHTML = `
+                <div class="status-indicator public">
+                    <span class="toggle-label">Private</span>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="publish-toggle" data-published="true" checked>
+                        <span class="toggle-slider"></span>
+                    </label>
+                    <span class="toggle-label">Public</span>
+                    <a href="/public/${linkToUse}" target="_blank" class="view-link-btn" title="View public board">👁️</a>
+                </div>
+            `;
+        } else if (isPublished) {
+            // Create public status indicator with toggle (fallback)
+            statusContainer.innerHTML = `
+                <div class="status-indicator public">
+                    <span class="toggle-label">Private</span>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="publish-toggle" data-published="true" checked>
+                        <span class="toggle-slider"></span>
+                    </label>
+                    <span class="toggle-label">Public</span>
+                </div>
+            `;
+        } else {
+            // Create private status indicator with toggle
+            statusContainer.innerHTML = `
+                <div class="status-indicator private">
+                    <span class="toggle-label">Private</span>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="publish-toggle" data-published="false">
+                        <span class="toggle-slider"></span>
+                    </label>
+                    <span class="toggle-label">Public</span>
+                </div>
+            `;
+        }
+
+        // Re-attach event listener to the new toggle
+        const publishToggle = document.getElementById('publish-toggle');
+        if (publishToggle && this.isAdmin) {
+            publishToggle.addEventListener('change', async (e) => {
+                console.log('[BoardView] Publish toggle changed:', e.target.checked);
+                await this.publishBoard(e.target.checked);
+            });
         }
     }
 
@@ -671,6 +730,8 @@ class BoardView {
         });
     }
 }
+
+
 
 // Initialize board view
 document.addEventListener('DOMContentLoaded', () => {

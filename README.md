@@ -117,6 +117,76 @@ Once configured, the invite button will be enabled for published boards, allowin
 
 ## Changelog
 
+### [v0.3.46] - Drag and Drop Event Targeting Fix
+- **🔧 Event Targeting**: Fixed drag event targeting to prevent multiple element dragging
+- **🎯 Direct Card Events**: Moved drag events from document-level to individual card-level
+- **🔄 Interactive Element Blocking**: Enhanced blocking of drag on buttons, menus, and form elements
+- **📱 Single Element Dragging**: Ensured only the clicked card is dragged, not multiple elements
+- **🛡️ Event Isolation**: Isolated drag events to prevent interference from other elements
+
+### [v0.3.45] - Drag and Drop Sort Interference Fix
+- **🔧 Critical Fix**: Fixed issue where global sort was interfering with drag and drop operations
+- **🎯 Sort Blocking**: Prevented sorting operations during active drag operations
+- **🔄 Interactive Element Protection**: Prevented dragging when clicking on buttons, links, or form elements
+- **📱 Single Card Dragging**: Ensured only one card is dragged at a time, not multiple elements
+- **🛡️ Drag Isolation**: Isolated drag operations from sort operations for clean user experience
+
+### [v0.3.44] - Drag and Drop Event Conflict Fix
+- **🔧 Event Conflict Resolution**: Fixed conflicting drag event listeners that were causing multiple drag events
+- **🎯 Single Event System**: Removed duplicate event listeners from `makeDraggable()` method
+- **🔄 Global Event Handling**: Now uses only global event listeners for consistent drag behavior
+- **📱 Smooth Dragging**: Eliminated drag interference and improved drag responsiveness
+- **🛡️ Clean Architecture**: Simplified event handling for better maintainability
+
+### [v0.3.43] - Drag and Drop Functionality Fix
+- **🔧 Critical Fix**: Fixed major regression where drag and drop functionality was broken for idea cards
+- **🎯 Proper Conditions**: Fixed `makeDraggable()` calls to only apply to admin users on private boards
+- **🔄 Global Sort Integration**: Ensured drag functionality works correctly with global sort feature
+- **📱 Admin Experience**: Restored full drag-and-drop capabilities for board administrators
+- **🛡️ Public Board Protection**: Maintained read-only behavior for public boards
+
+### [v0.3.42] - Board Status Text Update
+- **📝 Clearer Labels**: Changed status text from "Public Board" to "Board: Public" and "Private Board" to "Board: Private"
+- **🎯 Better Clarity**: More descriptive and consistent labeling format
+- **📱 Improved UX**: Clearer indication of board publication state
+- **🎨 Consistent Format**: Standardized "Board: [State]" format for all status indicators
+
+### [v0.3.41] - Board Status Indicator UI Update
+- **👁️ View Icon**: Replaced copy-to-clipboard with direct "View" icon for public boards
+- **🔗 Direct Access**: Users can now click the eye icon to view the public board directly
+- **🎨 Improved Design**: Better visual design with hover effects and proper styling
+- **📱 Simplified UX**: Removed clipboard functionality for cleaner, more direct interaction
+- **⚡ Faster Access**: One-click access to public board view
+
+### [v0.3.40] - Board Status Indicator Fix
+- **🔧 Fixed Undefined Link**: Resolved issue where public link was showing as "undefined"
+- **🎯 Client-Side Rendering**: Moved status indicator rendering to JavaScript for better reliability
+- **🛡️ Error Handling**: Added proper null checks and fallback handling for missing data
+- **🔄 Dynamic Updates**: Status indicator now properly updates when board state changes
+- **📱 Better UX**: Cleaner display with proper error handling
+
+### [v0.3.39] - Board Status Indicator
+- **🌐 Public/Private Indicator**: Added visual status indicator showing board publication state
+- **🔗 Public Link Display**: Shows public link with copy-to-clipboard functionality for published boards
+- **📋 One-Click Copy**: Users can copy the public link with a single click
+- **🎨 Visual Design**: Color-coded indicators (green for public, gray for private)
+- **🔄 Dynamic Updates**: Status indicator updates automatically when board is published/unpublished
+- **📱 Responsive Design**: Works seamlessly on all device sizes
+
+### [v0.3.38] - RICE Section Alignment Fix
+- **🎯 Perfect Top Alignment**: Fixed RICE form elements to be properly top-aligned across all columns
+- **📏 Consistent Heights**: Ensured all form groups have equal height and proper alignment
+- **🔧 CSS Overrides**: Added specific overrides to prevent conflicting general form styles
+- **📐 Grid Alignment**: Improved grid layout with proper flexbox alignment
+- **🎨 Visual Consistency**: All RICE inputs now align perfectly at the top
+
+### [v0.3.37] - RICE Section UI Improvements
+- **📏 Compact Layout**: Reduced spacing and margins in RICE score section for better space utilization
+- **🎯 Top Alignment**: Ensured all RICE form elements are properly top-aligned
+- **🎨 Consistent Styling**: Added proper borders, focus states, and consistent input heights
+- **📱 Better UX**: Improved form field appearance with better visual hierarchy
+- **⚡ Responsive Design**: Maintained responsive behavior while improving compactness
+
 ### [v0.3.36] - Board Settings Column Validation
 - **✅ Column Validation**: Added validation to ensure at least one column is selected before saving
 - **🛡️ Real-time Prevention**: Prevents users from unchecking all columns with immediate feedback

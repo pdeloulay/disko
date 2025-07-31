@@ -349,6 +349,32 @@ func main() {
 			publicLink, duration, clientIP)
 	})
 
+	// Terms of Service route
+	router.GET("/terms", func(c *gin.Context) {
+		log.Printf("[Template] Terms of Service route accessed - IP: %s", c.ClientIP())
+		
+		// Get app version
+		version := getAppVersion()
+
+		c.HTML(http.StatusOK, "terms.html", gin.H{
+			"title":   "Terms of Service - Disko",
+			"version": version,
+		})
+	})
+
+	// Privacy Policy route
+	router.GET("/privacy", func(c *gin.Context) {
+		log.Printf("[Template] Privacy Policy route accessed - IP: %s", c.ClientIP())
+		
+		// Get app version
+		version := getAppVersion()
+
+		c.HTML(http.StatusOK, "privacy.html", gin.H{
+			"title":   "Privacy Policy - Disko",
+			"version": version,
+		})
+	})
+
 	// API routes group
 	api := router.Group("/api")
 	{

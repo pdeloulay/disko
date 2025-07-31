@@ -328,6 +328,26 @@ func generateInviteEmailHTML(board models.Board) string {
         .footer-links a:hover {
             color: #3b82f6;
         }
+        .footer-cta {
+            margin: 16px 0;
+            padding: 12px;
+            background-color: #f8fafc;
+            border-radius: 6px;
+            border-left: 3px solid #3b82f6;
+        }
+        .footer-cta p {
+            margin: 0;
+            color: #1e293b;
+            font-weight: 500;
+        }
+        .footer-cta a {
+            color: #3b82f6;
+            text-decoration: none;
+            font-weight: 600;
+        }
+        .footer-cta a:hover {
+            text-decoration: underline;
+        }
         @media (max-width: 600px) {
             .container {
                 margin: 0;
@@ -390,6 +410,9 @@ func generateInviteEmailHTML(board models.Board) string {
             </div>
             <p>This invitation was sent from <a href="{{.AppURL}}">Disko</a></p>
             <p>If you didn't expect this invitation, you can safely ignore this email.</p>
+            <div class="footer-cta">
+                <p>Want to start your own board? <a href="{{.AppURL}}">Sign up for Disko</a></p>
+            </div>
             <div class="footer-links">
                 <a href="{{.AboutURL}}">About Disko</a>
                 <a href="{{.PrivacyURL}}">Privacy Policy</a>

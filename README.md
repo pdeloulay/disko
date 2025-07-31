@@ -117,6 +117,13 @@ Once configured, the invite button will be enabled for published boards, allowin
 
 ## Changelog
 
+### [v0.3.32] - Email Call-to-Action
+- **🚀 Sign Up CTA**: Added call-to-action to sign up for Disko in email footer
+- **📈 User Acquisition**: Encourages recipients to create their own boards
+- **🎨 Styled CTA**: Added highlighted section with proper styling and colors
+- **🔗 Direct Link**: Links directly to the main Disko application
+- **📱 Better Conversion**: Increases potential for user sign-ups from email invitations
+
 ### [v0.3.31] - Email Emoji Counters
 - **👍 Thumbs Up Counters**: Added thumbs up counts to email idea cards
 - **😊 Emoji Reaction Counters**: Added emoji reaction counts to email content

@@ -253,6 +253,12 @@ class BoardView {
                 
                 console.log('[BoardView] Updated board data - IsAdmin:', this.isAdmin, 'PublicLink:', this.publicLink);
                 
+                // Update invite button state based on board publication status
+                if (this.isAdmin) {
+                    const isPublished = boardData.isPublic || boardData.publicLink;
+                    this.updateInviteButtonState(isPublished);
+                }
+                
                 // Re-bind events with updated admin status
                 this.bindEvents();
             } else {

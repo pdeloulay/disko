@@ -78,6 +78,14 @@ The project is set up with:
 
 ## Changelog
 
+### [v0.3.23] - Board Invite Feature
+- **📧 Invite Button**: Added invite button next to publish button (enabled only when board is published)
+- **🎯 Email Integration**: Uses gomail library for sending HTML invitation emails
+- **📊 Board Stats**: Compelling HTML emails with board statistics and recent ideas
+- **✅ Form Validation**: Email and subject validation with proper error handling
+- **🔒 Security**: Only board owners can send invites to published boards
+- **📱 Responsive Design**: Beautiful HTML email template with mobile support
+
 ### [v0.3.22] - Last Updated Position Fix
 - **📍 Better Positioning**: Moved "last updated" info to separate section below feedback
 - **🎯 No Conflicts**: Last updated text no longer conflicts with emoji reactions

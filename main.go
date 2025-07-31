@@ -382,6 +382,7 @@ func main() {
 			protected.GET("/boards", handlers.GetBoards)
 			protected.GET("/boards/:id", handlers.GetBoard)
 			protected.PUT("/boards/:id", handlers.UpdateBoard)
+			protected.POST("/boards/:id/invite", handlers.SendBoardInvite)
 
 			protected.DELETE("/boards/:id", handlers.DeleteBoard)
 

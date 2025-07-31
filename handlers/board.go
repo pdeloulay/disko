@@ -918,3 +918,130 @@ type BoardNotFoundError struct{}
 func (e *BoardNotFoundError) Error() string {
 	return "board not found"
 }
+
+// InviteRequest represents the request payload for sending board invitations
+type InviteRequest struct {
+	Email   string `json:"email" binding:"required,email"`
+	Subject string `json:"subject" binding:"required,min=1,max=200"`
+}
+
+// SendBoardInvite handles POST /api/boards/:id/invite
+func SendBoardInvite(c *gin.Context) {
+	startTime := time.Now()
+	userAgent := c.GetHeader("User-Agent")
+	referer := c.GetHeader("Referer")
+
+	// Get user ID from auth middleware
+	userID, err := middleware.GetUserID(c)
+	if err != nil {
+		log.Printf("[Handler] SendBoardInvite failed - GetUserID error: %v, IP: %s, UserAgent: %s", err, c.ClientIP(), userAgent)
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": gin.H{
+				"code":    "INTERNAL_ERROR",
+				"message": "Failed to get user ID",
+			},
+		})
+		return
+	}
+
+	// Get board ID from URL parameter
+	boardID := c.Param("id")
+	if boardID == "" {
+		log.Printf("[Handler] SendBoardInvite failed - Invalid board ID: empty, UserID: %s, IP: %s, UserAgent: %s", userID, c.ClientIP(), userAgent)
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": gin.H{
+				"code":    "INVALID_BOARD_ID",
+				"message": "Board ID is required",
+			},
+		})
+		return
+	}
+
+	log.Printf("[Handler] SendBoardInvite started - BoardID: %s, UserID: %s, IP: %s, UserAgent: %s, Referer: %s",
+		boardID, userID, c.ClientIP(), userAgent, referer)
+
+	// Parse request body
+	var req InviteRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		log.Printf("[Handler] SendBoardInvite failed - JSON binding error: %v, BoardID: %s, UserID: %s, IP: %s",
+			err, boardID, userID, c.ClientIP())
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": gin.H{
+				"code":    "VALIDATION_ERROR",
+				"message": "Invalid request data",
+				"details": err.Error(),
+			},
+		})
+		return
+	}
+
+	// Get board data to verify ownership and get board info
+	collection := models.GetCollection(models.BoardsCollection)
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	filter := bson.M{"_id": boardID, "user_id": userID}
+	var board models.Board
+	err = collection.FindOne(ctx, filter).Decode(&board)
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			log.Printf("[Handler] SendBoardInvite failed - Board not found or not owned by user - BoardID: %s, UserID: %s, IP: %s",
+				boardID, userID, c.ClientIP())
+			c.JSON(http.StatusNotFound, gin.H{
+				"error": gin.H{
+					"code":    "BOARD_NOT_FOUND",
+					"message": "Board not found or you don't have permission to invite to this board",
+				},
+			})
+			return
+		}
+
+		log.Printf("[Handler] SendBoardInvite failed - Database error: %v, BoardID: %s, UserID: %s, IP: %s",
+			err, boardID, userID, c.ClientIP())
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": gin.H{
+				"code":    "DATABASE_ERROR",
+				"message": "Failed to fetch board",
+				"details": err.Error(),
+			},
+		})
+		return
+	}
+
+	// Check if board is published
+	if !board.IsPublic || board.PublicLink == "" {
+		log.Printf("[Handler] SendBoardInvite failed - Board not published - BoardID: %s, UserID: %s, IP: %s",
+			boardID, userID, c.ClientIP())
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": gin.H{
+				"code":    "BOARD_NOT_PUBLISHED",
+				"message": "Board must be published before sending invitations",
+			},
+		})
+		return
+	}
+
+	// Send invitation email
+	err = utils.SendBoardInviteEmail(req.Email, req.Subject, board)
+	if err != nil {
+		log.Printf("[Handler] SendBoardInvite failed - Email error: %v, BoardID: %s, UserID: %s, Email: %s, IP: %s",
+			err, boardID, userID, req.Email, c.ClientIP())
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": gin.H{
+				"code":    "EMAIL_ERROR",
+				"message": "Failed to send invitation email",
+				"details": err.Error(),
+			},
+		})
+		return
+	}
+
+	totalDuration := time.Since(startTime)
+	log.Printf("[Handler] SendBoardInvite completed successfully - BoardID: %s, UserID: %s, Email: %s, Subject: %s, Total duration: %v, IP: %s",
+		boardID, userID, req.Email, req.Subject, totalDuration, c.ClientIP())
+
+	c.JSON(http.StatusOK, gin.H{
+		"success": true,
+		"message": "Invitation email sent successfully",
+	})
+}

@@ -117,6 +117,34 @@ Once configured, the invite button will be enabled for published boards, allowin
 
 ## Changelog
 
+### [v0.3.36] - Board Settings Column Validation
+- **✅ Column Validation**: Added validation to ensure at least one column is selected before saving
+- **🛡️ Real-time Prevention**: Prevents users from unchecking all columns with immediate feedback
+- **📝 Form Validation**: Enhanced form submission validation with clear error messages
+- **🎯 User Experience**: Prevents invalid board configurations that would result in empty boards
+- **🔄 Immediate Feedback**: Shows error message and re-checks the last unchecked column
+
+### [v0.3.35] - Board Settings Visibility Fix
+- **🔧 Column Visibility**: Fixed private board columns to respect board settings visibility
+- **👥 Admin Consistency**: Admin users now see columns based on board settings, not all columns
+- **📊 Field Visibility**: Fixed field visibility to respect board settings for all users
+- **🎯 Settings Compliance**: Board display now properly follows saved visibility settings
+- **🔄 Real-time Updates**: Column and field visibility updates immediately after settings changes
+
+### [v0.3.34] - Global Sort Controls
+- **🎯 Single Sort Dropdown**: Consolidated individual column sort controls into one global dropdown
+- **📍 Strategic Placement**: Moved sort controls next to "Board" tab for better accessibility
+- **🔄 All Columns Sync**: Global sort applies to all columns simultaneously
+- **🎨 Cleaner UI**: Removed individual column sort controls for cleaner interface
+- **📱 Responsive Design**: Sort controls adapt to mobile screens
+
+### [v0.3.33] - Publish Button Toggle
+- **🔄 Toggle Functionality**: Converted publish button to toggle between publish/unpublish
+- **🔒 Unpublish Feature**: Added ability to unpublish boards with visual feedback
+- **🎨 Dynamic Styling**: Button changes color and text based on publish state
+- **📊 State Management**: Proper state tracking with data attributes
+- **🛡️ Enhanced Control**: Better board visibility control for administrators
+
 ### [v0.3.32] - Email Call-to-Action
 - **🚀 Sign Up CTA**: Added call-to-action to sign up for Disko in email footer
 - **📈 User Acquisition**: Encourages recipients to create their own boards

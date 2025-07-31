@@ -31,6 +31,7 @@ class DragDropBoard {
 
     init() {
         this.setupEventListeners();
+        this.setupGlobalSort();
         this.loadBoard();
     }
 
@@ -227,11 +228,6 @@ class DragDropBoard {
     }
 
     getVisibleColumns() {
-        // For admin users, show all columns
-        if (this.isAdmin) {
-            return this.columns;
-        }
-        
         // For public boards, show only specific columns: Now, Next, Later, Won't Do
         if (this.isPublic) {
             return this.columns.filter(column => 
@@ -239,8 +235,8 @@ class DragDropBoard {
             );
         }
         
-        // For public users on private boards, filter based on board visibility settings
-        if (this.board && this.board.visibleColumns) {
+        // For private boards (both admin and non-admin), filter based on board visibility settings
+        if (this.board && this.board.visibleColumns && this.board.visibleColumns.length > 0) {
             return this.columns.filter(column => 
                 this.board.visibleColumns.includes(column.id)
             );
@@ -251,11 +247,6 @@ class DragDropBoard {
     }
 
     shouldShowField(fieldName) {
-        // For admin users, show all fields
-        if (this.isAdmin) {
-            return true;
-        }
-        
         // oneLiner is always visible
         if (fieldName === 'oneLiner') {
             return true;
@@ -266,18 +257,17 @@ class DragDropBoard {
             return true;
         }
         
-        // riceScore is admin-only for private boards
-        if (fieldName === 'riceScore') {
-            return false;
-        }
-        
-        // For public users on private boards, filter based on board visibility settings
-        if (this.board && this.board.visibleFields) {
+        // For private boards (both admin and non-admin), filter based on board visibility settings
+        if (this.board && this.board.visibleFields && this.board.visibleFields.length > 0) {
             return this.board.visibleFields.includes(fieldName);
         }
         
-        // Default to showing all fields except RICE score for public users on private boards
-        return fieldName !== 'riceScore';
+        // Default to showing all fields except RICE score for non-admin users on private boards
+        if (!this.isAdmin && fieldName === 'riceScore') {
+            return false;
+        }
+        
+        return true;
     }
 
     groupIdeasByColumn() {
@@ -314,7 +304,6 @@ class DragDropBoard {
                         <div class="column-title">${column.title}</div>
                         <div class="column-count">${ideas.length}</div>
                     </div>
-                    ${this.isAdmin ? this.createColumnSortControls(column.id) : ''}
                 </div>
                 <div class="column-ideas ${isEmpty ? 'empty' : ''}" data-column="${column.id}">
                     ${ideas.map(idea => this.createIdeaCard(idea)).join('')}
@@ -323,21 +312,13 @@ class DragDropBoard {
         `;
     }
 
-    createColumnSortControls(columnId) {
-        return `
-            <div class="column-sort-controls">
-                <select class="column-sort-select" data-column="${columnId}" onchange="dragDropBoard.sortColumn('${columnId}', this.value)">
-                    <option value="">Sort by...</option>
-                    <option value="name-asc">Name A-Z</option>
-                    <option value="name-desc">Name Z-A</option>
-                    <option value="rice-desc">RICE Score ↓</option>
-                    <option value="rice-asc">RICE Score ↑</option>
-                    <option value="status-progress">In Progress First</option>
-                    <option value="created-desc">Newest First</option>
-                    <option value="created-asc">Oldest First</option>
-                </select>
-            </div>
-        `;
+    setupGlobalSort() {
+        const globalSortSelect = document.getElementById('global-sort');
+        if (globalSortSelect) {
+            globalSortSelect.addEventListener('change', (e) => {
+                this.sortAllColumns(e.target.value);
+            });
+        }
     }
 
     createIdeaCard(idea) {
@@ -1005,6 +986,68 @@ class DragDropBoard {
                 this.makeDraggable();
             }
         }
+    }
+
+    // Method to sort all columns with the same sort type
+    sortAllColumns(sortType) {
+        if (!sortType) {
+            // Reset to default order (by position)
+            this.renderBoard();
+            return;
+        }
+
+        const [sortBy, sortDir] = sortType.split('-');
+        
+        // Group ideas by column
+        const groupedIdeas = this.groupIdeasByColumn();
+        
+        // Sort each column's ideas
+        Object.keys(groupedIdeas).forEach(columnId => {
+            const columnIdeas = groupedIdeas[columnId];
+            
+            columnIdeas.sort((a, b) => {
+                let comparison = 0;
+                
+                switch (sortBy) {
+                    case 'name':
+                        comparison = a.oneLiner.localeCompare(b.oneLiner);
+                        break;
+                    case 'rice':
+                        const riceA = this.calculateRICEScore(a.riceScore);
+                        const riceB = this.calculateRICEScore(b.riceScore);
+                        comparison = riceA - riceB;
+                        break;
+                    case 'status':
+                        // Sort by in-progress first, then by status
+                        if (sortDir === 'progress') {
+                            if (a.inProgress && !b.inProgress) return -1;
+                            if (!a.inProgress && b.inProgress) return 1;
+                            return a.status.localeCompare(b.status);
+                        }
+                        comparison = a.status.localeCompare(b.status);
+                        break;
+                    case 'created':
+                        comparison = new Date(a.createdAt) - new Date(b.createdAt);
+                        break;
+                    default:
+                        comparison = a.position - b.position;
+                }
+                
+                return sortDir === 'desc' ? -comparison : comparison;
+            });
+            
+            // Update the column display
+            const columnElement = document.querySelector(`[data-column="${columnId}"] .column-ideas`);
+            if (columnElement) {
+                columnElement.innerHTML =
+                    columnIdeas.map(idea => this.createIdeaCard(idea)).join('');
+                
+                // Re-enable dragging if admin
+                if (this.isAdmin) {
+                    this.makeDraggable();
+                }
+            }
+        });
     }
 
     updateTabCounts() {

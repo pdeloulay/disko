@@ -228,6 +228,16 @@ a:hover {
     transform: translateY(-1px);
 }
 
+.btn-warning {
+    background: var(--warning-500);
+    color: white;
+}
+
+.btn-warning:hover {
+    background: var(--warning-600);
+    transform: translateY(-1px);
+}
+
 .btn-large {
     padding: var(--space-4) var(--space-8);
     font-size: 1rem;
@@ -1401,6 +1411,32 @@ a:hover {
     height: auto;
 }
 
+.board-sort-controls {
+    display: flex;
+    align-items: center;
+}
+
+.board-sort-controls .sort-select {
+    font-size: 0.875rem;
+    padding: var(--space-2) var(--space-3);
+    border: 1px solid var(--gray-300);
+    border-radius: var(--radius);
+    background-color: white;
+    color: var(--gray-700);
+    cursor: pointer;
+    transition: all var(--transition-normal);
+}
+
+.board-sort-controls .sort-select:hover {
+    border-color: var(--gray-400);
+}
+
+.board-sort-controls .sort-select:focus {
+    outline: none;
+    border-color: var(--primary-500);
+    box-shadow: 0 0 0 3px var(--primary-100);
+}
+
 @media (max-width: 768px) {
     .board-count-section {
         flex-direction: column;
@@ -1409,6 +1445,11 @@ a:hover {
     }
     
     .board-count-section .create-idea-btn {
+        font-size: 0.8rem;
+        padding: var(--space-1) var(--space-2);
+    }
+    
+    .board-sort-controls .sort-select {
         font-size: 0.8rem;
         padding: var(--space-1) var(--space-2);
     }

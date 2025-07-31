@@ -48,7 +48,9 @@
                             {{if not .isPublic}}
                             <button id="board-settings-btn" class="btn btn-secondary">⚙️ Settings</button>
                             {{end}}
-                            <button id="publish-btn" class="btn btn-primary">🌐 Publish</button>
+                            <button id="publish-btn" class="btn btn-primary" data-published="{{.isPublic}}">
+                                {{if .isPublic}}🔒 Unpublish{{else}}🌐 Publish{{end}}
+                            </button>
                             <button id="invite-btn" class="btn btn-secondary" disabled>📧 Invite</button>
                             <button id="refresh-btn" class="btn btn-secondary">Refresh</button>
                         </div>
@@ -74,7 +76,19 @@
                             <div class="board-header-info">
                                 <h2>Board</h2>
                                 <div class="board-count-section">
-                                <span id="ideas-count" class="ideas-count">Loading...</span>
+                                    <span id="ideas-count" class="ideas-count">Loading...</span>
+                                    <div class="board-sort-controls">
+                                        <select id="global-sort" class="sort-select">
+                                            <option value="">Sort by...</option>
+                                            <option value="name-asc">Name A-Z</option>
+                                            <option value="name-desc">Name Z-A</option>
+                                            <option value="rice-desc">RICE Score ↓</option>
+                                            <option value="rice-asc">RICE Score ↑</option>
+                                            <option value="status-progress">In Progress First</option>
+                                            <option value="created-desc">Newest First</option>
+                                            <option value="created-asc">Oldest First</option>
+                                        </select>
+                                    </div>
                                     {{if not .isPublic}}
                                     <button id="create-idea-btn" class="btn btn-primary create-idea-btn">Create Idea</button>
                                     {{end}}

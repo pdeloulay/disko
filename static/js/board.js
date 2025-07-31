@@ -257,6 +257,7 @@ class BoardView {
                 if (this.isAdmin) {
                     const isPublished = boardData.isPublic || boardData.publicLink;
                     this.updateInviteButtonState(isPublished);
+                    this.updatePublishButtonState(isPublished);
                 }
                 
                 // Re-bind events with updated admin status
@@ -310,13 +311,19 @@ class BoardView {
     }
 
     async publishBoard() {
-        console.log('[BoardView] Publishing board...');
+        console.log('[BoardView] Toggling board publish state...');
         
         const publishBtn = document.getElementById('publish-btn');
         if (!publishBtn) {
             console.error('[BoardView] Publish button not found');
             return;
         }
+
+        // Get current publish state
+        const isCurrentlyPublished = publishBtn.getAttribute('data-published') === 'true';
+        const newPublishState = !isCurrentlyPublished;
+        
+        console.log('[BoardView] Current publish state:', isCurrentlyPublished, 'New state:', newPublishState);
 
         // Store original button state
         const originalText = publishBtn.textContent;
@@ -325,35 +332,53 @@ class BoardView {
         try {
             // Update button state
             publishBtn.disabled = true;
-            publishBtn.textContent = '🔄 Publishing...';
+            publishBtn.textContent = newPublishState ? '🔄 Publishing...' : '🔄 Unpublishing...';
 
-            console.log('[BoardView] Making API call to set board as public');
+            console.log('[BoardView] Making API call to toggle board public state');
             const response = await window.api.put(`/boards/${this.boardId}`, {
-                isPublic: true
+                isPublic: newPublishState
             });
             
-            console.log('[BoardView] Publish API response:', response);
+            console.log('[BoardView] Toggle publish API response:', response);
             
-            if (response && response.publicLink) {
-                // Update the board data with new public link
+            if (response) {
+                // Update the board data
                 if (window.boardData) {
                     window.boardData.publicLink = response.publicLink;
+                    window.boardData.isPublic = newPublishState;
                 }
                 
-                // Enable invite button since board is now published
-                this.updateInviteButtonState(true);
+                // Update button state and text
+                publishBtn.setAttribute('data-published', newPublishState.toString());
+                publishBtn.textContent = newPublishState ? '🔒 Unpublish' : '🌐 Publish';
                 
-                // Show success message with public link
-                this.showSuccessMessage(`Board published successfully! New public link: ${response.publicLink}`, response.publicLink);
+                // Update button styling
+                if (newPublishState) {
+                    publishBtn.classList.remove('btn-primary');
+                    publishBtn.classList.add('btn-warning');
+                } else {
+                    publishBtn.classList.remove('btn-warning');
+                    publishBtn.classList.add('btn-primary');
+                }
                 
-                console.log('[BoardView] Board published successfully with new public link:', response.publicLink);
+                // Update invite button state
+                this.updateInviteButtonState(newPublishState);
+                
+                // Show success message
+                if (newPublishState) {
+                    this.showSuccessMessage(`Board published successfully! New public link: ${response.publicLink}`, response.publicLink);
+                    console.log('[BoardView] Board published successfully with new public link:', response.publicLink);
+                } else {
+                    this.showSuccessMessage('Board unpublished successfully!');
+                    console.log('[BoardView] Board unpublished successfully');
+                }
             } else {
-                throw new Error('No public link received from API');
+                throw new Error('No response received from API');
             }
 
         } catch (error) {
-            console.error('[BoardView] Failed to publish board:', error);
-            this.showErrorMessage('Failed to publish board. Please try again.');
+            console.error('[BoardView] Failed to toggle board publish state:', error);
+            this.showErrorMessage(`Failed to ${newPublishState ? 'publish' : 'unpublish'} board. Please try again.`);
         } finally {
             // Restore button state
             publishBtn.disabled = originalDisabled;
@@ -371,6 +396,26 @@ class BoardView {
             } else {
                 inviteBtn.classList.remove('btn-primary');
                 inviteBtn.classList.add('btn-secondary');
+            }
+        }
+    }
+
+    updatePublishButtonState(isPublished) {
+        const publishBtn = document.getElementById('publish-btn');
+        if (publishBtn) {
+            // Update data attribute
+            publishBtn.setAttribute('data-published', isPublished.toString());
+            
+            // Update button text
+            publishBtn.textContent = isPublished ? '🔒 Unpublish' : '🌐 Publish';
+            
+            // Update button styling
+            if (isPublished) {
+                publishBtn.classList.remove('btn-primary');
+                publishBtn.classList.add('btn-warning');
+            } else {
+                publishBtn.classList.remove('btn-warning');
+                publishBtn.classList.add('btn-primary');
             }
         }
     }

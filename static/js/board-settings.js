@@ -219,8 +219,31 @@ class BoardSettingsManager {
         checkboxes.forEach(checkbox => {
             checkbox.addEventListener('change', () => {
                 console.log('[BoardSettings] Form field updated:', checkbox.name, checkbox.value, checkbox.checked);
+                
+                // Validate column selection in real-time
+                if (checkbox.name === 'visibleColumns') {
+                    this.validateColumnSelection();
+                }
             });
         });
+    }
+
+    validateColumnSelection() {
+        const modal = document.getElementById('board-settings-modal');
+        if (!modal) return;
+
+        const columnCheckboxes = modal.querySelectorAll('input[name="visibleColumns"]');
+        const checkedColumns = Array.from(columnCheckboxes).filter(cb => cb.checked);
+        
+        // If no columns are selected, prevent unchecking the last one
+        if (checkedColumns.length === 0) {
+            // Find the checkbox that was just unchecked and re-check it
+            const uncheckedCheckbox = Array.from(columnCheckboxes).find(cb => !cb.checked);
+            if (uncheckedCheckbox) {
+                uncheckedCheckbox.checked = true;
+                this.showErrorMessage('At least one column must be selected.');
+            }
+        }
     }
 
     // Handle settings form submission
@@ -245,6 +268,12 @@ class BoardSettingsManager {
         // Validate board name
         if (!boardName.trim()) {
             this.showErrorMessage('Board name is required.');
+            return;
+        }
+
+        // Validate that at least one column is selected
+        if (visibleColumns.length === 0) {
+            this.showErrorMessage('At least one column must be selected.');
             return;
         }
 

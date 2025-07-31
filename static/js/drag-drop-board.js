@@ -190,13 +190,9 @@ class DragDropBoard {
             
             this.ideas = data.ideas || [];
 
-            // Update ideas count
-            const ideasCount = document.getElementById('ideas-count');
-            if (ideasCount) {
-                const count = this.ideas.length;
-                ideasCount.textContent = `${count} ${count === 1 ? 'idea' : 'ideas'}`;
-            }
-
+            // Update ideas count with visible/total format
+            this.updateIdeasCount();
+            
             // Update tab counts
             this.updateTabCounts();
             
@@ -249,6 +245,9 @@ class DragDropBoard {
         if (this.isAdmin && !this.isPublic) {
             this.makeDraggable();
         }
+        
+        // Update ideas count after rendering
+        this.updateIdeasCount();
     }
 
     getVisibleColumns() {
@@ -826,13 +825,8 @@ class DragDropBoard {
     showEmojiPicker(ideaId) {
         console.log('[DragDropBoard] showEmojiPicker called for idea:', ideaId);
         
-        // Create emoji picker modal for public boards
-        if (this.isPublic) {
-            this.createEmojiPickerModal(ideaId);
-        } else if (window.ideaManager) {
-            // For private boards, use idea manager
-            window.ideaManager.showEmojiPicker(ideaId);
-        }
+        // Create emoji picker modal for both public and private boards
+        this.createEmojiPickerModal(ideaId);
     }
 
     createEmojiPickerModal(ideaId) {
@@ -879,21 +873,16 @@ class DragDropBoard {
         console.log('[DragDropBoard] addEmojiReaction called for idea:', ideaId, 'emoji:', emoji);
         
         try {
-            // For public boards, use public API endpoint
-            if (this.isPublic) {
-                const response = await window.api.post(`/ideas/${ideaId}/emoji`, { emoji: emoji });
-                console.log('[DragDropBoard] Emoji reaction response:', response);
-                
-                this.closeEmojiPicker();
-                this.showSuccessMessage('Emoji reaction added!');
-                
-                // Refresh the board to show updated emoji reactions
-                await this.loadIdeas();
-                this.renderBoard();
-            } else if (window.ideaManager) {
-                // For private boards, use idea manager
-                await window.ideaManager.addEmojiReaction(ideaId, emoji);
-            }
+            // Use the same API endpoint for both public and private boards
+            const response = await window.api.post(`/ideas/${ideaId}/emoji`, { emoji: emoji });
+            console.log('[DragDropBoard] Emoji reaction response:', response);
+            
+            this.closeEmojiPicker();
+            this.showSuccessMessage('Emoji reaction added!');
+            
+            // Refresh the board to show updated emoji reactions
+            await this.loadIdeas();
+            this.renderBoard();
         } catch (error) {
             console.error('[DragDropBoard] Failed to add emoji reaction:', error);
             this.showErrorMessage('Failed to add emoji reaction. Please try again.');
@@ -961,8 +950,8 @@ class DragDropBoard {
         const ideasCount = document.getElementById('ideas-count');
         if (!ideasCount) return;
 
-        const count = this.ideas.length;
-        let countText = `${count} ${count === 1 ? 'idea' : 'ideas'}`;
+        const { visible, total } = this.getVisibleIdeasCount();
+        let countText = `Ideas: ${visible} visible / ${total} total`;
         
         if (searchInfo && (searchInfo.query || this.hasActiveFilters(searchInfo))) {
             countText += ' (filtered)';
@@ -1239,6 +1228,42 @@ class DragDropBoard {
         console.log('[DragDropBoard] Global drag listeners active:', hasGlobalListeners);
         
         return ideaCards.length > 0;
+    }
+
+    getVisibleIdeasCount() {
+        // Get visible columns
+        const visibleColumns = this.getVisibleColumns();
+        const visibleColumnIds = visibleColumns.map(col => col.id);
+        
+        // Count ideas that belong to visible columns
+        const visibleIdeas = this.ideas.filter(idea => 
+            visibleColumnIds.includes(idea.column)
+        );
+        
+        console.log('[DragDropBoard] Visible ideas calculation:', {
+            totalIdeas: this.ideas.length,
+            visibleIdeas: visibleIdeas.length,
+            visibleColumns: visibleColumnIds,
+            allColumns: this.ideas.map(idea => idea.column)
+        });
+        
+        return {
+            visible: visibleIdeas.length,
+            total: this.ideas.length
+        };
+    }
+
+    updateIdeasCount() {
+        const ideasCount = document.getElementById('ideas-count');
+        if (!ideasCount) return;
+
+        const { visible, total } = this.getVisibleIdeasCount();
+        
+        // Format: "Ideas: 5 visible / 7 total"
+        const countText = `Ideas: ${visible} visible / ${total} total`;
+        ideasCount.textContent = countText;
+        
+        console.log('[DragDropBoard] Updated ideas count:', countText);
     }
 }
 

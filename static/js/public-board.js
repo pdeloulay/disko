@@ -186,7 +186,13 @@ class PublicBoardView {
         }
 
         if (countElement) {
-            countElement.textContent = `${this.ideas.length} ideas`;
+            // Calculate visible ideas based on visible columns
+            const visibleIdeas = this.ideas.filter(idea => 
+                this.board.visibleColumns.includes(idea.column)
+            );
+            
+            const countText = `Ideas: ${visibleIdeas.length} visible / ${this.ideas.length} total`;
+            countElement.textContent = countText;
         }
 
         // Update tab counts

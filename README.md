@@ -117,6 +117,13 @@ Once configured, the invite button will be enabled for published boards, allowin
 
 ## Changelog
 
+### [v0.3.31] - Email Emoji Counters
+- **👍 Thumbs Up Counters**: Added thumbs up counts to email idea cards
+- **😊 Emoji Reaction Counters**: Added emoji reaction counts to email content
+- **📊 Feedback Summary**: Shows feedback summary with proper styling in email
+- **🎨 Visual Enhancement**: Improved email content with engagement metrics
+- **📱 Better Engagement**: Recipients can see which ideas are most popular
+
 ### [v0.3.28] - Email Footer Logo Update
 - **🖼️ Professional Logo**: Updated email footer to use the official Disko logo image
 - **📱 Responsive Design**: Logo scales properly across different email clients

@@ -258,6 +258,21 @@ func generateInviteEmailHTML(board models.Board) string {
             font-size: 12px;
             color: #64748b;
         }
+        .idea-feedback-summary {
+            margin-top: 8px;
+            padding-top: 8px;
+            border-top: 1px solid #e2e8f0;
+        }
+        .feedback-label {
+            font-size: 11px;
+            color: #64748b;
+            font-weight: 600;
+            margin-right: 8px;
+        }
+        .feedback-items {
+            font-size: 12px;
+            color: #3b82f6;
+        }
         .cta-section {
             text-align: center;
             padding: 30px;
@@ -470,24 +485,38 @@ func generateEmojiRecaps(board models.Board) string {
 
 func getRecentIdeas(boardID string, limit int) []models.Idea {
 	// This would typically query the database
-	// For now, return placeholder data
+	// For now, return placeholder data with emoji reactions
 	return []models.Idea{
 		{
-			ID:        "idea1",
-			OneLiner:  "Implement real-time collaboration features",
-			Column:    "now",
+			ID:       "idea1",
+			OneLiner: "Implement real-time collaboration features",
+			Column:   "now",
+			ThumbsUp: 5,
+			EmojiReactions: []models.EmojiReaction{
+				{Emoji: "🔥", Count: 3},
+				{Emoji: "💡", Count: 2},
+			},
 			CreatedAt: time.Now().Add(-2 * time.Hour),
 		},
 		{
-			ID:        "idea2",
-			OneLiner:  "Add advanced search and filtering",
-			Column:    "next",
+			ID:       "idea2",
+			OneLiner: "Add advanced search and filtering",
+			Column:   "next",
+			ThumbsUp: 3,
+			EmojiReactions: []models.EmojiReaction{
+				{Emoji: "🚀", Count: 4},
+			},
 			CreatedAt: time.Now().Add(-4 * time.Hour),
 		},
 		{
-			ID:        "idea3",
-			OneLiner:  "Create mobile app for iOS and Android",
-			Column:    "later",
+			ID:       "idea3",
+			OneLiner: "Create mobile app for iOS and Android",
+			Column:   "later",
+			ThumbsUp: 8,
+			EmojiReactions: []models.EmojiReaction{
+				{Emoji: "📱", Count: 6},
+				{Emoji: "🎯", Count: 2},
+			},
 			CreatedAt: time.Now().Add(-6 * time.Hour),
 		},
 	}
@@ -500,15 +529,20 @@ func generateRecentIdeasHTML(ideas []models.Idea) string {
 
 	html := ""
 	for _, idea := range ideas {
+		// Generate feedback summary
+		feedbackSummary := generateFeedbackSummary(idea)
+
 		html += fmt.Sprintf(`
             <div class="idea-item">
                 <div class="idea-title">%s</div>
                 <div class="idea-meta">%s • %s</div>
+                %s
             </div>
         `,
 			idea.OneLiner,
 			formatColumn(idea.Column),
 			formatTimeAgo(idea.CreatedAt),
+			feedbackSummary,
 		)
 	}
 
@@ -539,6 +573,37 @@ func formatTimeAgo(t time.Time) string {
 		}
 		return fmt.Sprintf("%d days ago", days)
 	}
+}
+
+func generateFeedbackSummary(idea models.Idea) string {
+	var feedbackParts []string
+
+	// Add thumbs up count if greater than 0
+	if idea.ThumbsUp > 0 {
+		feedbackParts = append(feedbackParts, fmt.Sprintf("👍 %d", idea.ThumbsUp))
+	}
+
+	// Add emoji reactions if any exist
+	if len(idea.EmojiReactions) > 0 {
+		for _, reaction := range idea.EmojiReactions {
+			if reaction.Count > 0 {
+				feedbackParts = append(feedbackParts, fmt.Sprintf("%s %d", reaction.Emoji, reaction.Count))
+			}
+		}
+	}
+
+	// If no feedback, return empty string
+	if len(feedbackParts) == 0 {
+		return ""
+	}
+
+	// Return feedback summary with styling
+	return fmt.Sprintf(`
+		<div class="idea-feedback-summary">
+			<span class="feedback-label">Feedback:</span>
+			<span class="feedback-items">%s</span>
+		</div>
+	`, strings.Join(feedbackParts, " "))
 }
 
 func formatColumn(column string) string {

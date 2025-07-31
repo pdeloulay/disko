@@ -314,7 +314,7 @@ a:hover {
     position: relative;
     z-index: 1;
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 1fr 1.5fr;
     gap: var(--space-16);
     align-items: center;
 }
@@ -378,9 +378,54 @@ a:hover {
     color: var(--success-400);
 }
 
+.discovery-questions {
+    margin-top: var(--space-6);
+    padding: var(--space-4);
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: var(--radius-lg);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.discovery-questions h4 {
+    color: rgba(255, 255, 255, 0.95);
+    font-size: 1rem;
+    font-weight: 600;
+    margin-bottom: var(--space-3);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.discovery-questions ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.discovery-questions li {
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 0.875rem;
+    line-height: 1.5;
+    margin-bottom: var(--space-2);
+    padding-left: var(--space-3);
+    position: relative;
+}
+
+.discovery-questions li:before {
+    content: "•";
+    color: var(--success-400);
+    font-weight: bold;
+    position: absolute;
+    left: 0;
+}
+
+.discovery-questions li strong {
+    color: rgba(255, 255, 255, 0.95);
+    font-weight: 600;
+}
+
 .hero-content-row {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 1fr 2fr;
     gap: var(--space-8);
     align-items: start;
     margin: var(--space-8) 0;
@@ -394,6 +439,7 @@ a:hover {
     max-width: 100%;
     margin: 0;
     min-width: 0; /* Allow grid item to shrink */
+    justify-self: end; /* Stretch to the right */
 }
 
 @media (max-width: 768px) {
@@ -1618,6 +1664,17 @@ a:hover {
     
     .form-actions .btn {
         width: 100%;
+    }
+}
+
+@media (min-width: 1400px) {
+    .hero .container {
+        grid-template-columns: 1fr 2fr;
+        max-width: 1600px;
+    }
+    
+    .hero-content-row {
+        grid-template-columns: 1fr 2.5fr;
     }
 }
 

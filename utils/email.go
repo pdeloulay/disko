@@ -1,10 +1,12 @@
 package utils
 
 import (
+	"bytes"
 	"fmt"
 	"log"
 	"os"
 	"strconv"
+	"text/template"
 	"time"
 
 	"disko-backend/models"
@@ -13,7 +15,7 @@ import (
 )
 
 // SendBoardInviteEmail sends an HTML invitation email for a board
-func SendBoardInviteEmail(email, subject string, board models.Board) error {
+func SendBoardInviteEmail(email, subject string, board models.Board, userID string) error {
 	// Get email configuration from environment variables
 	smtpHost := os.Getenv("SMTP_HOST")
 	smtpPortStr := os.Getenv("SMTP_PORT")
@@ -21,7 +23,11 @@ func SendBoardInviteEmail(email, subject string, board models.Board) error {
 	smtpPass := os.Getenv("SMTP_PASS")
 	fromEmail := os.Getenv("FROM_EMAIL")
 
+	log.Printf("[Email] Configuration check - SMTP_HOST: %s, SMTP_PORT: %s, SMTP_USER: %s, FROM_EMAIL: %s, APP_URL: %s",
+		smtpHost, smtpPortStr, smtpUser, fromEmail, os.Getenv("APP_URL"))
+
 	if smtpHost == "" || smtpPortStr == "" || smtpUser == "" || smtpPass == "" || fromEmail == "" {
+		log.Printf("[Email] Configuration incomplete - missing required environment variables")
 		return fmt.Errorf("email configuration incomplete - check SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, FROM_EMAIL environment variables")
 	}
 
@@ -30,9 +36,20 @@ func SendBoardInviteEmail(email, subject string, board models.Board) error {
 		return fmt.Errorf("invalid SMTP port: %v", err)
 	}
 
+	// Get user email from Clerk if userID is provided
+	fromEmailWithName := fromEmail
+	if userID != "" {
+		_, err := getUserEmailFromClerk(userID)
+		if err != nil {
+			log.Printf("[Email] Failed to get user email from Clerk: %v, using default email", err)
+		} else {
+			fromEmailWithName = fmt.Sprintf("Disko <noreply@%s>", extractDomain(fromEmail))
+		}
+	}
+
 	// Create email message
 	m := gomail.NewMessage()
-	m.SetHeader("From", fromEmail)
+	m.SetHeader("From", fromEmailWithName)
 	m.SetHeader("To", email)
 	m.SetHeader("Subject", subject)
 	m.SetBody("text/html", generateInviteEmailHTML(board))
@@ -50,7 +67,54 @@ func SendBoardInviteEmail(email, subject string, board models.Board) error {
 	return nil
 }
 
-// generateInviteEmailHTML creates a compelling HTML email template
+// getUserEmailFromClerk retrieves user email from Clerk
+func getUserEmailFromClerk(userID string) (string, error) {
+	// Initialize Clerk client
+	clerkSecretKey := os.Getenv("CLERK_SECRET_KEY")
+	if clerkSecretKey == "" {
+		return "", fmt.Errorf("CLERK_SECRET_KEY not set")
+	}
+
+	// For now, we'll use a placeholder since the Clerk SDK might not be available
+	// In a real implementation, you would use the Clerk SDK to get user information
+	log.Printf("[Email] Getting user email from Clerk for userID: %s", userID)
+
+	// Placeholder implementation - in production, you would use the actual Clerk SDK
+	// client, err := clerk.NewClient(clerkSecretKey)
+	// if err != nil {
+	//     return "", fmt.Errorf("failed to create Clerk client: %v", err)
+	// }
+	//
+	// user, err := client.Users.GetUser(context.Background(), userID)
+	// if err != nil {
+	//     return "", fmt.Errorf("failed to get user from Clerk: %v", err)
+	// }
+	//
+	// if len(user.EmailAddresses) > 0 {
+	//     for _, email := range user.EmailAddresses {
+	//         if email.ID == user.PrimaryEmailAddressID {
+	//             return email.EmailAddress, nil
+	//         }
+	//     }
+	//     if len(user.EmailAddresses) > 0 {
+	//         return user.EmailAddresses[0].EmailAddress, nil
+	//     }
+	// }
+
+	return "", fmt.Errorf("Clerk SDK integration not yet implemented")
+}
+
+// extractDomain extracts domain from email address
+func extractDomain(email string) string {
+	for i, char := range email {
+		if char == '@' {
+			return email[i+1:]
+		}
+	}
+	return "disko.app"
+}
+
+// generateInviteEmailHTML creates a compelling HTML email template with Disko branding
 func generateInviteEmailHTML(board models.Board) string {
 	publicURL := fmt.Sprintf("%s/public/%s", os.Getenv("APP_URL"), board.PublicLink)
 
@@ -58,13 +122,13 @@ func generateInviteEmailHTML(board models.Board) string {
 	ideasCount := getBoardIdeasCount(board.ID)
 	recentIdeas := getRecentIdeas(board.ID, 5)
 
-	html := fmt.Sprintf(`
-<!DOCTYPE html>
+	// Build the HTML template with proper escaping
+	htmlTemplate := `<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>%s - Board Invitation</title>
+    <title>{{.BoardName}} - Board Invitation</title>
     <style>
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -87,6 +151,11 @@ func generateInviteEmailHTML(board models.Board) string {
             color: white;
             padding: 40px 30px;
             text-align: center;
+        }
+        .logo {
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 16px;
         }
         .header h1 {
             margin: 0;
@@ -195,12 +264,31 @@ func generateInviteEmailHTML(board models.Board) string {
             color: #64748b;
             font-size: 14px;
         }
+        .footer-logo {
+            font-size: 20px;
+            font-weight: 700;
+            color: #3b82f6;
+            margin-bottom: 16px;
+        }
         .footer p {
             margin: 0 0 8px 0;
         }
         .footer a {
             color: #3b82f6;
             text-decoration: none;
+        }
+        .footer-links {
+            margin-top: 16px;
+            padding-top: 16px;
+            border-top: 1px solid #e2e8f0;
+        }
+        .footer-links a {
+            margin: 0 8px;
+            color: #64748b;
+            text-decoration: none;
+        }
+        .footer-links a:hover {
+            color: #3b82f6;
         }
         @media (max-width: 600px) {
             .container {
@@ -219,26 +307,27 @@ func generateInviteEmailHTML(board models.Board) string {
 <body>
     <div class="container">
         <div class="header">
-            <h1>🚀 You're Invited!</h1>
+            <div class="logo">🚀</div>
+            <h1>You're Invited!</h1>
             <p>Someone has invited you to view their Disko board</p>
         </div>
         
         <div class="content">
             <div class="board-info">
-                <h2 class="board-name">%s</h2>
-                <p class="board-description">%s</p>
+                <h2 class="board-name">{{.BoardName}}</h2>
+                <p class="board-description">{{.BoardDescription}}</p>
                 
                 <div class="stats-grid">
                     <div class="stat-item">
-                        <span class="stat-number">%d</span>
+                        <span class="stat-number">{{.IdeasCount}}</span>
                         <span class="stat-label">Ideas</span>
                     </div>
                     <div class="stat-item">
-                        <span class="stat-number">%d</span>
+                        <span class="stat-number">{{.ColumnsCount}}</span>
                         <span class="stat-label">Columns</span>
                     </div>
                     <div class="stat-item">
-                        <span class="stat-number">%s</span>
+                        <span class="stat-number">{{.UpdatedAgo}}</span>
                         <span class="stat-label">Updated</span>
                     </div>
                 </div>
@@ -246,34 +335,73 @@ func generateInviteEmailHTML(board models.Board) string {
             
             <div class="recent-ideas">
                 <h3>💡 Recent Ideas</h3>
-                %s
+                {{.RecentIdeasHTML}}
             </div>
             
             <div class="cta-section">
                 <h3 style="margin: 0 0 16px 0; color: #1e293b;">Ready to explore?</h3>
                 <p style="margin: 0 0 24px 0; color: #64748b;">Click the button below to view the board and provide feedback on ideas.</p>
-                <a href="%s" class="cta-button">View Board</a>
+                <a href="{{.PublicURL}}" class="cta-button">View Board</a>
             </div>
         </div>
         
         <div class="footer">
-            <p>This invitation was sent from <a href="%s">Disko</a></p>
+            <div class="footer-logo">🚀 Disko</div>
+            <p>This invitation was sent from <a href="{{.AppURL}}">Disko</a></p>
             <p>If you didn't expect this invitation, you can safely ignore this email.</p>
+            <div class="footer-links">
+                <a href="{{.AboutURL}}">About Disko</a>
+                <a href="{{.PrivacyURL}}">Privacy Policy</a>
+                <a href="{{.TermsURL}}">Terms of Service</a>
+                <a href="mailto:support@disko.app">Support</a>
+            </div>
         </div>
     </div>
 </body>
-</html>
-`,
-		board.Name,
-		board.Name,
-		board.Description,
-		ideasCount,
-		len(board.VisibleColumns),
-		formatTimeAgo(board.UpdatedAt),
-		generateRecentIdeasHTML(recentIdeas),
-		publicURL,
-		os.Getenv("APP_URL"),
-	)
+</html>`
+
+	// Create template data
+	templateData := struct {
+		BoardName        string
+		BoardDescription string
+		IdeasCount       int
+		ColumnsCount     int
+		UpdatedAgo       string
+		RecentIdeasHTML  string
+		PublicURL        string
+		AppURL           string
+		AboutURL         string
+		PrivacyURL       string
+		TermsURL         string
+	}{
+		BoardName:        board.Name,
+		BoardDescription: board.Description,
+		IdeasCount:       ideasCount,
+		ColumnsCount:     len(board.VisibleColumns),
+		UpdatedAgo:       formatTimeAgo(board.UpdatedAt),
+		RecentIdeasHTML:  generateRecentIdeasHTML(recentIdeas),
+		PublicURL:        publicURL,
+		AppURL:           os.Getenv("APP_URL"),
+		AboutURL:         fmt.Sprintf("%s/about", os.Getenv("APP_URL")),
+		PrivacyURL:       fmt.Sprintf("%s/privacy", os.Getenv("APP_URL")),
+		TermsURL:         fmt.Sprintf("%s/terms", os.Getenv("APP_URL")),
+	}
+
+	// Use Go's text/template to properly handle the template
+	tmpl, err := template.New("email").Parse(htmlTemplate)
+	if err != nil {
+		log.Printf("[Email] Failed to parse email template: %v", err)
+		return ""
+	}
+
+	var buf bytes.Buffer
+	err = tmpl.Execute(&buf, templateData)
+	if err != nil {
+		log.Printf("[Email] Failed to execute email template: %v", err)
+		return ""
+	}
+
+	html := buf.String()
 
 	return html
 }

@@ -381,7 +381,7 @@ class BoardView {
             // Set default subject
             const subjectInput = document.getElementById('invite-subject');
             if (subjectInput) {
-                subjectInput.value = `Invitation to view ${this.boardData.name || 'our board'}`;
+                subjectInput.value = `[Disko] 🚀 You're Invited to the ${this.boardData.name || 'board!'}`;
             }
             
             modal.classList.add('show');

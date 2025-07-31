@@ -1022,7 +1022,7 @@ func SendBoardInvite(c *gin.Context) {
 	}
 
 	// Send invitation email
-	err = utils.SendBoardInviteEmail(req.Email, req.Subject, board)
+	err = utils.SendBoardInviteEmail(req.Email, req.Subject, board, userID)
 	if err != nil {
 		log.Printf("[Handler] SendBoardInvite failed - Email error: %v, BoardID: %s, UserID: %s, Email: %s, IP: %s",
 			err, boardID, userID, req.Email, c.ClientIP())

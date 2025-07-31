@@ -59,6 +59,19 @@ Visit http://localhost:8080 to access the application.
 - `CLERK_PUBLISHABLE_KEY`: Your Clerk publishable key
 - `ENV`: Environment (development/production)
 
+### Email Configuration (for Board Invite Feature)
+- `SMTP_HOST`: SMTP server host (e.g., smtp.gmail.com)
+- `SMTP_PORT`: SMTP server port (e.g., 587 for TLS)
+- `SMTP_USER`: SMTP username (your email address)
+- `SMTP_PASS`: SMTP password (use app password for Gmail)
+- `FROM_EMAIL`: Email address that will appear as sender
+- `APP_URL`: Your application URL (e.g., http://localhost:8080)
+
+### Rate Limiting Configuration
+- `RATE_LIMIT_PUBLIC_BOARD_SECONDS`: Rate limit for public board access (default: 30)
+- `RATE_LIMIT_THUMBSUP_SECONDS`: Rate limit for thumbs up (default: 5)
+- `RATE_LIMIT_EMOJI_SECONDS`: Rate limit for emoji reactions (default: 5)
+
 ## Development
 
 The project is set up with:
@@ -67,6 +80,32 @@ The project is set up with:
 - Clerk authentication integration
 - MongoDB connection utilities
 - Basic project structure for scalable development
+
+## Email Setup (for Board Invite Feature)
+
+To enable the board invite feature, you need to configure SMTP settings:
+
+### Gmail Setup
+1. Enable 2-factor authentication on your Gmail account
+2. Generate an App Password:
+   - Go to Google Account settings
+   - Security → 2-Step Verification → App passwords
+   - Generate a password for "Mail"
+3. Use the generated password as `SMTP_PASS`
+
+### Environment Variables
+Copy `env.example` to `.env` and configure:
+```bash
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USER=your-email@gmail.com
+SMTP_PASS=your-app-password
+FROM_EMAIL=your-email@gmail.com
+APP_URL=http://localhost:8080
+```
+
+### Testing Email
+Once configured, the invite button will be enabled for published boards, allowing you to send beautiful HTML invitation emails.
 
 ## Application Routes
 
@@ -77,6 +116,21 @@ The project is set up with:
 - `/health` - Health check endpoint
 
 ## Changelog
+
+### [v0.3.25] - Email Improvements and Branding
+- **📧 Clerk Integration**: Added support for using Clerk user email in From field
+- **🚀 Disko Branding**: Enhanced email template with Disko logo and branding
+- **📄 Better Footer**: Improved email footer with links to About, Privacy, Terms, and Support
+- **🔧 HTML Fixes**: Fixed HTML display issues in email content using proper Go templates
+- **📱 Responsive Design**: Enhanced email template with better mobile responsiveness
+- **🎨 Visual Improvements**: Added gradient backgrounds and improved typography
+
+### [v0.3.24] - Environment Configuration
+- **📧 SMTP Setup**: Added comprehensive SMTP environment variable configuration
+- **📋 Example File**: Created `env.example` with all required environment variables
+- **🔧 Documentation**: Added detailed email setup instructions for Gmail
+- **📊 Configuration Logging**: Enhanced logging for email configuration debugging
+- **📖 Setup Guide**: Complete setup guide for board invite email functionality
 
 ### [v0.3.23] - Board Invite Feature
 - **📧 Invite Button**: Added invite button next to publish button (enabled only when board is published)

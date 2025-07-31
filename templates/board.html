@@ -49,6 +49,7 @@
                             <button id="board-settings-btn" class="btn btn-secondary">⚙️ Settings</button>
                             {{end}}
                             <button id="publish-btn" class="btn btn-primary">🌐 Publish</button>
+                            <button id="invite-btn" class="btn btn-secondary" disabled>📧 Invite</button>
                             <button id="refresh-btn" class="btn btn-secondary">Refresh</button>
                         </div>
                     </div>
@@ -239,5 +240,31 @@
             }
         });
     </script>
+
+    <!-- Invite Modal -->
+    <div id="invite-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>📧 Invite to Board</h3>
+                <button class="modal-close" onclick="boardView.closeInviteModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="invite-form">
+                    <div class="form-group">
+                        <label for="invite-email">Email Address *</label>
+                        <input type="email" id="invite-email" name="email" required placeholder="Enter email address">
+                    </div>
+                    <div class="form-group">
+                        <label for="invite-subject">Subject *</label>
+                        <input type="text" id="invite-subject" name="subject" required placeholder="Enter email subject">
+                    </div>
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-secondary" onclick="boardView.closeInviteModal()">Cancel</button>
+                        <button type="submit" class="btn btn-primary">📧 Send Email</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
 </body>
 </html>

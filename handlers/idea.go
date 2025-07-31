@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
+	"strconv"
 	"time"
 
 	"disko-backend/middleware"
@@ -1386,14 +1388,14 @@ func AddThumbsUp(c *gin.Context) {
 	// Get client IP for rate limiting
 	clientIP := c.ClientIP()
 
-	// Simple rate limiting: check if this IP has made a request in the last 5 seconds
-	// In production, you'd use Redis or similar for distributed rate limiting
+	// Rate limiting: check if this IP has made a request recently
 	rateLimitKey := "thumbsup_" + ideaID + "_" + clientIP
-	if isRateLimited(rateLimitKey, 5*time.Second) {
+	rateLimitSeconds := getRateLimitSeconds("RATE_LIMIT_THUMBSUP_SECONDS", 10)
+	if isRateLimited(rateLimitKey, time.Duration(rateLimitSeconds)*time.Second) {
 		c.JSON(http.StatusTooManyRequests, gin.H{
 			"error": gin.H{
 				"code":    "RATE_LIMITED",
-				"message": "Please wait before giving another thumbs up",
+				"message": fmt.Sprintf("Please wait %d seconds before giving another thumbs up", rateLimitSeconds),
 			},
 		})
 		return
@@ -1456,7 +1458,7 @@ func AddThumbsUp(c *gin.Context) {
 	}
 
 	// Set rate limit
-	setRateLimit(rateLimitKey, 5*time.Second)
+	setRateLimit(rateLimitKey, time.Duration(rateLimitSeconds)*time.Second)
 
 	// Send notification to admin (async)
 	go sendFeedbackNotification(idea.BoardID, ideaID, "thumbsup", clientIP)
@@ -1502,13 +1504,14 @@ func AddEmojiReaction(c *gin.Context) {
 	// Get client IP for rate limiting
 	clientIP := c.ClientIP()
 
-	// Rate limiting: check if this IP has made an emoji request in the last 3 seconds
+	// Rate limiting: check if this IP has made an emoji request recently
 	rateLimitKey := "emoji_" + ideaID + "_" + clientIP
-	if isRateLimited(rateLimitKey, 3*time.Second) {
+	rateLimitSeconds := getRateLimitSeconds("RATE_LIMIT_EMOJI_SECONDS", 5)
+	if isRateLimited(rateLimitKey, time.Duration(rateLimitSeconds)*time.Second) {
 		c.JSON(http.StatusTooManyRequests, gin.H{
 			"error": gin.H{
 				"code":    "RATE_LIMITED",
-				"message": "Please wait before adding another emoji reaction",
+				"message": fmt.Sprintf("Please wait %d seconds before adding another emoji reaction", rateLimitSeconds),
 			},
 		})
 		return
@@ -1605,7 +1608,7 @@ func AddEmojiReaction(c *gin.Context) {
 	}
 
 	// Set rate limit
-	setRateLimit(rateLimitKey, 3*time.Second)
+	setRateLimit(rateLimitKey, time.Duration(rateLimitSeconds)*time.Second)
 
 	// Send notification to admin (async)
 	go sendFeedbackNotification(idea.BoardID, ideaID, "emoji:"+req.Emoji, clientIP)
@@ -1643,6 +1646,16 @@ func setRateLimit(key string, duration time.Duration) {
 	}()
 }
 
+// getRateLimitSeconds gets rate limit seconds from environment variable with fallback
+func getRateLimitSeconds(envVar string, fallback int) int {
+	if value := os.Getenv(envVar); value != "" {
+		if seconds, err := strconv.Atoi(value); err == nil && seconds > 0 {
+			return seconds
+		}
+	}
+	return fallback
+}
+
 // isValidEmoji performs basic emoji validation
 func isValidEmoji(emoji string) bool {
 	// Basic validation - check length and common emoji patterns
@@ -1653,7 +1666,11 @@ func isValidEmoji(emoji string) bool {
 	// Allow common emoji characters (this is a simplified check)
 	// In production, you'd want a more comprehensive emoji validation
 	validEmojis := []string{
-		"😀", "😃", "😄", "😁", "😆", "😅", "😂", "🤣", "😊", "😇",
+		// Frontend emoji picker emojis
+		"🚀", "💡", "🎯", "🔥", "👍", "❤️", "😊", "🎉", "⭐", "💪",
+
+		// Additional common emojis
+		"😀", "😃", "😄", "😁", "😆", "😅", "😂", "🤣", "😇",
 		"🙂", "🙃", "😉", "😌", "😍", "🥰", "😘", "😗", "😙", "😚",
 		"😋", "😛", "😝", "😜", "🤪", "🤨", "🧐", "🤓", "😎", "🤩",
 		"🥳", "😏", "😒", "😞", "😔", "😟", "😕", "🙁", "☹️", "😣",
@@ -1662,15 +1679,15 @@ func isValidEmoji(emoji string) bool {
 		"🤔", "🤭", "🤫", "🤥", "😶", "😐", "😑", "😬", "🙄", "😯",
 		"😦", "😧", "😮", "😲", "🥱", "😴", "🤤", "😪", "😵", "🤐",
 		"🥴", "🤢", "🤮", "🤧", "😷", "🤒", "🤕", "🤑", "🤠", "😈",
-		"👍", "👎", "👌", "✌️", "🤞", "🤟", "🤘", "🤙", "👈", "👉",
+		"👎", "👌", "✌️", "🤞", "🤟", "🤘", "🤙", "👈", "👉",
 		"👆", "🖕", "👇", "☝️", "👋", "🤚", "🖐️", "✋", "🖖", "👏",
-		"🙌", "🤲", "🤝", "🙏", "✍️", "💪", "🦾", "🦿", "🦵", "🦶",
-		"❤️", "🧡", "💛", "💚", "💙", "💜", "🖤", "🤍", "🤎", "💔",
+		"🙌", "🤲", "🤝", "🙏", "✍️", "🦾", "🦿", "🦵", "🦶",
+		"🧡", "💛", "💚", "💙", "💜", "🖤", "🤍", "🤎", "💔",
 		"❣️", "💕", "💞", "💓", "💗", "💖", "💘", "💝", "💟", "☮️",
 		"✝️", "☪️", "🕉️", "☸️", "✡️", "🔯", "🕎", "☯️", "☦️", "🛐",
-		"⭐", "🌟", "💫", "✨", "🌠", "🌙", "☀️", "🌤️", "⛅", "🌦️",
+		"🌟", "💫", "✨", "🌠", "🌙", "☀️", "🌤️", "⛅", "🌦️",
 		"🌧️", "⛈️", "🌩️", "🌨️", "❄️", "☃️", "⛄", "🌬️", "💨", "🌪️",
-		"🔥", "💥", "⚡", "🌈", "☔", "💧", "🌊", "🎉", "🎊", "🎈",
+		"💥", "⚡", "🌈", "☔", "💧", "🌊", "🎊", "🎈",
 		"🎁", "🎀", "🏆", "🥇", "🥈", "🥉", "🏅", "🎖️", "🏵️", "🎗️",
 	}
 

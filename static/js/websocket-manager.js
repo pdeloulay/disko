@@ -154,8 +154,27 @@ class WebSocketManager {
     }
 
     async refreshIdeaFeedback(ideaId) {
-        // This would typically trigger a refresh of the specific idea's feedback data
-        // For now, we'll emit a custom event that the board manager can listen to
+        // Update the specific idea card's feedback counters
+        this.updateIdeaFeedbackCounters(ideaId);
+    }
+
+    updateIdeaFeedbackCounters(ideaId) {
+        const ideaCard = document.querySelector(`[data-idea-id="${ideaId}"]`);
+        if (!ideaCard) {
+            console.warn('[WebSocketManager] Idea card not found for feedback update:', ideaId);
+            return;
+        }
+
+        // For thumbs up, increment the counter
+        const thumbsUpCounter = ideaCard.querySelector('.thumbs-up .count');
+        if (thumbsUpCounter) {
+            const currentCount = parseInt(thumbsUpCounter.textContent) || 0;
+            thumbsUpCounter.textContent = currentCount + 1;
+        }
+
+        // For emoji reactions, we need to reload the board to get the updated emoji data
+        // This is because emoji reactions are more complex and we don't have the full data
+        // Dispatch the feedback updated event to trigger a board refresh
         const event = new CustomEvent('feedbackUpdated', {
             detail: { ideaId }
         });

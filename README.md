@@ -78,6 +78,144 @@ The project is set up with:
 
 ## Changelog
 
+### [v0.3.22] - Last Updated Position Fix
+- **📍 Better Positioning**: Moved "last updated" info to separate section below feedback
+- **🎯 No Conflicts**: Last updated text no longer conflicts with emoji reactions
+- **📱 Clean Layout**: Added visual separation with border and proper spacing
+- **✨ Improved UX**: Better organization of idea card information
+
+### [v0.3.21] - Emoji Validation Fix
+- **✅ Valid Emojis**: Fixed backend to accept all frontend emoji picker options
+- **🚀 Rocket, 💡 Lightbulb, 🎯 Target**: Added missing emojis to validation list
+- **🔥 Fire, ⭐ Star, 💪 Muscle**: All frontend emojis now work properly
+- **🎯 Consistent Experience**: No more "Invalid emoji" errors for valid selections
+
+### [v0.3.20] - Emoji Reactions Display Fix
+- **📍 Proper Location**: Fixed emoji reactions to display in correct position
+- **🔄 Real-time Updates**: Emoji reactions now update properly on WebSocket events
+- **👍 Counter Sync**: Thumbs up and emoji counters sync across all windows
+- **🎯 UI Consistency**: Emoji reactions display consistently in feedback section
+
+### [v0.3.19] - WebSocket Feedback Synchronization Fix
+- **🔄 Real-time Sync**: Fixed feedback counters to synchronize across all windows
+- **👍 Thumbs Up**: Counters now update immediately across all connected clients
+- **😊 Emoji Reactions**: Feedback updates are properly broadcast to all windows
+- **📡 WebSocket**: Improved feedback counter updates without full board reload
+
+### [v0.3.18] - Logging Optimization
+- **🔇 Reduced Verbosity**: Eliminated excessive logging for WebSocket feedback events
+- **📊 Cleaner Console**: Removed hundreds of debug messages per feedback event
+- **⚡ Performance**: Faster feedback updates with minimal logging overhead
+- **🎯 Focused Logging**: Only essential error and warning messages remain
+
+### [v0.3.17] - WebSocket Feedback Fix
+- **🔧 Method Call Fix**: Fixed incorrect method call in WebSocket feedback handling
+- **📡 Real-time Updates**: Private boards now properly respond to WebSocket feedback events
+- **🔄 Board Refresh**: Feedback updates now correctly refresh the drag-drop board
+- **🐛 Error Resolution**: Eliminated "loadBoardData is not a function" error
+
+### [v0.3.16] - Zero-Gap Column Selection
+- **📏 Zero Gap**: Removed all spacing between column visibility options
+- **🎨 Connected Design**: Items now connect seamlessly with shared borders
+- **📱 Minimal Padding**: Maximum space efficiency with no wasted vertical space
+- **⚡ Ultra-Compact**: Most compact possible layout while maintaining usability
+
+### [v0.3.15] - Ultra-Compact Column Selection
+- **📏 Minimal Spacing**: Further reduced padding and margins for maximum space efficiency
+- **🎯 Proper Alignment**: Fixed description alignment with flexbox layout
+- **📱 Optimized Layout**: Column names and descriptions now align properly on single lines
+- **⚡ Space Efficient**: Even more compact design while maintaining readability
+
+### [v0.3.14] - Compact Column Selection Design
+- **📐 Compact Layout**: Reduced spacing and padding in column visibility settings
+- **🎯 Inline Labels**: Column names and descriptions now display inline for better space usage
+- **📱 Better UX**: More efficient use of vertical space in settings modals
+- **🎨 Refined Design**: Smaller border radius and optimized spacing for cleaner appearance
+
+### [v0.3.13] - Public Board API Authentication Fix
+- **🔓 API Access**: Fixed public board feedback endpoints to bypass Clerk authentication
+- **👍 Thumbs Up**: Public boards can now successfully add thumbs up reactions
+- **😊 Emoji Reactions**: Public boards can now successfully add emoji reactions
+- **⚡ Performance**: Eliminated unnecessary Clerk waiting for public endpoints
+
+### [v0.3.12] - Public Board Feedback Fix
+- **👍 Thumbs Up**: Fixed thumbs up functionality for public boards
+- **😊 Emoji Reactions**: Added emoji picker modal for public boards
+- **🎯 Direct API Calls**: Public boards now call feedback APIs directly
+- **📱 Interactive UI**: Public boards now respond to feedback clicks properly
+
+### [v0.3.11] - RICE Score Default Values Fix
+- **📊 Guaranteed RICE**: All new ideas now always include RICE score with default values
+- **🛡️ Safe Parsing**: Prevents NaN values when form fields are empty
+- **🎯 Default Values**: Reach: 100%, Impact: 50%, Confidence: 50%, Effort: 1
+- **🔄 Consistent Data**: Both create and edit forms now ensure complete RICE data
+
+### [v0.3.10] - Public Board RICE Score Fix
+- **🛡️ Null Safety**: Fixed error when ideas don't have RICE score data
+- **🔍 Safe Access**: Added checks for undefined `riceScore` properties
+- **📊 Default Values**: Uses fallback values (0, 0, 0, 1) for missing RICE data
+- **🎯 Robust Rendering**: Public boards now render properly even with incomplete data
+
+### [v0.3.9] - Public Board Drag & Drop Fix
+- **🚫 Complete Disable**: Drag and drop now completely disabled for public boards
+- **🔒 Security**: Multiple layers of protection prevent drag operations on public boards
+- **🎯 Attribute Control**: `draggable="true"` attribute only set for admin users on private boards
+- **🛡️ Event Protection**: All drag event handlers check for public board status
+
+### [v0.3.8] - Public Board Column Filtering
+- **📋 Limited Columns**: Public boards now show only Now, Next, Later, Won't Do columns
+- **🎯 Focused View**: Removes Parking and Release columns from public board display
+- **📊 Cleaner Interface**: Public boards have a more streamlined, focused layout
+- **🔄 Consistent Logic**: Private boards still show all columns for admin users
+
+### [v0.3.7] - Enhanced Public/Private Board Integration
+- **🎯 Unified DragDropBoard**: Single class now handles both public and private boards
+- **🔗 Smart Endpoint Selection**: Automatically uses correct API endpoints based on board type
+- **👥 Role-Based Features**: Admin features only for private boards, read-only for public
+- **📊 Field Visibility**: Public boards show all fields, private boards respect visibility settings
+- **🚫 Drag & Drop Control**: Only enabled for admin users on private boards
+
+### [v0.3.6] - Public Board Multi-Column Layout Fix
+- **📋 Column Layout**: Fixed public board to use same multi-column layout as private board
+- **🎯 DragDropBoard Integration**: Public boards now use proper DragDropBoard class
+- **🔄 Consistent Rendering**: Public boards render ideas in same column format as private boards
+- **🚫 Read-Only Mode**: Drag and drop disabled for public boards (feedback only)
+- **📊 Proper Structure**: Now, Next, Later, Release columns displayed correctly
+
+### [v0.3.5] - Rate Limiting Configuration
+- **⚙️ Environment Variables**: Moved rate limiting configuration to environment variables
+- **📝 Config File**: Added `config.env` with rate limiting settings
+- **🎛️ Configurable Limits**: Public board (30s), Thumbs up (10s), Emoji (5s)
+- **🔄 Flexible Settings**: Easy to adjust limits without code changes
+- **📊 Better Messages**: Rate limit messages now show actual wait time
+
+### [v0.3.4] - Public Board Column Layout Fix
+- **📋 Column Layout**: Fixed public board to display proper multi-column layout
+- **🎨 CSS Grid**: Added `.board-columns` CSS class for horizontal column display
+- **📱 Responsive**: Columns automatically adjust based on screen size
+- **🎯 Proper Structure**: Public boards now show Now, Next, Later, Release columns
+- **🔄 Visual Consistency**: Public boards now match private board layout structure
+
+### [v0.3.3] - Public Board Route Fix
+- **🔗 Public Board Route**: Fixed `/public/{publicLink}` route to serve `public.html` template
+- **📋 Correct Template**: Public board URLs now render the dedicated public board template
+- **🎯 Proper Data**: Route passes correct board ID and public link to template
+- **🛡️ Rate Limiting**: Public board access includes rate limiting for security
+- **📊 Board Validation**: Route validates that board exists and is publicly accessible
+- **🎨 Clean Template**: Public boards use dedicated template without Clerk integration
+
+### [v0.3.2] - Public Board Action Cleanup
+- **🚫 No Publish Button**: Public boards correctly don't include publish functionality
+- **🔄 Refresh Only**: Public board actions limited to refresh button only
+- **👁️ Read-Only Actions**: No editing, creating, or publishing actions available
+- **🎯 Consistent Design**: Public board actions align with read-only nature
+
+### [v0.3.1] - Public Board UI Cleanup
+- **🧹 Removed Clerk Buttons**: Cleaned up public board template to remove authentication-related UI
+- **🎯 Simplified Header**: Public board header now only shows version display
+- **👁️ Read-Only Focus**: UI emphasizes the read-only nature of public boards
+- **🎨 Clean Design**: Streamlined interface without unnecessary authentication elements
+
 ### [v0.3.0] - Public Board API Integration
 - **🔗 Leveraged Public Handlers**: Now using existing backend public handlers for board data
 - **📋 GetPublicBoard**: Uses `/boards/{publicLink}/public` for board information

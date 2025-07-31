@@ -6,7 +6,10 @@ class API {
 
     async request(endpoint, options = {}) {
         // Check if this is a public endpoint (doesn't require authentication)
-        const isPublicEndpoint = endpoint.includes('/public') || endpoint.includes('/health');
+        const isPublicEndpoint = endpoint.includes('/public') || 
+                               endpoint.includes('/health') || 
+                               endpoint.includes('/thumbsup') || 
+                               endpoint.includes('/emoji');
         
         // Only wait for Clerk if this is not a public endpoint
         if (!isPublicEndpoint && !window.Clerk) {
@@ -22,10 +25,6 @@ class API {
         }
         
         const url = `${this.baseURL}${endpoint}`;
-        
-        console.log('[API] Making request to:', url);
-        console.log('[API] Request method:', options.method || 'GET');
-        console.log('[API] Request headers:', options.headers);
         
         const config = {
             headers: {
@@ -48,18 +47,17 @@ class API {
                     const currentTime = Math.floor(Date.now() / 1000);
                     
                     if (payload.exp && payload.exp < currentTime) {
-                        console.warn('[API] Stored token is expired, clearing:', storedToken);
+                        console.warn('[API] Stored token is expired, clearing');
                         localStorage.removeItem('clerk-db-jwt');
                     } else {
                         token = storedToken;
-                        console.log('[API] Using stored auth token from localStorage, length:', token.length);
                     }
                 } catch (error) {
-                    console.warn('[API] Failed to decode stored token, clearing:', error);
+                    console.warn('[API] Failed to decode stored token, clearing');
                     localStorage.removeItem('clerk-db-jwt');
                 }
             } else if (storedToken) {
-                console.warn('[API] Stored token is invalid (too short), clearing:', storedToken);
+                console.warn('[API] Stored token is invalid (too short), clearing');
                 localStorage.removeItem('clerk-db-jwt');
             }
             
@@ -68,7 +66,6 @@ class API {
                 try {
                     // Wait for Clerk to be fully loaded
                     if (!window.Clerk.session) {
-                        console.log('[API] Waiting for Clerk session...');
                         await new Promise(resolve => {
                             const checkSession = setInterval(() => {
                                 if (window.Clerk.session) {
@@ -80,11 +77,10 @@ class API {
                     }
                     
                     token = await window.Clerk.session.getToken();
-                    console.log('[API] Got auth token from Clerk session, length:', token ? token.length : 0);
                     
                     // Validate token format
                     if (!token || token.length < 100) {
-                        console.error('[API] Invalid token from Clerk session:', token);
+                        console.error('[API] Invalid token from Clerk session');
                         token = null;
                     }
                 } catch (error) {
@@ -95,46 +91,14 @@ class API {
         
         if (token) {
             config.headers.Authorization = `Bearer ${token}`;
-            console.log('[API] Added auth token to request');
-        } else if (isPublicEndpoint) {
-            console.log('[API] Public endpoint, proceeding without auth');
-        } else {
-            console.log('[API] No auth token available, proceeding without auth');
         }
 
         try {
-            console.log('[API] Sending fetch request to:', url);
-            console.log('[API] Request config:', {
-                method: config.method,
-                headers: config.headers,
-                body: config.body ? JSON.parse(config.body) : null
-            });
-            console.log('[API] Request body (raw):', config.body);
             const response = await fetch(url, config);
             
-            console.log('[API] Response status:', response.status);
-            console.log('[API] Response headers:', Object.fromEntries(response.headers.entries()));
-            console.log('[API] Response ok:', response.ok);
-            console.log('[API] About to check response.ok...');
-            
             if (!response.ok) {
-                console.log('[API] Response is NOT ok, getting error text...');
                 const errorText = await response.text();
-                console.error('[API] Response not ok:', response.status, errorText);
-                console.error('[API] Full error details:', {
-                    status: response.status,
-                    statusText: response.statusText,
-                    url: url,
-                    body: errorText
-                });
-                
-                // Try to parse JSON error response
-                try {
-                    const errorJson = JSON.parse(errorText);
-                    console.error('[API] Parsed error JSON:', errorJson);
-                } catch (e) {
-                    console.error('[API] Could not parse error as JSON:', e);
-                }
+                console.error('[API] Request failed:', response.status, errorText);
                 
                 // If it's an authentication error, clear the stored token
                 if (response.status === 401) {
@@ -146,17 +110,12 @@ class API {
             }
             
             const contentType = response.headers.get('content-type');
-            console.log('[API] Response content-type:', contentType);
             
             if (contentType && contentType.includes('application/json')) {
-                const jsonResponse = await response.json();
-                console.log('[API] JSON response received:', jsonResponse);
-                return jsonResponse;
+                return await response.json();
             }
             
-            const textResponse = await response.text();
-            console.log('[API] Text response received:', textResponse);
-            return textResponse;
+            return await response.text();
         } catch (error) {
             console.error('[API] Request failed:', error);
             throw error;

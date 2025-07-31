@@ -464,16 +464,20 @@ class IdeaManager {
     async handleCreateIdea(e) {
         console.log('[IdeaManager] handleCreateIdea called');
         const formData = new FormData(e.target);
+        
+        // Ensure RICE score always has default values
+        const riceScore = {
+            reach: parseInt(formData.get('reach')) || 100,
+            impact: parseInt(formData.get('impact')) || 50,
+            confidence: parseInt(formData.get('confidence')) || 50,
+            effort: parseInt(formData.get('effort')) || 1
+        };
+        
         const ideaData = {
             oneLiner: formData.get('oneLiner'),
-            description: formData.get('description'),
-            valueStatement: formData.get('valueStatement'),
-            riceScore: {
-                reach: parseInt(formData.get('reach')),
-                impact: parseInt(formData.get('impact')),
-                confidence: parseInt(formData.get('confidence')),
-                effort: parseInt(formData.get('effort'))
-            },
+            description: formData.get('description') || '',
+            valueStatement: formData.get('valueStatement') || '',
+            riceScore: riceScore,
             column: 'parking', // New ideas start in parking
             status: 'active'
         };
@@ -522,16 +526,20 @@ class IdeaManager {
 
     async handleEditIdea(e) {
         const formData = new FormData(e.target);
+        
+        // Ensure RICE score always has default values
+        const riceScore = {
+            reach: parseInt(formData.get('reach')) || 100,
+            impact: parseInt(formData.get('impact')) || 50,
+            confidence: parseInt(formData.get('confidence')) || 50,
+            effort: parseInt(formData.get('effort')) || 1
+        };
+        
         const ideaData = {
             oneLiner: formData.get('oneLiner'),
-            description: formData.get('description'),
-            valueStatement: formData.get('valueStatement'),
-            riceScore: {
-                reach: parseInt(formData.get('reach')),
-                impact: parseInt(formData.get('impact')),
-                confidence: parseInt(formData.get('confidence')),
-                effort: parseInt(formData.get('effort'))
-            }
+            description: formData.get('description') || '',
+            valueStatement: formData.get('valueStatement') || '',
+            riceScore: riceScore
         };
 
         // Validate form

@@ -5,10 +5,15 @@ class DragDropBoard {
     constructor() {
         this.boardData = window.boardData || {};
         this.isAdmin = this.boardData.isAdmin || false;
+        this.isPublic = this.boardData.isPublic || false;
         this.boardId = this.boardData.boardId;
+        this.publicLink = this.boardData.publicLink;
+        
         console.log('[DragDropBoard] Constructor - BoardData:', this.boardData);
         console.log('[DragDropBoard] Constructor - IsAdmin:', this.isAdmin);
+        console.log('[DragDropBoard] Constructor - IsPublic:', this.isPublic);
         console.log('[DragDropBoard] Constructor - BoardID:', this.boardId);
+        console.log('[DragDropBoard] Constructor - PublicLink:', this.publicLink);
         
         this.ideas = [];
         this.columns = [
@@ -30,13 +35,15 @@ class DragDropBoard {
     }
 
     setupEventListeners() {
-        // Global event listeners for drag and drop
-        document.addEventListener('dragstart', this.handleDragStart.bind(this));
-        document.addEventListener('dragend', this.handleDragEnd.bind(this));
-        document.addEventListener('dragover', this.handleDragOver.bind(this));
-        document.addEventListener('drop', this.handleDrop.bind(this));
-        document.addEventListener('dragenter', this.handleDragEnter.bind(this));
-        document.addEventListener('dragleave', this.handleDragLeave.bind(this));
+        // Global event listeners for drag and drop (only for admin users)
+        if (this.isAdmin) {
+            document.addEventListener('dragstart', this.handleDragStart.bind(this));
+            document.addEventListener('dragend', this.handleDragEnd.bind(this));
+            document.addEventListener('dragover', this.handleDragOver.bind(this));
+            document.addEventListener('drop', this.handleDrop.bind(this));
+            document.addEventListener('dragenter', this.handleDragEnter.bind(this));
+            document.addEventListener('dragleave', this.handleDragLeave.bind(this));
+        }
 
         // Click outside to close menus
         document.addEventListener('click', (e) => {
@@ -45,14 +52,16 @@ class DragDropBoard {
             }
         });
 
-        // WebSocket event listeners for real-time updates
-        document.addEventListener('feedbackUpdated', (event) => {
-            this.handleFeedbackUpdate(event.detail);
-        });
+        // WebSocket event listeners for real-time updates (only for admin users)
+        if (this.isAdmin) {
+            document.addEventListener('feedbackUpdated', (event) => {
+                this.handleFeedbackUpdate(event.detail);
+            });
 
-        document.addEventListener('ideaUpdated', (event) => {
-            this.handleIdeaUpdate(event.detail);
-        });
+            document.addEventListener('ideaUpdated', (event) => {
+                this.handleIdeaUpdate(event.detail);
+            });
+        }
     }
 
     async loadBoard() {
@@ -60,33 +69,33 @@ class DragDropBoard {
         const boardTitle = document.getElementById('board-title');
         const boardDescription = document.getElementById('board-description');
 
-        console.log('[DragDropBoard] loadBoard started - BoardID:', this.boardId, 'IsAdmin:', this.isAdmin);
-
         try {
-            // Load board details
-            const endpoint = `/boards/${this.boardId}`;
-            console.log('[DragDropBoard] Making API call to:', endpoint);
-            console.log('[DragDropBoard] API base URL:', window.api.baseURL);
-            console.log('[DragDropBoard] Full URL will be:', window.api.baseURL + endpoint);
+            // Load board details - use appropriate endpoint based on public/private
+            let endpoint;
+            if (this.isPublic) {
+                endpoint = `/boards/${this.publicLink}/public`;
+            } else {
+                endpoint = `/boards/${this.boardId}`;
+            }
             
             const response = await window.api.get(endpoint);
-            console.log('[DragDropBoard] API response received:', response);
             const board = response.data || response;
 
             // Store board data for column filtering
             this.board = board;
             
-            // Update admin status based on board data
-            this.isAdmin = board.isAdmin || false;
-            console.log('[DragDropBoard] Updated admin status from board data - IsAdmin:', this.isAdmin);
+            // Update admin status based on board data (only for private boards)
+            if (!this.isPublic) {
+                this.isAdmin = board.isAdmin || false;
+            }
             
             // Update window.boardData for consistency across components
             window.boardData = {
                 boardId: this.boardId,
                 isAdmin: this.isAdmin,
-                publicLink: board.publicLink
+                isPublic: this.isPublic,
+                publicLink: this.publicLink
             };
-            console.log('[DragDropBoard] Updated window.boardData:', window.boardData);
 
             if (boardTitle) {
                 boardTitle.textContent = board.name || 'Untitled Board';
@@ -98,10 +107,13 @@ class DragDropBoard {
             }
 
             // Update page title
-            document.title = `${board.name || 'Untitled Board'} - Board ${this.boardId}`;
+            const pageTitle = this.isPublic ? 
+                `${board.name || 'Untitled Board'} - Public Board` :
+                `${board.name || 'Untitled Board'} - Board ${this.boardId}`;
+            document.title = pageTitle;
 
-            // Update board settings manager with current board data
-            if (window.boardSettingsManager) {
+            // Update board settings manager with current board data (only for admin users)
+            if (this.isAdmin && window.boardSettingsManager) {
                 window.boardSettingsManager.setBoard(board);
             }
 
@@ -117,7 +129,8 @@ class DragDropBoard {
                 message: error.message,
                 stack: error.stack,
                 boardId: this.boardId,
-                isAdmin: this.isAdmin
+                isAdmin: this.isAdmin,
+                isPublic: this.isPublic
             });
             
             if (boardTitle) {
@@ -135,30 +148,28 @@ class DragDropBoard {
         }
     }
 
-
-
     async loadIdeas() {
-        console.log('[DragDropBoard] loadIdeas started - BoardID:', this.boardId, 'IsAdmin:', this.isAdmin);
+        console.log('[DragDropBoard] loadIdeas started - BoardID:', this.boardId, 'IsAdmin:', this.isAdmin, 'IsPublic:', this.isPublic);
         
         try {
-            const endpoint = `/boards/${this.boardId}/ideas`;
-            console.log('[DragDropBoard] Making ideas API call to:', endpoint);
+            // Use appropriate endpoint based on public/private
+            let endpoint;
+            if (this.isPublic) {
+                endpoint = `/boards/${this.publicLink}/ideas/public`;
+            } else {
+                endpoint = `/boards/${this.boardId}/ideas`;
+            }
             
             const response = await window.api.get(endpoint);
-            console.log('[DragDropBoard] Ideas API response received:', response);
             const data = response.data || response;
-            console.log('[DragDropBoard] Ideas data:', data);
             
             this.ideas = data.ideas || [];
-            console.log('[DragDropBoard] Processed ideas array:', this.ideas);
-            console.log('[DragDropBoard] Ideas array length:', this.ideas.length);
 
             // Update ideas count
             const ideasCount = document.getElementById('ideas-count');
             if (ideasCount) {
                 const count = this.ideas.length;
                 ideasCount.textContent = `${count} ${count === 1 ? 'idea' : 'ideas'}`;
-                console.log('[DragDropBoard] Updated ideas count display:', count);
             }
 
             // Update tab counts
@@ -170,7 +181,8 @@ class DragDropBoard {
                 message: error.message,
                 stack: error.stack,
                 boardId: this.boardId,
-                isAdmin: this.isAdmin
+                isAdmin: this.isAdmin,
+                isPublic: this.isPublic
             });
             this.ideas = [];
             
@@ -182,12 +194,7 @@ class DragDropBoard {
     }
 
     renderBoard() {
-        console.log('[DragDropBoard] renderBoard called');
-        console.log('[DragDropBoard] Ideas count:', this.ideas.length);
-        console.log('[DragDropBoard] Ideas:', this.ideas);
-        
         const boardContainer = document.getElementById('drag-drop-board');
-        console.log('[DragDropBoard] Board container found:', !!boardContainer);
         
         if (!boardContainer) {
             console.error('[DragDropBoard] Board container not found!');
@@ -195,39 +202,28 @@ class DragDropBoard {
         }
         
         if (this.ideas.length === 0) {
-            console.log('[DragDropBoard] No ideas, showing empty state');
             boardContainer.innerHTML = this.createEmptyState();
             return;
         }
 
         // Group ideas by column
         const ideasByColumn = this.groupIdeasByColumn();
-        console.log('[DragDropBoard] Ideas grouped by column:', ideasByColumn);
         
         // Filter columns based on visibility settings
         const visibleColumns = this.getVisibleColumns();
-        console.log('[DragDropBoard] Visible columns:', visibleColumns);
         
         // Render only visible columns
         const columnsHtml = visibleColumns.map(column => {
             const columnIdeas = ideasByColumn[column.id] || [];
-            console.log(`[DragDropBoard] Column ${column.id} has ${columnIdeas.length} ideas`);
             return this.createColumnView(column, columnIdeas);
         }).join('');
         
-        console.log('[DragDropBoard] Generated HTML length:', columnsHtml.length);
         boardContainer.innerHTML = columnsHtml;
         
-        // Make idea cards draggable if admin
-        console.log('[DragDropBoard] renderBoard - IsAdmin:', this.isAdmin);
-        if (this.isAdmin) {
-            console.log('[DragDropBoard] renderBoard - Calling makeDraggable');
+        // Make idea cards draggable if admin and not public board
+        if (this.isAdmin && !this.isPublic) {
             this.makeDraggable();
-        } else {
-            console.log('[DragDropBoard] renderBoard - Not admin, skipping makeDraggable');
         }
-        
-        console.log('[DragDropBoard] Board rendering complete');
     }
 
     getVisibleColumns() {
@@ -236,7 +232,14 @@ class DragDropBoard {
             return this.columns;
         }
         
-        // For public users, filter based on board visibility settings
+        // For public boards, show only specific columns: Now, Next, Later, Won't Do
+        if (this.isPublic) {
+            return this.columns.filter(column => 
+                ['now', 'next', 'later', 'wont-do'].includes(column.id)
+            );
+        }
+        
+        // For public users on private boards, filter based on board visibility settings
         if (this.board && this.board.visibleColumns) {
             return this.columns.filter(column => 
                 this.board.visibleColumns.includes(column.id)
@@ -248,37 +251,33 @@ class DragDropBoard {
     }
 
     shouldShowField(fieldName) {
-        console.log('[DragDropBoard] shouldShowField called for:', fieldName, 'IsAdmin:', this.isAdmin);
-        
-        // For admin users, show all fields except RICE score is admin-only
+        // For admin users, show all fields
         if (this.isAdmin) {
-            console.log('[DragDropBoard] Admin user, showing field:', fieldName);
             return true;
         }
         
         // oneLiner is always visible
         if (fieldName === 'oneLiner') {
-            console.log('[DragDropBoard] One-liner always visible');
             return true;
         }
         
-        // riceScore is admin-only
+        // For public boards, show all fields (read-only mode)
+        if (this.isPublic) {
+            return true;
+        }
+        
+        // riceScore is admin-only for private boards
         if (fieldName === 'riceScore') {
-            console.log('[DragDropBoard] RICE score admin-only, not showing');
             return false;
         }
         
-        // For public users, filter based on board visibility settings
+        // For public users on private boards, filter based on board visibility settings
         if (this.board && this.board.visibleFields) {
-            const isVisible = this.board.visibleFields.includes(fieldName);
-            console.log('[DragDropBoard] Public user, field visible:', fieldName, isVisible);
-            return isVisible;
+            return this.board.visibleFields.includes(fieldName);
         }
         
-        // Default to showing all fields except RICE score
-        const shouldShow = fieldName !== 'riceScore';
-        console.log('[DragDropBoard] Default visibility for:', fieldName, shouldShow);
-        return shouldShow;
+        // Default to showing all fields except RICE score for public users on private boards
+        return fieldName !== 'riceScore';
     }
 
     groupIdeasByColumn() {
@@ -349,7 +348,7 @@ class DragDropBoard {
             <div class="idea-card ${statusClass}" 
                  data-idea-id="${idea.id}" 
                  data-column="${idea.column}"
-                 ${this.isAdmin ? 'draggable="true"' : ''}>
+                 ${this.isAdmin && !this.isPublic ? 'draggable="true"' : ''}>
                 <div class="idea-card-header">
                     <h4 class="idea-title idea-oneliner">${this.escapeHtml(idea.oneLiner)}</h4>
                     ${this.isAdmin ? `
@@ -380,12 +379,12 @@ class DragDropBoard {
                     ${this.shouldShowField('valueStatement') ? `<p class="idea-value-statement"><strong>Value:</strong> <span class="idea-value">${this.escapeHtml(idea.valueStatement)}</span></p>` : ''}
                 </div>
                 
-                ${this.shouldShowField('riceScore') ? `
+                ${this.shouldShowField('riceScore') && idea.riceScore ? `
                     <div class="idea-rice-score">
                         <span class="rice-label">RICE Score:</span>
                         <span class="rice-value">${riceScore.toFixed(1)}</span>
                         <div class="rice-breakdown">
-                            R:${idea.riceScore.reach}% I:${idea.riceScore.impact}% C:${idea.riceScore.confidence} E:${idea.riceScore.effort}%
+                            R:${idea.riceScore.reach || 0}% I:${idea.riceScore.impact || 0}% C:${idea.riceScore.confidence || 0} E:${idea.riceScore.effort || 1}%
                         </div>
                     </div>
                 ` : ''}
@@ -406,6 +405,8 @@ class DragDropBoard {
                             ).join('')}
                         </div>
                     ` : ''}
+                </div>
+                <div class="idea-meta">
                     <span class="idea-date">Updated ${this.formatTimeAgo(idea.updatedAt)}</span>
                 </div>
             </div>
@@ -413,26 +414,26 @@ class DragDropBoard {
     }
 
     makeDraggable() {
-        console.log('[DragDropBoard] makeDraggable called');
-        const ideaCards = document.querySelectorAll('.idea-card[draggable="true"]');
-        console.log('[DragDropBoard] Found draggable idea cards:', ideaCards.length);
+        // Only make cards draggable for admin users on private boards
+        if (!this.isAdmin || this.isPublic) {
+            return;
+        }
         
-        ideaCards.forEach((card, index) => {
-            console.log(`[DragDropBoard] Making card ${index + 1} draggable:`, card.dataset.ideaId);
+        const ideaCards = document.querySelectorAll('.idea-card[draggable="true"]');
+        
+        ideaCards.forEach((card) => {
             card.addEventListener('dragstart', this.handleDragStart.bind(this));
             card.addEventListener('dragend', this.handleDragEnd.bind(this));
         });
-        
-        console.log('[DragDropBoard] makeDraggable complete');
     }
 
     // Drag and Drop Event Handlers
     handleDragStart(e) {
         console.log('[DragDropBoard] Drag start event triggered');
-        console.log('[DragDropBoard] IsAdmin:', this.isAdmin);
+        console.log('[DragDropBoard] IsAdmin:', this.isAdmin, 'IsPublic:', this.isPublic);
         
-        if (!this.isAdmin) {
-            console.log('[DragDropBoard] Drag blocked - user not admin');
+        if (!this.isAdmin || this.isPublic) {
+            console.log('[DragDropBoard] Drag blocked - user not admin or public board');
             return;
         }
         
@@ -461,7 +462,7 @@ class DragDropBoard {
     }
 
     handleDragEnd(e) {
-        if (!this.isAdmin) return;
+        if (!this.isAdmin || this.isPublic) return;
         
         const ideaCard = e.target.closest('.idea-card');
         if (ideaCard) {
@@ -478,14 +479,14 @@ class DragDropBoard {
     }
 
     handleDragOver(e) {
-        if (!this.isAdmin || !this.draggedElement) return;
+        if (!this.isAdmin || this.isPublic || !this.draggedElement) return;
         
         e.preventDefault();
         e.dataTransfer.dropEffect = 'move';
     }
 
     handleDragEnter(e) {
-        if (!this.isAdmin || !this.draggedElement) return;
+        if (!this.isAdmin || this.isPublic || !this.draggedElement) return;
         
         const column = e.target.closest('.board-column');
         if (column) {
@@ -494,7 +495,7 @@ class DragDropBoard {
     }
 
     handleDragLeave(e) {
-        if (!this.isAdmin || !this.draggedElement) return;
+        if (!this.isAdmin || this.isPublic || !this.draggedElement) return;
         
         const column = e.target.closest('.board-column');
         if (column && !column.contains(e.relatedTarget)) {
@@ -504,10 +505,10 @@ class DragDropBoard {
 
     async handleDrop(e) {
         console.log('[DragDropBoard] Drop event triggered');
-        console.log('[DragDropBoard] IsAdmin:', this.isAdmin, 'DraggedElement:', !!this.draggedElement);
+        console.log('[DragDropBoard] IsAdmin:', this.isAdmin, 'IsPublic:', this.isPublic, 'DraggedElement:', !!this.draggedElement);
         
-        if (!this.isAdmin || !this.draggedElement) {
-            console.log('[DragDropBoard] Drop blocked - not admin or no dragged element');
+        if (!this.isAdmin || this.isPublic || !this.draggedElement) {
+            console.log('[DragDropBoard] Drop blocked - not admin, public board, or no dragged element');
             return;
         }
         
@@ -568,11 +569,11 @@ class DragDropBoard {
 
     // Utility Methods
     calculateRICEScore(riceScore) {
-        if (!riceScore || riceScore.effort === 0) return 0;
+        if (!riceScore || !riceScore.effort || riceScore.effort === 0) return 0;
         // Convert percentages to decimals (0-100 -> 0-1)
-        const reach = riceScore.reach / 100;
-        const impact = riceScore.impact / 100;
-        const confidence = riceScore.confidence / 100;
+        const reach = (riceScore.reach || 0) / 100;
+        const impact = (riceScore.impact || 0) / 100;
+        const confidence = (riceScore.confidence || 0) / 100;
         return (reach * impact * confidence) / riceScore.effort;
     }
 
@@ -657,7 +658,7 @@ class DragDropBoard {
     }
 
     createEmptyState() {
-        if (this.isAdmin) {
+        if (this.isAdmin && !this.isPublic) {
             return `
                 <div class="ideas-empty-state">
                     <h3>No ideas yet</h3>
@@ -671,7 +672,7 @@ class DragDropBoard {
             return `
                 <div class="ideas-empty-state">
                     <h3>No ideas to display</h3>
-                    <p>The board owner hasn't added any ideas yet. Check back later!</p>
+                    <p>${this.isPublic ? 'This public board has no ideas yet.' : 'The board owner hasn\'t added any ideas yet. Check back later!'}</p>
                 </div>
             `;
         }
@@ -754,23 +755,118 @@ class DragDropBoard {
     }
 
     async addThumbsUp(ideaId) {
-        if (window.ideaManager) {
-            await window.ideaManager.addThumbsUp(ideaId);
-            // Update the UI optimistically
-            const ideaCard = document.querySelector(`[data-idea-id="${ideaId}"]`);
-            if (ideaCard) {
-                const countSpan = ideaCard.querySelector('.thumbs-up .count');
-                if (countSpan) {
-                    const currentCount = parseInt(countSpan.textContent) || 0;
-                    countSpan.textContent = currentCount + 1;
+        console.log('[DragDropBoard] addThumbsUp called for idea:', ideaId);
+        
+        try {
+            // For public boards, use public API endpoint
+            if (this.isPublic) {
+                const response = await window.api.post(`/ideas/${ideaId}/thumbsup`);
+                console.log('[DragDropBoard] Thumbs up response:', response);
+                
+                // Update the UI optimistically
+                const ideaCard = document.querySelector(`[data-idea-id="${ideaId}"]`);
+                if (ideaCard) {
+                    const countSpan = ideaCard.querySelector('.thumbs-up .count');
+                    if (countSpan) {
+                        const currentCount = parseInt(countSpan.textContent) || 0;
+                        countSpan.textContent = currentCount + 1;
+                    }
+                }
+                
+                this.showSuccessMessage('Thumbs up added!');
+            } else if (window.ideaManager) {
+                // For private boards, use idea manager
+                await window.ideaManager.addThumbsUp(ideaId);
+                // Update the UI optimistically
+                const ideaCard = document.querySelector(`[data-idea-id="${ideaId}"]`);
+                if (ideaCard) {
+                    const countSpan = ideaCard.querySelector('.thumbs-up .count');
+                    if (countSpan) {
+                        const currentCount = parseInt(countSpan.textContent) || 0;
+                        countSpan.textContent = currentCount + 1;
+                    }
                 }
             }
+        } catch (error) {
+            console.error('[DragDropBoard] Failed to add thumbs up:', error);
+            this.showErrorMessage('Failed to add thumbs up. Please try again.');
         }
     }
 
     showEmojiPicker(ideaId) {
-        if (window.ideaManager) {
+        console.log('[DragDropBoard] showEmojiPicker called for idea:', ideaId);
+        
+        // Create emoji picker modal for public boards
+        if (this.isPublic) {
+            this.createEmojiPickerModal(ideaId);
+        } else if (window.ideaManager) {
+            // For private boards, use idea manager
             window.ideaManager.showEmojiPicker(ideaId);
+        }
+    }
+
+    createEmojiPickerModal(ideaId) {
+        // Remove existing emoji picker
+        const existingPicker = document.getElementById('emoji-picker-modal');
+        if (existingPicker) {
+            existingPicker.remove();
+        }
+
+        const emojis = ['🚀', '💡', '🎯', '🔥', '👍', '❤️', '😊', '🎉', '⭐', '💪'];
+        
+        const modal = document.createElement('div');
+        modal.id = 'emoji-picker-modal';
+        modal.className = 'modal show';
+        modal.innerHTML = `
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>Add Emoji Reaction</h3>
+                    <button class="modal-close" onclick="dragDropBoard.closeEmojiPicker()">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div class="emoji-grid">
+                        ${emojis.map(emoji => `
+                            <button class="emoji-option" onclick="dragDropBoard.addEmojiReaction('${ideaId}', '${emoji}')">
+                                ${emoji}
+                            </button>
+                        `).join('')}
+                    </div>
+                </div>
+            </div>
+        `;
+
+        document.body.appendChild(modal);
+    }
+
+    closeEmojiPicker() {
+        const modal = document.getElementById('emoji-picker-modal');
+        if (modal) {
+            modal.remove();
+        }
+    }
+
+    async addEmojiReaction(ideaId, emoji) {
+        console.log('[DragDropBoard] addEmojiReaction called for idea:', ideaId, 'emoji:', emoji);
+        
+        try {
+            // For public boards, use public API endpoint
+            if (this.isPublic) {
+                const response = await window.api.post(`/ideas/${ideaId}/emoji`, { emoji: emoji });
+                console.log('[DragDropBoard] Emoji reaction response:', response);
+                
+                this.closeEmojiPicker();
+                this.showSuccessMessage('Emoji reaction added!');
+                
+                // Refresh the board to show updated emoji reactions
+                await this.loadIdeas();
+                this.renderBoard();
+            } else if (window.ideaManager) {
+                // For private boards, use idea manager
+                await window.ideaManager.addEmojiReaction(ideaId, emoji);
+            }
+        } catch (error) {
+            console.error('[DragDropBoard] Failed to add emoji reaction:', error);
+            this.showErrorMessage('Failed to add emoji reaction. Please try again.');
         }
     }
 
@@ -970,21 +1066,29 @@ class DragDropBoard {
 
     updateIdeaCardFeedback(ideaCard, idea) {
         // Update thumbs up count
-        const thumbsUpCount = ideaCard.querySelector('.thumbs-up-count');
+        const thumbsUpCount = ideaCard.querySelector('.thumbs-up .count');
         if (thumbsUpCount) {
             thumbsUpCount.textContent = idea.thumbsUp || 0;
         }
 
-        // Update emoji reactions
+        // Update emoji button count
+        const emojiButtonCount = ideaCard.querySelector('.emoji .count');
+        if (emojiButtonCount) {
+            const totalEmojiCount = idea.emojiReactions ? 
+                idea.emojiReactions.reduce((sum, reaction) => sum + reaction.count, 0) : 0;
+            emojiButtonCount.textContent = totalEmojiCount;
+        }
+
+        // Update emoji reactions display
         const emojiContainer = ideaCard.querySelector('.emoji-reactions');
-        if (emojiContainer && idea.emojiReactions) {
-            emojiContainer.innerHTML = '';
-            idea.emojiReactions.forEach(reaction => {
-                const emojiSpan = document.createElement('span');
-                emojiSpan.className = 'emoji-reaction';
-                emojiSpan.innerHTML = `${reaction.emoji} ${reaction.count}`;
-                emojiContainer.appendChild(emojiSpan);
-            });
+        if (emojiContainer) {
+            if (idea.emojiReactions && idea.emojiReactions.length > 0) {
+                emojiContainer.innerHTML = idea.emojiReactions.map(reaction => 
+                    `<span class="emoji-reaction">${reaction.emoji} ${reaction.count}</span>`
+                ).join('');
+            } else {
+                emojiContainer.innerHTML = '';
+            }
         }
     }
 

@@ -90,6 +90,27 @@ class BoardView {
         } else {
             console.log('[BoardView] Publish button not found or user not admin - Button exists:', !!publishBtn, 'IsAdmin:', this.isAdmin);
         }
+
+        // Invite button (admin only, enabled only when board is published)
+        const inviteBtn = document.getElementById('invite-btn');
+        if (inviteBtn && this.isAdmin) {
+            console.log('[BoardView] Adding invite button event listener - IsAdmin:', this.isAdmin);
+            inviteBtn.addEventListener('click', () => {
+                console.log('[BoardView] Invite button clicked');
+                this.openInviteModal();
+            });
+        } else {
+            console.log('[BoardView] Invite button not found or user not admin - Button exists:', !!inviteBtn, 'IsAdmin:', this.isAdmin);
+        }
+
+        // Invite form submission
+        const inviteForm = document.getElementById('invite-form');
+        if (inviteForm) {
+            inviteForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                await this.sendInvite();
+            });
+        }
     }
 
     removeEventListeners() {
@@ -166,7 +187,7 @@ class BoardView {
         // If drag-drop board is available, refresh it
         if (window.dragDropBoard) {
             console.log('[BoardView] Refreshing drag-drop board for feedback update');
-            window.dragDropBoard.loadBoardData();
+            window.dragDropBoard.loadBoard();
         } else {
             console.log('[BoardView] Refreshing board for feedback update');
             this.refreshBoard();
@@ -313,6 +334,9 @@ class BoardView {
                     window.boardData.publicLink = response.publicLink;
                 }
                 
+                // Enable invite button since board is now published
+                this.updateInviteButtonState(true);
+                
                 // Show success message with public link
                 this.showSuccessMessage(`Board published successfully! New public link: ${response.publicLink}`, response.publicLink);
                 
@@ -328,6 +352,98 @@ class BoardView {
             // Restore button state
             publishBtn.disabled = originalDisabled;
             publishBtn.textContent = originalText;
+        }
+    }
+
+    updateInviteButtonState(enabled) {
+        const inviteBtn = document.getElementById('invite-btn');
+        if (inviteBtn) {
+            inviteBtn.disabled = !enabled;
+            if (enabled) {
+                inviteBtn.classList.remove('btn-secondary');
+                inviteBtn.classList.add('btn-primary');
+            } else {
+                inviteBtn.classList.remove('btn-primary');
+                inviteBtn.classList.add('btn-secondary');
+            }
+        }
+    }
+
+    openInviteModal() {
+        const modal = document.getElementById('invite-modal');
+        if (modal) {
+            // Set default subject
+            const subjectInput = document.getElementById('invite-subject');
+            if (subjectInput) {
+                subjectInput.value = `Invitation to view ${this.boardData.name || 'our board'}`;
+            }
+            
+            modal.classList.add('show');
+        }
+    }
+
+    closeInviteModal() {
+        const modal = document.getElementById('invite-modal');
+        if (modal) {
+            modal.classList.remove('show');
+            // Reset form
+            const form = document.getElementById('invite-form');
+            if (form) {
+                form.reset();
+            }
+        }
+    }
+
+    async sendInvite() {
+        const emailInput = document.getElementById('invite-email');
+        const subjectInput = document.getElementById('invite-subject');
+        
+        if (!emailInput || !subjectInput) {
+            this.showErrorMessage('Form elements not found');
+            return;
+        }
+
+        const email = emailInput.value.trim();
+        const subject = subjectInput.value.trim();
+
+        // Validation
+        if (!email) {
+            this.showErrorMessage('Email address is required');
+            return;
+        }
+
+        if (!subject) {
+            this.showErrorMessage('Subject is required');
+            return;
+        }
+
+        // Basic email validation
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+            this.showErrorMessage('Please enter a valid email address');
+            return;
+        }
+
+        try {
+            console.log('[BoardView] Sending invite email to:', email);
+            
+            const response = await window.api.post(`/boards/${this.boardId}/invite`, {
+                email: email,
+                subject: subject
+            });
+            
+            console.log('[BoardView] Invite API response:', response);
+            
+            if (response && response.success) {
+                this.showSuccessMessage('Invitation email sent successfully!');
+                this.closeInviteModal();
+            } else {
+                throw new Error('Failed to send invitation');
+            }
+
+        } catch (error) {
+            console.error('[BoardView] Failed to send invite:', error);
+            this.showErrorMessage('Failed to send invitation email. Please try again.');
         }
     }
 

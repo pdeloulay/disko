@@ -2,9 +2,11 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 
@@ -45,6 +47,16 @@ func init() {
 	if err := godotenv.Load(); err != nil {
 		log.Println("No .env file found")
 	}
+}
+
+// getRateLimitSeconds gets rate limit seconds from environment variable with fallback
+func getRateLimitSeconds(envVar string, fallback int) int {
+	if value := os.Getenv(envVar); value != "" {
+		if seconds, err := strconv.Atoi(value); err == nil && seconds > 0 {
+			return seconds
+		}
+	}
+	return fallback
 }
 
 // getAppVersion reads the version from the .version file
@@ -287,15 +299,16 @@ func main() {
 
 		// Rate limiting for public board access
 		rateLimitKey := "public_board_" + publicLink + "_" + clientIP
-		if isRateLimited(rateLimitKey, 10*time.Second) {
-			log.Printf("[Template] Public Board route - Rate limited: %s, IP: %s", publicLink, clientIP)
+		rateLimitSeconds := getRateLimitSeconds("RATE_LIMIT_PUBLIC_BOARD_SECONDS", 30)
+		if isRateLimited(rateLimitKey, time.Duration(rateLimitSeconds)*time.Second) {
+			log.Printf("[Template] Public Board route - Rate limited: %s, IP: %s, Limit: %ds", publicLink, clientIP, rateLimitSeconds)
 			c.HTML(http.StatusTooManyRequests, "error.html", gin.H{
 				"title":   "Rate Limited - Disko",
-				"message": "Too many requests. Please try again in a few seconds.",
+				"message": fmt.Sprintf("Too many requests. Please try again in %d seconds.", rateLimitSeconds),
 			})
 			return
 		}
-		setRateLimit(rateLimitKey, 10*time.Second)
+		setRateLimit(rateLimitKey, time.Duration(rateLimitSeconds)*time.Second)
 
 		// Log environment variables for debugging
 		clerkKey := os.Getenv("CLERK_PUBLISHABLE_KEY")
@@ -324,14 +337,11 @@ func main() {
 		// Get app version
 		version := getAppVersion()
 
-		c.HTML(http.StatusOK, "board.html", gin.H{
-			"title":               "Board - Disko",
-			"publicLink":          publicLink,
-			"isPublic":            true, // Always true for public route
-			"boardID":             "",   // No board ID for public view
-			"clerkPublishableKey": clerkKey,
-			"clerkFrontendApiUrl": clerkApiUrl,
-			"version":             version,
+		c.HTML(http.StatusOK, "public.html", gin.H{
+			"title":      "Public Board - Disko",
+			"publicLink": publicLink,
+			"boardID":    board.ID, // Use the actual board ID from database
+			"version":    version,
 		})
 
 		duration := time.Since(startTime)

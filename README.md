@@ -117,7 +117,27 @@ Once configured, the invite button will be enabled for published boards, allowin
 
 ## Changelog
 
-### [v0.3.46] - Drag and Drop Event Targeting Fix
+### [v1.0.7] - RICE Scoring Scale Update
+- **📊 Scale Change**: Updated RICE scoring from 0-100% to 0-10 scale for Reach, Impact, and Confidence
+- **🎯 Simplified Scoring**: More intuitive 0-10 scale makes RICE scoring easier to understand and use
+- **🔄 Calculation Update**: Updated RICE score calculation to work with new scale (no percentage conversion needed)
+- **📝 Form Updates**: Updated all RICE input forms to use 0-10 scale with proper validation
+- **🎨 UI Improvements**: Updated labels and placeholders to reflect new scale
+- **🔧 Backend Updates**: Updated validation rules and default values for new scale
+- **📱 Frontend Consistency**: Updated all JavaScript calculations and displays to use new scale
+- **🛡️ Validation**: Updated error messages and validation to reflect 0-10 scale
+
+### [v1.0.6] - Board Deletion Feature
+- **🗑️ Board Deletion**: Added delete board functionality with confirmation modal
+- **⚠️ Safety Confirmation**: Users must re-enter the board name to confirm deletion
+- **🔄 Cascade Deletion**: Deleting a board removes all associated ideas and feedback
+- **🎨 UI Enhancement**: Added delete button next to refresh button in board actions
+- **🔒 Admin Only**: Delete functionality restricted to board owners only
+- **📱 Responsive Design**: Delete modal works properly on mobile devices
+- **🎯 User Experience**: Clear warning messages and confirmation flow
+- **🔧 Error Handling**: Proper error handling and user feedback for deletion failures
+
+### [v1.0.5] - Drag & Drop Regression Fix & Ideas Count Enhancement
 - **🔧 Event Targeting**: Fixed drag event targeting to prevent multiple element dragging
 - **🎯 Direct Card Events**: Moved drag events from document-level to individual card-level
 - **🔄 Interactive Element Blocking**: Enhanced blocking of drag on buttons, menus, and form elements

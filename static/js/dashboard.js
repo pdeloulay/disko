@@ -66,6 +66,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 function updateDashboardStats(boardsCount = 0, ideasCount = 0) {
     const boardsCountElement = document.getElementById('boards-count');
     const ideasCountElement = document.getElementById('ideas-count');
+    const boardsLabelElement = document.querySelector('.stat-item:first-child .stat-label');
+    const ideasLabelElement = document.querySelector('.stat-item:last-child .stat-label');
     
     if (boardsCountElement) {
         boardsCountElement.textContent = boardsCount;
@@ -73,6 +75,15 @@ function updateDashboardStats(boardsCount = 0, ideasCount = 0) {
     
     if (ideasCountElement) {
         ideasCountElement.textContent = ideasCount;
+    }
+    
+    // Update labels for singular vs plural
+    if (boardsLabelElement) {
+        boardsLabelElement.textContent = boardsCount === 1 ? 'Total Board' : 'Total Boards';
+    }
+    
+    if (ideasLabelElement) {
+        ideasLabelElement.textContent = ideasCount === 1 ? 'Total Idea' : 'Total Ideas';
     }
 }
 
@@ -276,11 +287,10 @@ function createBoardCard(board) {
             ${board.description ? `<p class="board-description">${escapeHtml(board.description)}</p>` : ''}
             <div class="board-meta">
                 <span class="board-date">Created ${createdDate}</span>
-                <span class="board-columns">${board.visibleColumns.length} columns</span>
+                <span class="board-stats">${board.ideasCount} ideas • ${board.reactionsCount} reactions</span>
             </div>
             <div class="board-actions">
                 <button class="btn btn-primary" onclick="viewBoard('${boardId}')">Open Board</button>
-                <button class="btn btn-secondary" onclick="copyPublicLink('${publicUrl}')">Share</button>
             </div>
         </div>
     `;

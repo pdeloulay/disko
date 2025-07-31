@@ -2,6 +2,7 @@ package utils
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"log"
 	"os"
@@ -12,11 +13,13 @@ import (
 
 	"disko-backend/models"
 
+	"go.mongodb.org/mongo-driver/v2/bson"
+	"go.mongodb.org/mongo-driver/v2/mongo/options"
 	"gopkg.in/gomail.v2"
 )
 
 // SendBoardInviteEmail sends an HTML invitation email for a board
-func SendBoardInviteEmail(email, subject string, board models.Board, userID string) error {
+func SendBoardInviteEmail(email, subject, message string, board models.Board, userID string) error {
 	// Get email configuration from environment variables
 	smtpHost := os.Getenv("SMTP_HOST")
 	smtpPortStr := os.Getenv("SMTP_PORT")
@@ -53,7 +56,7 @@ func SendBoardInviteEmail(email, subject string, board models.Board, userID stri
 	m.SetHeader("From", fromEmailWithName)
 	m.SetHeader("To", email)
 	m.SetHeader("Subject", subject)
-	m.SetBody("text/html", generateInviteEmailHTML(board))
+	m.SetBody("text/html", generateInviteEmailHTML(board, message))
 
 	// Create dialer
 	d := gomail.NewDialer(smtpHost, smtpPort, smtpUser, smtpPass)
@@ -116,11 +119,12 @@ func extractDomain(email string) string {
 }
 
 // generateInviteEmailHTML creates a compelling HTML email template with Disko branding
-func generateInviteEmailHTML(board models.Board) string {
+func generateInviteEmailHTML(board models.Board, message string) string {
 	publicURL := fmt.Sprintf("%s/public/%s", os.Getenv("APP_URL"), board.PublicLink)
 
 	// Get board statistics
 	ideasCount := getBoardIdeasCount(board.ID)
+	reactionsCount := getBoardReactionsCount(board.ID)
 	recentIdeas := getRecentIdeas(board.ID, 5)
 
 	// Build the HTML template with proper escaping
@@ -381,6 +385,10 @@ func generateInviteEmailHTML(board models.Board) string {
                         <span class="stat-label">Ideas</span>
                     </div>
                     <div class="stat-item">
+                        <span class="stat-number">{{.ReactionsCount}}</span>
+                        <span class="stat-label">Reactions</span>
+                    </div>
+                    <div class="stat-item">
                         <span class="stat-number">{{.UpdatedAgo}}</span>
                         <span class="stat-label">Updated</span>
                     </div>
@@ -391,6 +399,15 @@ func generateInviteEmailHTML(board models.Board) string {
                     <span class="recaps-emojis">{{.EmojiRecaps}}</span>
                 </div>
             </div>
+            
+            {{if .Message}}
+            <div class="personal-message">
+                <h3>💬 Personal Message</h3>
+                <div class="message-content">
+                    {{.Message}}
+                </div>
+            </div>
+            {{end}}
             
             <div class="recent-ideas">
                 <h3>💡 Recent Ideas</h3>
@@ -429,6 +446,7 @@ func generateInviteEmailHTML(board models.Board) string {
 		BoardName        string
 		BoardDescription string
 		IdeasCount       int
+		ReactionsCount   int
 		UpdatedAgo       string
 		EmojiRecaps      string
 		RecentIdeasHTML  string
@@ -437,10 +455,12 @@ func generateInviteEmailHTML(board models.Board) string {
 		AboutURL         string
 		PrivacyURL       string
 		TermsURL         string
+		Message          string // Added Message field
 	}{
 		BoardName:        board.Name,
 		BoardDescription: board.Description,
 		IdeasCount:       ideasCount,
+		ReactionsCount:   reactionsCount,
 		UpdatedAgo:       formatTimeAgo(board.UpdatedAt),
 		EmojiRecaps:      generateEmojiRecaps(board),
 		RecentIdeasHTML:  generateRecentIdeasHTML(recentIdeas),
@@ -449,6 +469,7 @@ func generateInviteEmailHTML(board models.Board) string {
 		AboutURL:         fmt.Sprintf("%s/about", os.Getenv("APP_URL")),
 		PrivacyURL:       fmt.Sprintf("%s/privacy", os.Getenv("APP_URL")),
 		TermsURL:         fmt.Sprintf("%s/terms", os.Getenv("APP_URL")),
+		Message:          message, // Pass the message to the template
 	}
 
 	// Use Go's text/template to properly handle the template
@@ -472,17 +493,124 @@ func generateInviteEmailHTML(board models.Board) string {
 
 // Helper functions for email generation
 func getBoardIdeasCount(boardID string) int {
-	// This would typically query the database
-	// For now, return a placeholder
-	return 12 // Placeholder
+	// Query the database for actual ideas count
+	ideasCollection := models.GetCollection(models.IdeasCollection)
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	filter := bson.M{"board_id": boardID}
+	count, err := ideasCollection.CountDocuments(ctx, filter)
+	if err != nil {
+		log.Printf("[Email] Failed to count ideas for board %s: %v", boardID, err)
+		return 0
+	}
+
+	return int(count)
+}
+
+// getBoardReactionsCount gets the total reactions count for a board
+func getBoardReactionsCount(boardID string) int {
+	ideasCollection := models.GetCollection(models.IdeasCollection)
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	pipeline := []bson.M{
+		{"$match": bson.M{"board_id": boardID}},
+		{"$project": bson.M{
+			"totalReactions": bson.M{
+				"$add": []interface{}{
+					"$thumbs_up",
+					bson.M{"$reduce": bson.M{
+						"input":        "$emoji_reactions",
+						"initialValue": 0,
+						"in":           bson.M{"$add": []string{"$$value", "$$this.count"}},
+					}},
+				},
+			},
+		}},
+		{"$group": bson.M{
+			"_id":            nil,
+			"totalReactions": bson.M{"$sum": "$totalReactions"},
+		}},
+	}
+
+	cursor, err := ideasCollection.Aggregate(ctx, pipeline)
+	if err != nil {
+		log.Printf("[Email] Failed to get reactions count for board %s: %v", boardID, err)
+		return 0
+	}
+	defer cursor.Close(ctx)
+
+	var result []bson.M
+	if err := cursor.All(ctx, &result); err != nil || len(result) == 0 {
+		return 0
+	}
+
+	if total, ok := result[0]["totalReactions"].(int32); ok {
+		return int(total)
+	}
+
+	return 0
 }
 
 // generateEmojiRecaps creates emoji recaps for the board
 func generateEmojiRecaps(board models.Board) string {
-	// Create emoji recaps based on board activity and content
+	// Query the database for real board statistics
+	ideasCollection := models.GetCollection(models.IdeasCollection)
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
 	recaps := []string{}
 
-	// Add emoji based on board activity
+	// Get all emoji reactions aggregated across the board
+	emojiPipeline := []bson.M{
+		{"$match": bson.M{"board_id": board.ID}},
+		{"$unwind": "$emoji_reactions"},
+		{"$group": bson.M{
+			"_id":   "$emoji_reactions.emoji",
+			"count": bson.M{"$sum": "$emoji_reactions.count"},
+		}},
+		{"$sort": bson.M{"count": -1}},
+		{"$limit": 5}, // Show top 5 most popular emojis
+	}
+
+	emojiCursor, err := ideasCollection.Aggregate(ctx, emojiPipeline)
+	if err == nil {
+		defer emojiCursor.Close(ctx)
+		var emojiResults []bson.M
+		if err := emojiCursor.All(ctx, &emojiResults); err == nil {
+			for _, emoji := range emojiResults {
+				if emojiStr, ok := emoji["_id"].(string); ok {
+					if count, ok := emoji["count"].(int32); ok && count > 0 {
+						// Add emoji with count if it has reactions
+						recaps = append(recaps, emojiStr)
+					}
+				}
+			}
+		}
+	}
+
+	// Get total thumbs up count
+	thumbsUpPipeline := []bson.M{
+		{"$match": bson.M{"board_id": board.ID}},
+		{"$group": bson.M{
+			"_id":         nil,
+			"totalThumbs": bson.M{"$sum": "$thumbs_up"},
+		}},
+	}
+
+	thumbsCursor, err := ideasCollection.Aggregate(ctx, thumbsUpPipeline)
+	if err == nil {
+		defer thumbsCursor.Close(ctx)
+		var thumbsResults []bson.M
+		if err := thumbsCursor.All(ctx, &thumbsResults); err == nil && len(thumbsResults) > 0 {
+			if totalThumbs, ok := thumbsResults[0]["totalThumbs"].(int32); ok && totalThumbs > 0 {
+				recaps = append(recaps, "👍") // Add thumbs up emoji if there are any
+			}
+		}
+	}
+
+	// Add contextual emojis based on board activity
 	if len(board.VisibleColumns) > 0 {
 		recaps = append(recaps, "📊") // Board structure
 	}
@@ -507,42 +635,28 @@ func generateEmojiRecaps(board models.Board) string {
 }
 
 func getRecentIdeas(boardID string, limit int) []models.Idea {
-	// This would typically query the database
-	// For now, return placeholder data with emoji reactions
-	return []models.Idea{
-		{
-			ID:       "idea1",
-			OneLiner: "Implement real-time collaboration features",
-			Column:   "now",
-			ThumbsUp: 5,
-			EmojiReactions: []models.EmojiReaction{
-				{Emoji: "🔥", Count: 3},
-				{Emoji: "💡", Count: 2},
-			},
-			CreatedAt: time.Now().Add(-2 * time.Hour),
-		},
-		{
-			ID:       "idea2",
-			OneLiner: "Add advanced search and filtering",
-			Column:   "next",
-			ThumbsUp: 3,
-			EmojiReactions: []models.EmojiReaction{
-				{Emoji: "🚀", Count: 4},
-			},
-			CreatedAt: time.Now().Add(-4 * time.Hour),
-		},
-		{
-			ID:       "idea3",
-			OneLiner: "Create mobile app for iOS and Android",
-			Column:   "later",
-			ThumbsUp: 8,
-			EmojiReactions: []models.EmojiReaction{
-				{Emoji: "📱", Count: 6},
-				{Emoji: "🎯", Count: 2},
-			},
-			CreatedAt: time.Now().Add(-6 * time.Hour),
-		},
+	// Query the database for actual recent ideas
+	ideasCollection := models.GetCollection(models.IdeasCollection)
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	filter := bson.M{"board_id": boardID}
+	opts := options.Find().SetSort(bson.M{"created_at": -1}).SetLimit(int64(limit))
+
+	cursor, err := ideasCollection.Find(ctx, filter, opts)
+	if err != nil {
+		log.Printf("[Email] Failed to get recent ideas for board %s: %v", boardID, err)
+		return []models.Idea{}
 	}
+	defer cursor.Close(ctx)
+
+	var ideas []models.Idea
+	if err := cursor.All(ctx, &ideas); err != nil {
+		log.Printf("[Email] Failed to decode recent ideas for board %s: %v", boardID, err)
+		return []models.Idea{}
+	}
+
+	return ideas
 }
 
 func generateRecentIdeasHTML(ideas []models.Idea) string {

@@ -115,26 +115,26 @@ class IdeaManager {
                             <div class="rice-score-section">
                                 <h4>RICE Score</h4>
                                 <div class="rice-grid">
-                                                                    <div class="form-group">
-                                    <label for="rice-reach">Reach (%)</label>
-                                    <input type="number" id="rice-reach" name="reach" min="0" max="100" 
-                                           value="100" placeholder="0-100">
-                                    <small class="form-help">Percentage of users affected</small>
-                                </div>
-                                
-                                <div class="form-group">
-                                    <label for="rice-impact">Impact (%)</label>
-                                    <input type="number" id="rice-impact" name="impact" min="0" max="100" 
-                                           value="50" placeholder="0-100">
-                                    <small class="form-help">Impact per user</small>
-                                </div>
-                                
-                                <div class="form-group">
-                                    <label for="rice-confidence">Confidence (%)</label>
-                                    <input type="number" id="rice-confidence" name="confidence" min="0" max="100" 
-                                           value="50" placeholder="0-100">
-                                    <small class="form-help">Confidence in the estimate</small>
-                                </div>
+                                    <div class="form-group">
+                                        <label for="rice-reach">Reach (0-10)</label>
+                                        <input type="number" id="rice-reach" name="reach" min="0" max="10" 
+                                               value="5" placeholder="0-10">
+                                        <small class="form-help">Scale of users affected (0-10)</small>
+                                    </div>
+                                    
+                                    <div class="form-group">
+                                        <label for="rice-impact">Impact (0-10)</label>
+                                        <input type="number" id="rice-impact" name="impact" min="0" max="10" 
+                                               value="5" placeholder="0-10">
+                                        <small class="form-help">Impact per user (0-10)</small>
+                                    </div>
+                                    
+                                    <div class="form-group">
+                                        <label for="rice-confidence">Confidence (0-10)</label>
+                                        <input type="number" id="rice-confidence" name="confidence" min="0" max="10" 
+                                               value="5" placeholder="0-10">
+                                        <small class="form-help">Confidence in the estimate (0-10)</small>
+                                    </div>
                                 
                                 <div class="form-group">
                                     <label for="rice-effort">Effort</label>
@@ -205,7 +205,7 @@ class IdeaManager {
                         <span class="rice-label">RICE Score:</span>
                         <span class="rice-value">${riceScore.toFixed(1)}</span>
                         <div class="rice-breakdown">
-                            R:${idea.riceScore.reach}% I:${idea.riceScore.impact}% C:${idea.riceScore.confidence} E:${idea.riceScore.effort}%
+                            R:${idea.riceScore.reach} I:${idea.riceScore.impact} C:${idea.riceScore.confidence} E:${idea.riceScore.effort}
                         </div>
                     </div>
                 ` : ''}
@@ -270,24 +270,24 @@ class IdeaManager {
                             <h4>RICE Score</h4>
                             <div class="rice-grid">
                                 <div class="form-group">
-                                    <label for="edit-rice-reach">Reach (%)</label>
-                                    <input type="number" id="edit-rice-reach" name="reach" min="0" max="100" 
-                                           value="${idea.riceScore.reach}" placeholder="0-100">
-                                    <small class="form-help">Percentage of users affected</small>
+                                    <label for="edit-rice-reach">Reach (0-10)</label>
+                                    <input type="number" id="edit-rice-reach" name="reach" min="0" max="10" 
+                                           value="${idea.riceScore.reach}" placeholder="0-10">
+                                    <small class="form-help">Scale of users affected (0-10)</small>
                                 </div>
                                 
                                 <div class="form-group">
-                                    <label for="edit-rice-impact">Impact (%)</label>
-                                    <input type="number" id="edit-rice-impact" name="impact" min="0" max="100" 
-                                           value="${idea.riceScore.impact}" placeholder="0-100">
-                                    <small class="form-help">Impact per user</small>
+                                    <label for="edit-rice-impact">Impact (0-10)</label>
+                                    <input type="number" id="edit-rice-impact" name="impact" min="0" max="10" 
+                                           value="${idea.riceScore.impact}" placeholder="0-10">
+                                    <small class="form-help">Impact per user (0-10)</small>
                                 </div>
                                 
                                 <div class="form-group">
-                                    <label for="edit-rice-confidence">Confidence (%)</label>
-                                    <input type="number" id="edit-rice-confidence" name="confidence" min="0" max="100" 
-                                           value="${idea.riceScore.confidence}" placeholder="0-100">
-                                    <small class="form-help">Confidence in the estimate</small>
+                                    <label for="edit-rice-confidence">Confidence (0-10)</label>
+                                    <input type="number" id="edit-rice-confidence" name="confidence" min="0" max="10" 
+                                           value="${idea.riceScore.confidence}" placeholder="0-10">
+                                    <small class="form-help">Confidence in the estimate (0-10)</small>
                                 </div>
                                 
                                 <div class="form-group">
@@ -320,7 +320,7 @@ class IdeaManager {
     // Delete Confirmation Modal
     createDeleteConfirmationModal(ideaId, ideaTitle) {
         return `
-            <div id="delete-idea-modal" class="modal" style="display: flex;">
+            <div id="delete-idea-modal" class="modal show">
                 <div class="modal-content">
                     <div class="modal-header">
                         <h3>Delete Idea</h3>
@@ -434,14 +434,33 @@ class IdeaManager {
     }
 
     confirmDeleteIdea(ideaId, ideaTitle) {
+        console.log('[IdeaManager] confirmDeleteIdea called with ideaId:', ideaId, 'ideaTitle:', ideaTitle);
+        
         // Remove existing modal if any
         const existingModal = document.getElementById('delete-idea-modal');
         if (existingModal) {
+            console.log('[IdeaManager] Removing existing delete modal');
             existingModal.remove();
         }
 
         // Add modal to page
+        console.log('[IdeaManager] Creating delete confirmation modal');
         document.body.insertAdjacentHTML('beforeend', this.createDeleteConfirmationModal(ideaId, ideaTitle));
+        
+        // Add event listener for the close button
+        const modal = document.getElementById('delete-idea-modal');
+        if (modal) {
+            console.log('[IdeaManager] Modal created successfully, adding event listeners');
+            const closeBtn = modal.querySelector('.modal-close');
+            if (closeBtn) {
+                closeBtn.addEventListener('click', () => {
+                    console.log('[IdeaManager] Close button clicked');
+                    this.closeDeleteModal();
+                });
+            }
+        } else {
+            console.error('[IdeaManager] Failed to create delete modal');
+        }
         
         // Close idea menu
         this.closeIdeaMenus();
@@ -467,10 +486,10 @@ class IdeaManager {
         
         // Ensure RICE score always has default values
         const riceScore = {
-            reach: parseInt(formData.get('reach')) || 100,
-            impact: parseInt(formData.get('impact')) || 50,
-            confidence: parseInt(formData.get('confidence')) || 50,
-            effort: parseInt(formData.get('effort')) || 1
+            reach: parseInt(formData.get('reach')) || 5,
+            impact: parseInt(formData.get('impact')) || 5,
+            confidence: parseInt(formData.get('confidence')) || 5,
+            effort: parseInt(formData.get('effort')) || 3
         };
         
         const ideaData = {
@@ -529,10 +548,10 @@ class IdeaManager {
         
         // Ensure RICE score always has default values
         const riceScore = {
-            reach: parseInt(formData.get('reach')) || 100,
-            impact: parseInt(formData.get('impact')) || 50,
-            confidence: parseInt(formData.get('confidence')) || 50,
-            effort: parseInt(formData.get('effort')) || 1
+            reach: parseInt(formData.get('reach')) || 5,
+            impact: parseInt(formData.get('impact')) || 5,
+            confidence: parseInt(formData.get('confidence')) || 5,
+            effort: parseInt(formData.get('effort')) || 3
         };
         
         const ideaData = {
@@ -589,8 +608,10 @@ class IdeaManager {
             this.closeDeleteModal();
             this.showSuccessMessage('Idea deleted successfully!');
             
-            // Trigger refresh of ideas list
-            if (window.boardView && window.boardView.refreshIdeas) {
+            // Trigger refresh of ideas list - use drag-drop board if available
+            if (window.dragDropBoard && window.dragDropBoard.refreshBoard) {
+                await window.dragDropBoard.refreshBoard();
+            } else if (window.boardView && window.boardView.refreshIdeas) {
                 await window.boardView.refreshIdeas();
             }
             
@@ -828,25 +849,25 @@ class IdeaManager {
         const rice = ideaData.riceScore;
         console.log('[IdeaManager] Validating RICE score:', rice);
         
-        if (isNaN(rice.reach) || rice.reach < 0 || rice.reach > 100) {
+        if (isNaN(rice.reach) || rice.reach < 0 || rice.reach > 10) {
             console.log('[IdeaManager] Reach validation failed:', rice.reach);
-            this.showFieldError('reach', 'Reach must be between 0 and 100');
+            this.showFieldError('reach', 'Reach must be between 0 and 10');
             isValid = false;
         } else {
             console.log('[IdeaManager] Reach validation passed:', rice.reach);
         }
         
-        if (isNaN(rice.impact) || rice.impact < 0 || rice.impact > 100) {
+        if (isNaN(rice.impact) || rice.impact < 0 || rice.impact > 10) {
             console.log('[IdeaManager] Impact validation failed:', rice.impact);
-            this.showFieldError('impact', 'Impact must be between 0 and 100');
+            this.showFieldError('impact', 'Impact must be between 0 and 10');
             isValid = false;
         } else {
             console.log('[IdeaManager] Impact validation passed:', rice.impact);
         }
         
-        if (isNaN(rice.confidence) || rice.confidence < 0 || rice.confidence > 100) {
+        if (isNaN(rice.confidence) || rice.confidence < 0 || rice.confidence > 10) {
             console.log('[IdeaManager] Confidence validation failed:', rice.confidence);
-            this.showFieldError('confidence', 'Confidence must be between 0 and 100');
+            this.showFieldError('confidence', 'Confidence must be between 0 and 10');
             isValid = false;
         } else {
             console.log('[IdeaManager] Confidence validation passed:', rice.confidence);
@@ -904,10 +925,11 @@ class IdeaManager {
 
     calculateRICEScore(riceScore) {
         if (!riceScore || riceScore.effort === 0) return 0;
-        // Convert percentages to decimals (0-100 -> 0-1)
-        const reach = riceScore.reach / 100;
-        const impact = riceScore.impact / 100;
-        const confidence = riceScore.confidence / 100;
+        
+        // Use 0-10 scale directly (no need to convert from percentages)
+        const reach = riceScore.reach;
+        const impact = riceScore.impact;
+        const confidence = riceScore.confidence;
         return (reach * impact * confidence) / riceScore.effort;
     }
 

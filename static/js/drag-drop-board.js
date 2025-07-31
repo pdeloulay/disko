@@ -384,13 +384,13 @@ class DragDropBoard {
                 </div>
                 
                 ${this.shouldShowField('riceScore') && idea.riceScore ? `
-                    <div class="idea-rice-score">
-                        <span class="rice-label">RICE Score:</span>
-                        <span class="rice-value">${riceScore.toFixed(1)}</span>
-                        <div class="rice-breakdown">
-                            R:${idea.riceScore.reach || 0}% I:${idea.riceScore.impact || 0}% C:${idea.riceScore.confidence || 0} E:${idea.riceScore.effort || 1}%
-                        </div>
+                <div class="idea-rice-score">
+                    <span class="rice-label">RICE Score:</span>
+                    <span class="rice-value">${riceScore.toFixed(1)}</span>
+                    <div class="rice-breakdown">
+                        R:${idea.riceScore.reach || 0} I:${idea.riceScore.impact || 0} C:${idea.riceScore.confidence || 0} E:${idea.riceScore.effort || 1}
                     </div>
+                </div>
                 ` : ''}
                 
                 <div class="idea-feedback">
@@ -599,10 +599,11 @@ class DragDropBoard {
     // Utility Methods
     calculateRICEScore(riceScore) {
         if (!riceScore || !riceScore.effort || riceScore.effort === 0) return 0;
-        // Convert percentages to decimals (0-100 -> 0-1)
-        const reach = (riceScore.reach || 0) / 100;
-        const impact = (riceScore.impact || 0) / 100;
-        const confidence = (riceScore.confidence || 0) / 100;
+        
+        // Use 0-10 scale directly (no need to convert from percentages)
+        const reach = riceScore.reach || 0;
+        const impact = riceScore.impact || 0;
+        const confidence = riceScore.confidence || 0;
         return (reach * impact * confidence) / riceScore.effort;
     }
 
@@ -777,8 +778,15 @@ class DragDropBoard {
     }
 
     confirmDeleteIdea(ideaId, ideaTitle) {
+        console.log('[DragDropBoard] confirmDeleteIdea called with ideaId:', ideaId, 'ideaTitle:', ideaTitle);
+        console.log('[DragDropBoard] ideaManager available:', !!window.ideaManager);
+        
         if (window.ideaManager) {
+            console.log('[DragDropBoard] Calling ideaManager.confirmDeleteIdea');
             window.ideaManager.confirmDeleteIdea(ideaId, ideaTitle);
+        } else {
+            console.error('[DragDropBoard] ideaManager not available for delete confirmation');
+            this.showErrorMessage('Delete functionality not available. Please refresh the page and try again.');
         }
         this.closeAllMenus();
     }

@@ -203,9 +203,8 @@ class ReleaseTable {
         let riceScore = 0;
         if (!this.isPublic && idea.riceScore) {
             const { reach, impact, confidence, effort } = idea.riceScore;
-            if (effort > 0) {
-                riceScore = ((reach * impact * confidence) / effort).toFixed(1);
-            }
+            // Use 0-10 scale directly (no need to convert from percentages)
+            riceScore = ((reach * impact * confidence) / effort).toFixed(1);
         }
 
         // Format date

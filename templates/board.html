@@ -51,8 +51,10 @@
                             {{if not .isPublic}}
                             <button id="board-settings-btn" class="btn btn-secondary">⚙️ Settings</button>
                             {{end}}
-                            <button id="invite-btn" class="btn btn-secondary" disabled>📧 Invite</button>
                             <button id="refresh-btn" class="btn btn-secondary">Refresh</button>
+                            {{if not .isPublic}}
+                            <button id="delete-board-btn" class="btn btn-secondary">🗑️ Delete</button>
+                            {{end}}
                         </div>
                     </div>
 
@@ -259,18 +261,23 @@
     <div id="invite-modal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
-                <h3>📧 Invite to Board</h3>
+                <h3>📧 Share Board</h3>
                 <button class="modal-close" onclick="boardView.closeInviteModal()">&times;</button>
             </div>
             <div class="modal-body">
                 <form id="invite-form">
                     <div class="form-group">
                         <label for="invite-email">Email Address *</label>
-                        <input type="email" id="invite-email" name="email" required placeholder="Enter email address">
+                        <input type="email" id="invite-email" name="email" required placeholder="Enter recipient email address">
                     </div>
                     <div class="form-group">
                         <label for="invite-subject">Subject *</label>
                         <input type="text" id="invite-subject" name="subject" required placeholder="Enter email subject">
+                    </div>
+                    <div class="form-group">
+                        <label for="invite-message">Message (optional)</label>
+                        <textarea id="invite-message" name="message" rows="4" placeholder="Add a personal message..."></textarea>
+                        <small class="form-help">The public board link will be automatically included in the email.</small>
                     </div>
                     <div class="form-actions">
                         <button type="button" class="btn btn-secondary" onclick="boardView.closeInviteModal()">Cancel</button>
@@ -280,5 +287,68 @@
             </div>
         </div>
     </div>
+
+    <!-- Delete Board Modal -->
+    <div id="delete-board-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>🗑️ Delete Board</h3>
+                <button class="modal-close" onclick="boardView.closeDeleteModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="delete-warning">
+                    <p><strong>⚠️ Warning:</strong> This action cannot be undone!</p>
+                    <p>Deleting this board will permanently remove:</p>
+                    <ul>
+                        <li>The board itself</li>
+                        <li>All ideas associated with this board</li>
+                        <li>All feedback and reactions</li>
+                        <li>All board settings and configurations</li>
+                    </ul>
+                </div>
+                <form id="delete-board-form">
+                    <div class="form-group">
+                        <label for="confirm-board-name">To confirm deletion, please type the board name: <strong id="board-name-to-confirm"></strong></label>
+                        <input type="text" id="confirm-board-name" name="boardName" required placeholder="Enter board name to confirm">
+                    </div>
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-secondary" onclick="boardView.closeDeleteModal()">Cancel</button>
+                        <button type="submit" class="btn btn-danger">🗑️ Delete Board</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <div class="footer-logo">
+                        <img src="/static/images/logo-sm-white.png" alt="Disko" class="logo-image">
+                    </div>
+                    <p>Empowering entrepreneurs to share progress and build trust with customers through beautiful, interactive project boards.</p>
+                </div>
+                <div class="footer-section">
+                    <h4>Legal</h4>
+                    <ul>
+                        <li><a href="/terms">Terms of Service</a></li>
+                        <li><a href="/privacy">Privacy Policy</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>Contact</h4>
+                    <ul>
+                        <li><a href="/contact">Contact Us</a></li>
+                        <li><a href="mailto:support@disko.app">Support</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2025 Disko. A Nomadis Service. All rights reserved. | v{{.version}}</p>
+            </div>
+        </div>
+    </footer>
 </body>
 </html>

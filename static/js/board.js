@@ -89,16 +89,16 @@ class BoardView {
         // Publish toggle (admin only) - will be handled in updateStatusIndicator
         console.log('[BoardView] Publish toggle will be handled in updateStatusIndicator - IsAdmin:', this.isAdmin);
 
-        // Invite button (admin only, enabled only when board is published)
-        const inviteBtn = document.getElementById('invite-btn');
-        if (inviteBtn && this.isAdmin) {
-            console.log('[BoardView] Adding invite button event listener - IsAdmin:', this.isAdmin);
-            inviteBtn.addEventListener('click', () => {
-                console.log('[BoardView] Invite button clicked');
-                this.openInviteModal();
+        // Delete board button (admin only)
+        const deleteBoardBtn = document.getElementById('delete-board-btn');
+        if (deleteBoardBtn && this.isAdmin) {
+            console.log('[BoardView] Adding delete board button event listener - IsAdmin:', this.isAdmin);
+            deleteBoardBtn.addEventListener('click', () => {
+                console.log('[BoardView] Delete board button clicked');
+                this.openDeleteModal();
             });
         } else {
-            console.log('[BoardView] Invite button not found or user not admin - Button exists:', !!inviteBtn, 'IsAdmin:', this.isAdmin);
+            console.log('[BoardView] Delete board button not found or user not admin - Button exists:', !!deleteBoardBtn, 'IsAdmin:', this.isAdmin);
         }
 
         // Invite form submission
@@ -112,25 +112,28 @@ class BoardView {
     }
 
     removeEventListeners() {
-        // Remove existing event listeners to prevent duplicates
+        // Remove refresh button listener
         const refreshBtn = document.getElementById('refresh-btn');
         if (refreshBtn) {
             refreshBtn.replaceWith(refreshBtn.cloneNode(true));
         }
 
+        // Remove create idea button listener
         const createIdeaBtn = document.getElementById('create-idea-btn');
         if (createIdeaBtn) {
             createIdeaBtn.replaceWith(createIdeaBtn.cloneNode(true));
         }
 
+        // Remove settings button listener
         const settingsBtn = document.getElementById('board-settings-btn');
         if (settingsBtn) {
             settingsBtn.replaceWith(settingsBtn.cloneNode(true));
         }
 
-        const publishBtn = document.getElementById('publish-btn');
-        if (publishBtn) {
-            publishBtn.replaceWith(publishBtn.cloneNode(true));
+        // Remove delete board button listener
+        const deleteBoardBtn = document.getElementById('delete-board-btn');
+        if (deleteBoardBtn) {
+            deleteBoardBtn.replaceWith(deleteBoardBtn.cloneNode(true));
         }
     }
 
@@ -255,7 +258,6 @@ class BoardView {
                 const isPublished = boardData.isPublic || boardData.publicLink;
                 
                 if (this.isAdmin) {
-                    this.updateInviteButtonState(isPublished);
                     this.updatePublishButtonState(isPublished);
                 } else {
                     // For non-admin users, still show the status indicator
@@ -357,7 +359,7 @@ class BoardView {
                 console.log('[BoardView] Updated publish toggle state to:', publishToggle.checked);
                 
                 // Update invite button state
-                this.updateInviteButtonState(newPublishState);
+                this.updatePublishButtonState(newPublishState);
                 
                 // Update status indicator with the new public link
                 this.updateStatusIndicator(newPublishState, response.publicLink);
@@ -384,20 +386,6 @@ class BoardView {
             // Remove loading state
             publishToggle.disabled = false;
             publishToggle.parentElement.classList.remove('loading');
-        }
-    }
-
-    updateInviteButtonState(enabled) {
-        const inviteBtn = document.getElementById('invite-btn');
-        if (inviteBtn) {
-            inviteBtn.disabled = !enabled;
-            if (enabled) {
-                inviteBtn.classList.remove('btn-secondary');
-                inviteBtn.classList.add('btn-primary');
-            } else {
-                inviteBtn.classList.remove('btn-primary');
-                inviteBtn.classList.add('btn-secondary');
-            }
         }
     }
 
@@ -440,7 +428,8 @@ class BoardView {
                         <span class="toggle-slider"></span>
                     </label>
                     <span class="toggle-label">Public</span>
-                    <a href="/public/${linkToUse}" target="_blank" class="view-link-btn" title="View public board">👁️</a>
+                    <a href="/public/${linkToUse}" target="_blank" class="view-link-btn" title="View public board">View</a>
+                    <button class="share-link-btn" onclick="boardView.openInviteModal()" title="Share board via email">Share</button>
                 </div>
             `;
         } else if (isPublished) {
@@ -453,6 +442,7 @@ class BoardView {
                         <span class="toggle-slider"></span>
                     </label>
                     <span class="toggle-label">Public</span>
+                    <button class="share-link-btn" onclick="boardView.openInviteModal()" title="Share board via email">Share</button>
                 </div>
             `;
         } else {
@@ -482,10 +472,34 @@ class BoardView {
     openInviteModal() {
         const modal = document.getElementById('invite-modal');
         if (modal) {
-            // Set default subject
+            // Set default subject with board name and public link
             const subjectInput = document.getElementById('invite-subject');
+            const boardName = this.boardData?.name || 'my board';
+            const publicLink = this.boardData?.publicLink;
+            
             if (subjectInput) {
-                subjectInput.value = `[Disko] 🚀 You're Invited to the ${this.boardData.name || 'board!'}`;
+                if (publicLink) {
+                    subjectInput.value = `[Disko] 🚀 You're invited to view ${boardName}`;
+                } else {
+                    subjectInput.value = `[Disko] 🚀 You're invited to ${boardName}`;
+                }
+            }
+            
+            // Pre-fill email body with public link if available
+            const emailInput = document.getElementById('invite-email');
+            if (emailInput) {
+                emailInput.value = '';
+                emailInput.placeholder = 'Enter recipient email address';
+            }
+            
+            // Pre-fill message with public link
+            const messageInput = document.getElementById('invite-message');
+            if (messageInput && publicLink) {
+                const appUrl = window.location.origin;
+                const publicUrl = `${appUrl}/public/${publicLink}`;
+                messageInput.value = `Hi! I'd like to share my board "${boardName}" with you.\n\nYou can view it here: ${publicUrl}\n\nLet me know what you think!`;
+            } else if (messageInput) {
+                messageInput.value = '';
             }
             
             modal.classList.add('show');
@@ -507,53 +521,145 @@ class BoardView {
     async sendInvite() {
         const emailInput = document.getElementById('invite-email');
         const subjectInput = document.getElementById('invite-subject');
+        const messageInput = document.getElementById('invite-message');
         
         if (!emailInput || !subjectInput) {
-            this.showErrorMessage('Form elements not found');
+            console.error('[BoardView] Invite form inputs not found');
             return;
         }
-
+        
         const email = emailInput.value.trim();
         const subject = subjectInput.value.trim();
-
-        // Validation
-        if (!email) {
-            this.showErrorMessage('Email address is required');
+        const message = messageInput ? messageInput.value.trim() : '';
+        
+        if (!email || !subject) {
+            this.showErrorMessage('Please fill in all required fields.');
             return;
         }
-
-        if (!subject) {
-            this.showErrorMessage('Subject is required');
-            return;
-        }
-
-        // Basic email validation
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!emailRegex.test(email)) {
-            this.showErrorMessage('Please enter a valid email address');
-            return;
-        }
-
+        
         try {
-            console.log('[BoardView] Sending invite email to:', email);
+            console.log('[BoardView] Sending invite for board:', this.boardId, 'Email:', email, 'Subject:', subject);
             
-            const response = await window.api.post(`/boards/${this.boardId}/invite`, {
+            // Include public link in the request if available
+            const inviteData = {
                 email: email,
-                subject: subject
-            });
+                subject: subject,
+                message: message,
+                publicLink: this.boardData?.publicLink || null
+            };
             
-            console.log('[BoardView] Invite API response:', response);
+            const response = await window.api.post(`/boards/${this.boardId}/invite`, inviteData);
             
-            if (response && response.success) {
-                this.showSuccessMessage('Invitation email sent successfully!');
+            if (response) {
+                this.showSuccessMessage('Invitation sent successfully!');
                 this.closeInviteModal();
+                
+                // Clear form
+                emailInput.value = '';
+                subjectInput.value = '';
+                if (messageInput) {
+                    messageInput.value = '';
+                }
             } else {
-                throw new Error('Failed to send invitation');
+                this.showErrorMessage('Failed to send invitation. Please try again.');
             }
-
         } catch (error) {
             console.error('[BoardView] Failed to send invite:', error);
-            this.showErrorMessage('Failed to send invitation email. Please try again.');
+            this.showErrorMessage('Failed to send invitation. Please try again.');
+        }
+    }
+
+    openDeleteModal() {
+        console.log('[BoardView] Opening delete modal for board:', this.boardId);
+        
+        // Get the board name to display in the confirmation
+        const boardTitle = document.getElementById('board-title');
+        const boardName = boardTitle ? boardTitle.textContent : 'this board';
+        
+        // Set the board name in the confirmation field
+        const boardNameConfirm = document.getElementById('board-name-to-confirm');
+        if (boardNameConfirm) {
+            boardNameConfirm.textContent = boardName;
+        }
+        
+        // Clear the confirmation input
+        const confirmInput = document.getElementById('confirm-board-name');
+        if (confirmInput) {
+            confirmInput.value = '';
+        }
+        
+        // Show the modal
+        const modal = document.getElementById('delete-board-modal');
+        if (modal) {
+            modal.classList.add('show');
+        }
+        
+        // Focus on the confirmation input
+        if (confirmInput) {
+            setTimeout(() => confirmInput.focus(), 100);
+        }
+        
+        // Add form submission handler
+        const form = document.getElementById('delete-board-form');
+        if (form) {
+            form.onsubmit = (e) => {
+                e.preventDefault();
+                this.confirmDeleteBoard();
+            };
+        }
+    }
+
+    closeDeleteModal() {
+        console.log('[BoardView] Closing delete modal');
+        
+        const modal = document.getElementById('delete-board-modal');
+        if (modal) {
+            modal.classList.remove('show');
+        }
+        
+        // Remove form submission handler
+        const form = document.getElementById('delete-board-form');
+        if (form) {
+            form.onsubmit = null;
+        }
+    }
+
+    async confirmDeleteBoard() {
+        const confirmInput = document.getElementById('confirm-board-name');
+        const boardNameConfirm = document.getElementById('board-name-to-confirm');
+        
+        if (!confirmInput || !boardNameConfirm) {
+            console.error('[BoardView] Delete confirmation elements not found');
+            return;
+        }
+        
+        const enteredName = confirmInput.value.trim();
+        const expectedName = boardNameConfirm.textContent.trim();
+        
+        if (enteredName !== expectedName) {
+            this.showErrorMessage('Board name does not match. Please enter the exact board name to confirm deletion.');
+            return;
+        }
+        
+        try {
+            console.log('[BoardView] Confirming board deletion for board:', this.boardId);
+            
+            const response = await window.api.delete(`/boards/${this.boardId}`);
+            
+            if (response) {
+                this.showSuccessMessage('Board deleted successfully!');
+                this.closeDeleteModal();
+                
+                // Redirect to dashboard after a short delay
+                setTimeout(() => {
+                    window.location.href = '/dashboard';
+                }, 1500);
+            } else {
+                this.showErrorMessage('Failed to delete board. Please try again.');
+            }
+        } catch (error) {
+            console.error('[BoardView] Failed to delete board:', error);
+            this.showErrorMessage('Failed to delete board. Please try again.');
         }
     }
 

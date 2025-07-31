@@ -44,6 +44,7 @@ type BoardResponse struct {
 	VisibleColumns []string  `json:"visibleColumns"`
 	VisibleFields  []string  `json:"visibleFields"`
 	IdeasCount     int       `json:"ideasCount"`
+	ReactionsCount int       `json:"reactionsCount"`
 	CreatedAt      time.Time `json:"createdAt"`
 	UpdatedAt      time.Time `json:"updatedAt"`
 }
@@ -350,6 +351,44 @@ func GetBoards(c *gin.Context) {
 			ideasCount = 0
 		}
 
+		// Calculate total reactions for this board (thumbs up + emoji reactions)
+		reactionsCount := 0
+		if ideasCount > 0 {
+			// Aggregate to sum all reactions
+			pipeline := []bson.M{
+				{"$match": bson.M{"board_id": board.ID}},
+				{"$project": bson.M{
+					"totalReactions": bson.M{
+						"$add": []interface{}{
+							"$thumbs_up",
+							bson.M{"$reduce": bson.M{
+								"input":        "$emoji_reactions",
+								"initialValue": 0,
+								"in":           bson.M{"$add": []string{"$$value", "$$this.count"}},
+							}},
+						},
+					},
+				}},
+				{"$group": bson.M{
+					"_id":            nil,
+					"totalReactions": bson.M{"$sum": "$totalReactions"},
+				}},
+			}
+
+			cursor, err := ideasCollection.Aggregate(ctx, pipeline)
+			if err != nil {
+				log.Printf("[Handler] GetBoards - Failed to calculate reactions for board %s: %v", board.ID, err)
+			} else {
+				defer cursor.Close(ctx)
+				var result []bson.M
+				if err := cursor.All(ctx, &result); err == nil && len(result) > 0 {
+					if total, ok := result[0]["totalReactions"].(int32); ok {
+						reactionsCount = int(total)
+					}
+				}
+			}
+		}
+
 		responses = append(responses, BoardResponse{
 			ID:             board.ID,
 			Name:           board.Name,
@@ -360,6 +399,7 @@ func GetBoards(c *gin.Context) {
 			VisibleColumns: board.VisibleColumns,
 			VisibleFields:  board.VisibleFields,
 			IdeasCount:     int(ideasCount),
+			ReactionsCount: reactionsCount,
 			CreatedAt:      board.CreatedAt,
 			UpdatedAt:      board.UpdatedAt,
 		})
@@ -923,6 +963,7 @@ func (e *BoardNotFoundError) Error() string {
 type InviteRequest struct {
 	Email   string `json:"email" binding:"required,email"`
 	Subject string `json:"subject" binding:"required,min=1,max=200"`
+	Message string `json:"message,omitempty" binding:"max=1000"`
 }
 
 // SendBoardInvite handles POST /api/boards/:id/invite
@@ -1022,7 +1063,7 @@ func SendBoardInvite(c *gin.Context) {
 	}
 
 	// Send invitation email
-	err = utils.SendBoardInviteEmail(req.Email, req.Subject, board, userID)
+	err = utils.SendBoardInviteEmail(req.Email, req.Subject, req.Message, board, userID)
 	if err != nil {
 		log.Printf("[Handler] SendBoardInvite failed - Email error: %v, BoardID: %s, UserID: %s, Email: %s, IP: %s",
 			err, boardID, userID, req.Email, c.ClientIP())

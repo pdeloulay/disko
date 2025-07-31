@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contact Us - Disko</title>
+    <link rel="icon" type="image/png" href="/static/images/boom.png">
+    <link rel="stylesheet" href="/static/css/main.css">
+</head>
+<body>
+    <div class="contact-page">
+        <!-- Navigation -->
+        <nav class="navbar">
+            <div class="container">
+                <div class="nav-brand">
+                    <a href="/" class="logo-link">
+                        <img src="/static/images/logo-sm.png" alt="Disko" class="logo-image">
+                    </a>
+                </div>
+                <div class="nav-actions">
+                    <a href="/" class="btn btn-ghost">Back to Home</a>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Contact Form Section -->
+        <main class="contact-main">
+            <div class="container">
+                <div class="contact-content">
+                    <div class="contact-header">
+                        <h1>Contact Us</h1>
+                        <p>We'd love to hear from you! Send us a message and we'll get back to you as soon as possible.</p>
+                    </div>
+
+                    <div class="contact-form-container">
+                        <form id="contact-form" class="contact-form">
+                            <div class="form-group">
+                                <label for="contact-subject">Subject *</label>
+                                <select id="contact-subject" name="subject" required>
+                                    <option value="">Select a subject...</option>
+                                    <option value="Bug">Bug Report</option>
+                                    <option value="Thanks">Thanks</option>
+                                    <option value="Careers">Careers</option>
+                                    <option value="Hackathon">Hackathon</option>
+                                    <option value="Feedback">Feedback</option>
+                                    <option value="Product Enhancement">Product Enhancement</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="contact-email">Your Email *</label>
+                                <input type="email" id="contact-email" name="email" required placeholder="Enter your email address">
+                            </div>
+
+                            <div class="form-group">
+                                <label for="contact-name">Your Name</label>
+                                <input type="text" id="contact-name" name="name" placeholder="Enter your name">
+                            </div>
+
+                            <div class="form-group">
+                                <label for="contact-message">Message *</label>
+                                <textarea id="contact-message" name="message" rows="6" required placeholder="Tell us what's on your mind..."></textarea>
+                            </div>
+
+                            <div class="form-actions">
+                                <button type="submit" class="btn btn-primary">Send Message</button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <div class="contact-info">
+                        <div class="info-card">
+                            <div class="info-icon">📧</div>
+                            <h3>Email Support</h3>
+                            <p>For immediate assistance, email us directly at <a href="mailto:support@disko.app">support@disko.app</a></p>
+                        </div>
+                        
+                        <div class="info-card">
+                            <div class="info-icon">⚡</div>
+                            <h3>Quick Response</h3>
+                            <p>We typically respond within 24 hours during business days.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <div class="container">
+                <div class="footer-content">
+                    <div class="footer-section">
+                        <div class="footer-logo">
+                            <img src="/static/images/logo-sm-white.png" alt="Disko" class="logo-image">
+                        </div>
+                        <p>Empowering entrepreneurs to share progress and build trust with customers through beautiful, interactive project boards.</p>
+                    </div>
+                    <div class="footer-section">
+                        <h4>Legal</h4>
+                        <ul>
+                            <li><a href="/terms">Terms of Service</a></li>
+                            <li><a href="/privacy">Privacy Policy</a></li>
+                        </ul>
+                    </div>
+                    <div class="footer-section">
+                        <h4>Contact</h4>
+                        <ul>
+                            <li><a href="/contact">Contact Us</a></li>
+                            <li><a href="mailto:support@disko.app">Support</a></li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="footer-bottom">
+                    <p>&copy; 2025 Disko. A Nomadis Service. All rights reserved. | v{{.version}}</p>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Common JavaScript -->
+    <script src="/static/js/api.js"></script>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const contactForm = document.getElementById('contact-form');
+            
+            if (contactForm) {
+                contactForm.addEventListener('submit', async function(e) {
+                    e.preventDefault();
+                    
+                    const formData = new FormData(contactForm);
+                    const data = {
+                        subject: formData.get('subject'),
+                        email: formData.get('email'),
+                        name: formData.get('name'),
+                        message: formData.get('message')
+                    };
+                    
+                    try {
+                        const response = await fetch('/api/contact', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify(data)
+                        });
+                        
+                        if (response.ok) {
+                            alert('Thank you for your message! We\'ll get back to you soon.');
+                            contactForm.reset();
+                        } else {
+                            alert('Sorry, there was an error sending your message. Please try again.');
+                        }
+                    } catch (error) {
+                        console.error('Error sending contact form:', error);
+                        alert('Sorry, there was an error sending your message. Please try again.');
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html> 

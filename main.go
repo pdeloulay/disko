@@ -352,7 +352,7 @@ func main() {
 	// Terms of Service route
 	router.GET("/terms", func(c *gin.Context) {
 		log.Printf("[Template] Terms of Service route accessed - IP: %s", c.ClientIP())
-		
+
 		// Get app version
 		version := getAppVersion()
 
@@ -365,7 +365,7 @@ func main() {
 	// Privacy Policy route
 	router.GET("/privacy", func(c *gin.Context) {
 		log.Printf("[Template] Privacy Policy route accessed - IP: %s", c.ClientIP())
-		
+
 		// Get app version
 		version := getAppVersion()
 
@@ -375,11 +375,17 @@ func main() {
 		})
 	})
 
+	// Contact page route
+	router.GET("/contact", handlers.HandleContactPage)
+
 	// API routes group
 	api := router.Group("/api")
 	{
 		// Public endpoints
 		api.GET("/ping", handlers.Ping)
+
+		// Contact form endpoint
+		api.POST("/contact", handlers.HandleContactSubmit)
 
 		// Public board access endpoint
 		api.GET("/boards/:id/public", handlers.GetPublicBoard)

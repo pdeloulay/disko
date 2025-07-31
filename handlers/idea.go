@@ -138,7 +138,7 @@ func CreateIdea(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"error": gin.H{
 				"code":    "INVALID_RICE_SCORE",
-				"message": "Invalid RICE score values. R: 0-100%, I: 0-100%, C: 0-100%, E: 1/3/8/21",
+				"message": "Invalid RICE score values. R: 0-10, I: 0-10, C: 0-10, E: 1/3/8/21",
 			},
 		})
 		return
@@ -577,7 +577,7 @@ func UpdateIdea(c *gin.Context) {
 			c.JSON(http.StatusBadRequest, gin.H{
 				"error": gin.H{
 					"code":    "INVALID_RICE_SCORE",
-					"message": "Invalid RICE score values. R: 0-100%, I: 0-100%, C: 1/2/4/8, E: 0-100%",
+					"message": "Invalid RICE score values. R: 0-10, I: 0-10, C: 0-10, E: 1/3/8/21",
 				},
 			})
 			return

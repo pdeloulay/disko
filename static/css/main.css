@@ -313,10 +313,9 @@ a:hover {
 .hero .container {
     position: relative;
     z-index: 1;
-    display: grid;
-    grid-template-columns: 1fr 1.5fr;
-    gap: var(--space-16);
-    align-items: center;
+    max-width: 100%;
+    padding: var(--space-16) var(--space-6);
+    margin: 0 auto;
 }
 
 .hero-title {
@@ -336,7 +335,16 @@ a:hover {
 }
 
 .hero-subtitle {
-    font-size: 1.25rem;
+    font-size: 1.5rem;
+    line-height: 1.4;
+    margin-bottom: var(--space-6);
+    color: rgba(255, 255, 255, 0.95);
+    font-weight: 600;
+    max-width: 600px;
+}
+
+.hero-description {
+    font-size: 1.125rem;
     line-height: 1.6;
     margin-bottom: var(--space-8);
     color: rgba(255, 255, 255, 0.9);
@@ -423,38 +431,76 @@ a:hover {
     font-weight: 600;
 }
 
-.hero-content-row {
+.hero-content-grid {
     display: grid;
     grid-template-columns: 1fr 2fr;
-    gap: var(--space-8);
+    gap: var(--space-12);
     align-items: start;
     margin: var(--space-8) 0;
-}
-
-.hero-content-row .hero-quote {
-    margin: 0;
-}
-
-.hero-content-row .board-preview {
     max-width: 100%;
-    margin: 0;
-    min-width: 0; /* Allow grid item to shrink */
-    justify-self: end; /* Stretch to the right */
 }
 
-@media (max-width: 768px) {
-    .hero-content-row {
+.hero-content-left {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-6);
+}
+
+.hero-content-right {
+    display: flex;
+    justify-content: flex-start;
+    align-items: flex-start;
+    width: 100%;
+}
+
+.hero-content-right .board-preview {
+    max-width: 100%;
+    min-width: 0;
+    flex-shrink: 0;
+    width: 100%;
+}
+
+@media (max-width: 1024px) {
+    .hero-content-grid {
         grid-template-columns: 1fr;
-        gap: var(--space-6);
+        gap: var(--space-8);
     }
     
-    .board-preview {
+    .hero-content-right {
+        justify-content: center;
+        width: 100%;
+    }
+    
+    .hero-content-right .board-preview {
         max-width: 100%;
         overflow-x: auto;
+        width: 100%;
     }
     
     .preview-columns {
-        min-width: 600px; /* Ensure minimum width for readability */
+        min-width: 600px;
+    }
+}
+
+@media (max-width: 768px) {
+    .hero-content-grid {
+        gap: var(--space-6);
+    }
+    
+    .hero-content-left {
+        gap: var(--space-4);
+    }
+    
+    .hero-quote {
+        margin: 0;
+    }
+    
+    .discovery-questions {
+        margin-top: var(--space-4);
+    }
+    
+    .preview-columns {
+        min-width: 500px;
     }
 }
 
@@ -598,6 +644,12 @@ a:hover {
     font-size: 0.75rem;
     color: var(--gray-500);
     font-weight: 500;
+}
+
+.emoji-reactions {
+    font-size: 0.7rem;
+    color: var(--gray-500);
+    margin-left: auto;
 }
 
 /* ===== SECTIONS ===== */
@@ -1669,12 +1721,12 @@ a:hover {
 
 @media (min-width: 1400px) {
     .hero .container {
-        grid-template-columns: 1fr 2fr;
         max-width: 1600px;
     }
     
-    .hero-content-row {
+    .hero-content-grid {
         grid-template-columns: 1fr 2.5fr;
+        gap: var(--space-16);
     }
 }
 

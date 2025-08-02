@@ -30,30 +30,29 @@ func SendBoardInviteEmail(email, subject, message string, board models.Board, us
 	log.Printf("[Email] Configuration check - SMTP_HOST: %s, SMTP_PORT: %s, SMTP_USER: %s, FROM_EMAIL: %s, APP_URL: %s",
 		smtpHost, smtpPortStr, smtpUser, fromEmail, os.Getenv("APP_URL"))
 
+	log.Printf("[Email] Requested email - To: %s, Subject: %s", email, subject)
+
 	if smtpHost == "" || smtpPortStr == "" || smtpUser == "" || smtpPass == "" || fromEmail == "" {
 		log.Printf("[Email] Configuration incomplete - missing required environment variables")
 		return fmt.Errorf("email configuration incomplete - check SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, FROM_EMAIL environment variables")
 	}
 
-	smtpPort, err := strconv.Atoi(smtpPortStr)
-	if err != nil {
-		return fmt.Errorf("invalid SMTP port: %v", err)
-	}
+	smtpPort, _ := strconv.Atoi(smtpPortStr)
 
 	// Get user email from Clerk if userID is provided
-	fromEmailWithName := fromEmail
-	if userID != "" {
-		_, err := getUserEmailFromClerk(userID)
-		if err != nil {
-			log.Printf("[Email] Failed to get user email from Clerk: %v, using default email", err)
-		} else {
-			fromEmailWithName = fmt.Sprintf("Disko <noreply@%s>", extractDomain(fromEmail))
-		}
-	}
+	// fromEmailWithName := fromEmail
+	// if userID != "" {
+	// 	_, err := getUserEmailFromClerk(userID)
+	// 	if err != nil {
+	// 		log.Printf("[Email] Failed to get user email from Clerk: %v, using default email", err)
+	// 	} else {
+	// 		fromEmailWithName = fmt.Sprintf("Disko <noreply@%s>", extractDomain(fromEmail))
+	// 	}
+	// }
 
-	// Create email message
+	// Create email message - send to the email address provided in the form
 	m := gomail.NewMessage()
-	m.SetHeader("From", fromEmailWithName)
+	m.SetHeader("From", fromEmail)
 	m.SetHeader("To", email)
 	m.SetHeader("Subject", subject)
 	m.SetBody("text/html", generateInviteEmailHTML(board, message))
@@ -83,39 +82,7 @@ func getUserEmailFromClerk(userID string) (string, error) {
 	// In a real implementation, you would use the Clerk SDK to get user information
 	log.Printf("[Email] Getting user email from Clerk for userID: %s", userID)
 
-	// Placeholder implementation - in production, you would use the actual Clerk SDK
-	// client, err := clerk.NewClient(clerkSecretKey)
-	// if err != nil {
-	//     return "", fmt.Errorf("failed to create Clerk client: %v", err)
-	// }
-	//
-	// user, err := client.Users.GetUser(context.Background(), userID)
-	// if err != nil {
-	//     return "", fmt.Errorf("failed to get user from Clerk: %v", err)
-	// }
-	//
-	// if len(user.EmailAddresses) > 0 {
-	//     for _, email := range user.EmailAddresses {
-	//         if email.ID == user.PrimaryEmailAddressID {
-	//             return email.EmailAddress, nil
-	//         }
-	//     }
-	//     if len(user.EmailAddresses) > 0 {
-	//         return user.EmailAddresses[0].EmailAddress, nil
-	//     }
-	// }
-
 	return "", fmt.Errorf("Clerk SDK integration not yet implemented")
-}
-
-// extractDomain extracts domain from email address
-func extractDomain(email string) string {
-	for i, char := range email {
-		if char == '@' {
-			return email[i+1:]
-		}
-	}
-	return "disko.app"
 }
 
 // generateInviteEmailHTML creates a compelling HTML email template with Disko branding
@@ -425,7 +392,7 @@ func generateInviteEmailHTML(board models.Board, message string) string {
             <div class="footer-logo">
                 <img src="{{.AppURL}}/static/images/logo-sm.png" alt="Disko" width="120" height="30" style="border: 0; display: block;">
             </div>
-            <p>This invitation was sent from <a href="{{.AppURL}}">Disko</a></p>
+            <p>This invitation was sent from <a href="{{.AppURL}}">Disko</a>, a Nomadis service.</p>
             <p>If you didn't expect this invitation, you can safely ignore this email.</p>
             <div class="footer-cta">
                 <p>Want to start your own board? <a href="{{.AppURL}}">Sign up for Disko</a></p>

@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 
@@ -123,19 +124,23 @@ func sendContactEmail(req ContactRequest) error {
 	// Get email configuration from environment
 	smtpHost := os.Getenv("SMTP_HOST")
 	smtpPort := os.Getenv("SMTP_PORT")
+	smtpPortInt, _ := strconv.Atoi(smtpPort)
 	smtpUser := os.Getenv("SMTP_USER")
 	smtpPass := os.Getenv("SMTP_PASS")
-	adminEmail := os.Getenv("ADMIN_EMAIL")
 
-	if smtpHost == "" || smtpPort == "" || smtpUser == "" || smtpPass == "" || adminEmail == "" {
+	//
+	fromName := os.Getenv("FROM_NAME")
+	fromEmail := os.Getenv("FROM_EMAIL")
+
+	if smtpHost == "" || smtpPort == "" || smtpUser == "" || smtpPass == "" || fromEmail == "" {
 		log.Printf("[Contact] Email configuration missing, skipping email send")
 		return nil // Don't fail the request if email is not configured
 	}
 
 	// Create email message
 	m := gomail.NewMessage()
-	m.SetHeader("From", smtpUser)
-	m.SetHeader("To", adminEmail)
+	m.SetHeader("From", fmt.Sprintf("%s <%s>", fromName, fromEmail))
+	m.SetHeader("To", fromEmail)
 	m.SetHeader("Subject", fmt.Sprintf("[Disko][Contact] %s - %s", req.Subject, req.Email))
 
 	// Set email body
@@ -143,7 +148,7 @@ func sendContactEmail(req ContactRequest) error {
 	m.SetBody("text/html", body)
 
 	// Send email
-	d := gomail.NewDialer(smtpHost, 587, smtpUser, smtpPass)
+	d := gomail.NewDialer(smtpHost, smtpPortInt, smtpUser, smtpPass)
 	if err := d.DialAndSend(m); err != nil {
 		return fmt.Errorf("failed to send contact email: %w", err)
 	}

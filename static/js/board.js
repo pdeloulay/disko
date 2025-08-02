@@ -106,7 +106,24 @@ class BoardView {
         if (inviteForm) {
             inviteForm.addEventListener('submit', async (e) => {
                 e.preventDefault();
-                await this.sendInvite();
+                console.log('[BoardView] Invite form submitted, preventing duplicate submission');
+                
+                // Disable submit button to prevent multiple submissions
+                const submitBtn = inviteForm.querySelector('button[type="submit"]');
+                if (submitBtn) {
+                    submitBtn.disabled = true;
+                    submitBtn.textContent = 'Sending...';
+                }
+                
+                try {
+                    await this.sendInvite();
+                } finally {
+                    // Re-enable submit button
+                    if (submitBtn) {
+                        submitBtn.disabled = false;
+                        submitBtn.textContent = '📧 Send Email';
+                    }
+                }
             });
         }
     }
@@ -134,6 +151,12 @@ class BoardView {
         const deleteBoardBtn = document.getElementById('delete-board-btn');
         if (deleteBoardBtn) {
             deleteBoardBtn.replaceWith(deleteBoardBtn.cloneNode(true));
+        }
+
+        // Remove invite form listener
+        const inviteForm = document.getElementById('invite-form');
+        if (inviteForm) {
+            inviteForm.replaceWith(inviteForm.cloneNode(true));
         }
     }
 
@@ -266,9 +289,6 @@ class BoardView {
                 
                 // Always update status indicator for all users
                 this.updateStatusIndicator(isPublished);
-                
-                // Re-bind events with updated admin status
-                this.bindEvents();
             } else {
                 console.error('[BoardView] Failed to load board data:', response.status);
             }
@@ -497,7 +517,7 @@ class BoardView {
             if (messageInput && publicLink) {
                 const appUrl = window.location.origin;
                 const publicUrl = `${appUrl}/public/${publicLink}`;
-                messageInput.value = `Hi! I'd like to share my board "${boardName}" with you.\n\nYou can view it here: ${publicUrl}\n\nLet me know what you think!`;
+                messageInput.value = `Hi! I'd like to share my board "${boardName}" with you. Let me know what you think!`;
             } else if (messageInput) {
                 messageInput.value = '';
             }
@@ -519,6 +539,8 @@ class BoardView {
     }
 
     async sendInvite() {
+        console.log('[BoardView] sendInvite method called');
+        
         const emailInput = document.getElementById('invite-email');
         const subjectInput = document.getElementById('invite-subject');
         const messageInput = document.getElementById('invite-message');
@@ -528,27 +550,29 @@ class BoardView {
             return;
         }
         
-        const email = emailInput.value.trim();
+        const emailTo = emailInput.value.trim();
         const subject = subjectInput.value.trim();
         const message = messageInput ? messageInput.value.trim() : '';
         
-        if (!email || !subject) {
+        if (!emailTo || !subject) {
             this.showErrorMessage('Please fill in all required fields.');
             return;
         }
         
         try {
-            console.log('[BoardView] Sending invite for board:', this.boardId, 'Email:', email, 'Subject:', subject);
+            console.log('[BoardView] Sending invite for board:', this.boardId, 'Email:', emailTo, 'Subject:', subject);
             
             // Include public link in the request if available
-            const inviteData = {
-                email: email,
+            const inviteData = {    
+                emailTo: emailTo,
                 subject: subject,
                 message: message,
                 publicLink: this.boardData?.publicLink || null
             };
             
+            console.log('[BoardView] Making API call to send invite');
             const response = await window.api.post(`/boards/${this.boardId}/invite`, inviteData);
+            console.log('[BoardView] API call completed');
             
             if (response) {
                 this.showSuccessMessage('Invitation sent successfully!');

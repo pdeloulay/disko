@@ -961,7 +961,7 @@ func (e *BoardNotFoundError) Error() string {
 
 // InviteRequest represents the request payload for sending board invitations
 type InviteRequest struct {
-	Email   string `json:"email" binding:"required,email"`
+	Email   string `json:"emailTo" binding:"required,email"`
 	Subject string `json:"subject" binding:"required,min=1,max=200"`
 	Message string `json:"message,omitempty" binding:"max=1000"`
 }

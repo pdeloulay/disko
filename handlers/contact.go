@@ -35,9 +35,19 @@ func HandleContactPage(c *gin.Context) {
 		version = strings.TrimSpace(string(versionBytes))
 	}
 
+	appURL := os.Getenv("APP_URL")
+	if appURL == "" {
+		appURL = "https://disko.nomadis.com"
+	}
+
 	c.HTML(http.StatusOK, "contact.html", gin.H{
-		"title":   "Contact Us",
-		"version": version,
+		"title":       "Contact Us",
+		"version":     version,
+		"appURL":      appURL,
+		"siteName":    "Disko, a Service of Nomadis",
+		"description": "Contact Disko support.",
+		"canonical":   appURL + "/contact",
+		"robots":      "index,follow",
 	})
 }
 

@@ -195,6 +195,42 @@ func main() {
 	// Serve static files
 	router.Static("/static", "./static")
 
+	// robots.txt
+	router.GET("/robots.txt", func(c *gin.Context) {
+		log.Printf("[SEO] robots.txt requested - IP: %s", c.ClientIP())
+		appURL := os.Getenv("APP_URL")
+		if appURL == "" {
+			appURL = "https://disko.nomadis.com"
+		}
+		content := "User-agent: *\n" +
+			"Disallow: /dashboard\n" +
+			"Disallow: /board\n" +
+			"Disallow: /api\n" +
+			"Allow: /\n\n" +
+			"Sitemap: " + appURL + "/sitemap.xml\n"
+		c.Header("Content-Type", "text/plain; charset=utf-8")
+		c.String(http.StatusOK, content)
+	})
+
+	// sitemap.xml (basic)
+	router.GET("/sitemap.xml", func(c *gin.Context) {
+		log.Printf("[SEO] sitemap.xml requested - IP: %s", c.ClientIP())
+		appURL := os.Getenv("APP_URL")
+		if appURL == "" {
+			appURL = "https://disko.nomadis.com"
+		}
+		now := time.Now().UTC().Format("2006-01-02")
+		urls := []string{"/", "/about", "/contact", "/terms", "/privacy"}
+		var items string
+		for _, u := range urls {
+			items += "<url><loc>" + appURL + u + "</loc><lastmod>" + now + "</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>"
+		}
+		body := "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" +
+			"<urlset xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\">" + items + "</urlset>"
+		c.Header("Content-Type", "application/xml; charset=utf-8")
+		c.String(http.StatusOK, body)
+	})
+
 	// Health check endpoint
 	router.GET("/health", handlers.HealthCheck)
 
@@ -214,12 +250,22 @@ func main() {
 		// Get app version
 		version := getAppVersion()
 
+		appURL := os.Getenv("APP_URL")
+		if appURL == "" {
+			appURL = "https://disko.nomadis.com"
+		}
 		c.HTML(http.StatusOK, "index.html", gin.H{
 			"title":               "Disko",
 			"clerkPublishableKey": os.Getenv("CLERK_PUBLISHABLE_KEY"),
 			"clerkFrontendApiUrl": os.Getenv("CLERK_FRONTEND_API_URL"),
 			"stats":               stats,
 			"version":             version,
+			"siteName":            "Disko, a Service of Nomadis",
+			"description":         "Disko helps solopreneurs share progress with customers through beautiful public boards, real-time feedback, and RICE prioritization.",
+			"canonical":           appURL + "/",
+			"appURL":              appURL,
+			"ogImage":             appURL + "/static/images/disko-on-dark.png",
+			"robots":              "index,follow",
 		})
 	})
 
@@ -241,11 +287,21 @@ func main() {
 		// Get app version
 		version := getAppVersion()
 
+		appURL := os.Getenv("APP_URL")
+		if appURL == "" {
+			appURL = "https://disko.nomadis.com"
+		}
 		c.HTML(http.StatusOK, "dashboard.html", gin.H{
 			"title":               "Dashboard - Disko",
 			"clerkPublishableKey": clerkKey,
 			"clerkFrontendApiUrl": clerkApiUrl,
 			"version":             version,
+			"siteName":            "Disko, a Service of Nomadis",
+			"description":         "Manage your boards and ideas in Disko.",
+			"canonical":           appURL + "/dashboard",
+			"appURL":              appURL,
+			"ogImage":             appURL + "/static/images/disko-on-dark.png",
+			"robots":              "noindex,nofollow",
 		})
 
 		duration := time.Since(startTime)
@@ -272,12 +328,22 @@ func main() {
 		// Get app version
 		version := getAppVersion()
 
+		appURL := os.Getenv("APP_URL")
+		if appURL == "" {
+			appURL = "https://disko.nomadis.com"
+		}
 		c.HTML(http.StatusOK, "board.html", gin.H{
 			"title":               "Board - Disko",
 			"boardID":             boardID,
 			"clerkPublishableKey": clerkKey,
 			"clerkFrontendApiUrl": clerkApiUrl,
 			"version":             version,
+			"siteName":            "Disko, a Service of Nomadis",
+			"description":         "View and manage your product discovery board in Disko.",
+			"canonical":           appURL + "/board/" + boardID,
+			"appURL":              appURL,
+			"ogImage":             appURL + "/static/images/disko-on-dark.png",
+			"robots":              "noindex,nofollow",
 		})
 
 		duration := time.Since(startTime)
@@ -337,11 +403,21 @@ func main() {
 		// Get app version
 		version := getAppVersion()
 
+		appURL := os.Getenv("APP_URL")
+		if appURL == "" {
+			appURL = "https://disko.nomadis.com"
+		}
 		c.HTML(http.StatusOK, "public.html", gin.H{
-			"title":      "Public Board - Disko",
-			"publicLink": publicLink,
-			"boardID":    board.ID, // Use the actual board ID from database
-			"version":    version,
+			"title":       "Public Board - Disko",
+			"publicLink":  publicLink,
+			"boardID":     board.ID, // Use the actual board ID from database
+			"version":     version,
+			"siteName":    "Disko, a Service of Nomadis",
+			"description": "Explore a live public product board with ideas, progress and releases.",
+			"canonical":   appURL + "/public/" + publicLink,
+			"appURL":      appURL,
+			"ogImage":     appURL + "/static/images/disko-on-dark.png",
+			"robots":      "index,follow",
 		})
 
 		duration := time.Since(startTime)
@@ -356,9 +432,19 @@ func main() {
 		// Get app version
 		version := getAppVersion()
 
+		appURL := os.Getenv("APP_URL")
+		if appURL == "" {
+			appURL = "https://disko.nomadis.com"
+		}
 		c.HTML(http.StatusOK, "terms.html", gin.H{
-			"title":   "Terms of Service - Disko",
-			"version": version,
+			"title":       "Terms of Service - Disko",
+			"version":     version,
+			"siteName":    "Disko, a Service of Nomadis",
+			"description": "Terms of Service for Disko.",
+			"canonical":   appURL + "/terms",
+			"appURL":      appURL,
+			"ogImage":     appURL + "/static/images/disko-on-dark.png",
+			"robots":      "index,follow",
 		})
 	})
 
@@ -369,9 +455,19 @@ func main() {
 		// Get app version
 		version := getAppVersion()
 
+		appURL := os.Getenv("APP_URL")
+		if appURL == "" {
+			appURL = "https://disko.nomadis.com"
+		}
 		c.HTML(http.StatusOK, "privacy.html", gin.H{
-			"title":   "Privacy Policy - Disko",
-			"version": version,
+			"title":       "Privacy Policy - Disko",
+			"version":     version,
+			"siteName":    "Disko, a Service of Nomadis",
+			"description": "Privacy Policy for Disko.",
+			"canonical":   appURL + "/privacy",
+			"appURL":      appURL,
+			"ogImage":     appURL + "/static/images/disko-on-dark.png",
+			"robots":      "index,follow",
 		})
 	})
 
@@ -385,9 +481,18 @@ func main() {
 		// Get app version
 		version := getAppVersion()
 
+		appURL := os.Getenv("APP_URL")
+		if appURL == "" {
+			appURL = "https://disko.nomadis.com"
+		}
 		c.HTML(http.StatusOK, "about.html", gin.H{
-			"title":   "About Disko",
-			"version": version,
+			"title":       "About Disko",
+			"version":     version,
+			"siteName":    "Disko, a Service of Nomadis",
+			"description": "About Disko: product discovery done right.",
+			"canonical":   appURL + "/about",
+			"appURL":      appURL,
+			"robots":      "index,follow",
 		})
 	})
 

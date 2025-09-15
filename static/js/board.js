@@ -20,7 +20,7 @@ class BoardView {
         this.bindEvents();
         this.setupIdeaManager();
         this.setupWebSocket();
-        this.setupSearchBar();
+        // this.setupSearchBar(); // Search removed
         
         // Set initial status indicator based on available data
         if (this.boardData) {
@@ -289,6 +289,14 @@ class BoardView {
                 
                 // Always update status indicator for all users
                 this.updateStatusIndicator(isPublished);
+
+                // After auth, admin state may change from default. Re-bind UI events so
+                // admin-only controls (e.g., Create Idea overlay, Settings) become active.
+                console.log('[BoardView] Rebinding events and initializing features based on updated admin state');
+                this.bindEvents();
+                // if (this.isAdmin && !this.searchBar) {
+                //     this.setupSearchBar();
+                // }
             } else {
                 console.error('[BoardView] Failed to load board data:', response.status);
             }
@@ -749,21 +757,21 @@ class BoardView {
         console.log('[BoardView] Ideas refresh complete');
     }
 
-    setupSearchBar() {
-        console.log('[BoardView] Setting up search bar...');
-        // Only setup search bar for admin users
-        if (!this.isAdmin || !this.boardId) {
-            console.log('[BoardView] Skipping search bar setup - IsAdmin:', this.isAdmin, 'BoardID:', this.boardId);
-            return;
-        }
-
-        console.log('[BoardView] Initializing search bar for admin user');
-        // Initialize search bar with callback for handling search results
-        this.searchBar = new SearchBar(this.boardId, (searchResults, searchInfo) => {
-            this.handleSearchResults(searchResults, searchInfo);
-        });
-        console.log('[BoardView] Search bar setup complete');
-    }
+    // setupSearchBar() {
+    //     console.log('[BoardView] Setting up search bar...');
+    //     // Only setup search bar for admin users
+    //     if (!this.isAdmin || !this.boardId) {
+    //         console.log('[BoardView] Skipping search bar setup - IsAdmin:', this.isAdmin, 'BoardID:', this.boardId);
+    //         return;
+    //     }
+    //
+    //     console.log('[BoardView] Initializing search bar for admin user');
+    //     // Initialize search bar with callback for handling search results
+    //     this.searchBar = new SearchBar(this.boardId, (searchResults, searchInfo) => {
+    //         this.handleSearchResults(searchResults, searchInfo);
+    //     });
+    //     console.log('[BoardView] Search bar setup complete');
+    // }
 
     handleSearchResults(searchResults, searchInfo) {
         console.log('[BoardView] Handling search results:', searchResults?.length || 0, 'ideas, SearchInfo:', searchInfo);

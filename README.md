@@ -2,57 +2,23 @@
 
 A web-based project management tool that allows solopreneurs to share their work progress with customers through public boards.
 
+## Screenshot
+
+![Disko Screenshot](./static/images/disko.png)
+
 ## Project Structure
 
 ```
 disko/
-├── main.go                 # Main application entry point with route definitions
-├── handlers/               # API handlers and business logic
-│   ├── board.go           # Board management endpoints
-│   ├── idea.go            # Idea management endpoints
-│   ├── user.go            # User authentication endpoints
-│   ├── contact.go         # Contact form handling
-│   ├── health.go          # Health check endpoint
-│   └── stats.go           # Statistics endpoints
+├── main.go                # Main application entry point with route definitions
+├── handlers/              # API handlers and business logic
 ├── models/                # Data models and database schemas
-│   ├── board.go           # Board data model
-│   ├── idea.go            # Idea data model with RICE scoring
-│   ├── database.go        # MongoDB connection and utilities
-│   └── validation.go      # Input validation rules
 ├── middleware/            # Custom middleware
-│   ├── auth.go            # Clerk authentication middleware
-│   └── auth_test.go       # Authentication tests
 ├── utils/                 # Utility functions
-│   ├── email.go           # Email sending functionality
-│   ├── uuid.go            # UUID generation utilities
-│   ├── websocket.go       # WebSocket management
-│   └── notifications.go   # Notification services
 ├── templates/             # HTML templates
-│   ├── index.html         # Landing page
-│   ├── dashboard.html     # Admin dashboard
-│   ├── board.html         # Private board view
-│   ├── public.html        # Public board view
-│   ├── about.html         # About page
-│   ├── contact.html       # Contact page
-│   ├── terms.html         # Terms of service
-│   ├── privacy.html       # Privacy policy
-│   └── error.html         # Error pages
 ├── static/                # Static assets
 │   ├── css/               # Stylesheets
 │   ├── js/                # JavaScript modules
-│   │   ├── api.js         # API client
-│   │   ├── board.js       # Board view functionality
-│   │   ├── dashboard.js   # Dashboard functionality
-│   │   ├── drag-drop-board.js # Drag and drop board
-│   │   ├── idea-management.js # Idea CRUD operations
-│   │   ├── public-board.js # Public board functionality
-│   │   ├── board-settings.js # Board settings management
-│   │   ├── release-table.js # Release table component
-│   │   ├── search-bar.js  # Search functionality
-│   │   ├── feedback-widget.js # Feedback system
-│   │   ├── websocket-manager.js # Real-time updates
-│   │   ├── board-tabs.js  # Tab navigation
-│   │   └── landing.js     # Landing page interactions
 │   ├── images/            # Images and logos
 │   └── .version           # Application version file
 ├── docs/                  # Documentation
@@ -62,6 +28,11 @@ disko/
 ├── LICENSE                # GNU General Public License v3.0
 └── README.md              # This file
 ```
+
+## Social Posts
+
+![Disko Social](./static/images/disko-push.png)
+
 
 ## Tech Stack
 
@@ -105,9 +76,9 @@ disko/
 
 ### Prerequisites
 - Go 1.22.0 or higher
-- MongoDB Atlas account or local MongoDB instance
+- MongoDB Atlas account
 - Clerk account for authentication
-- SMTP server for email functionality (optional)
+- SMTP server for email
 
 ### Setup
 
@@ -290,6 +261,10 @@ The application follows a clean architecture pattern:
 This project is licensed under the GNU General Public License v3.0. See the [LICENSE](LICENSE) file for details.
 
 ## Changelog
+
+### [v1.1.3] - Remove top search UI
+- **🧹 UI Simplification**: Removed master search bar from board pages and public view to streamline the interface and reduce unauthenticated 401 errors.
+- **🧩 Cleanup**: Dropped `search-bar.js` from templates and disabled its initialization in `static/js/board.js`.
 
 ### [v1.1.2] - Docs and Routes Alignment
 - **📝 Docs**: Updated README with accurate routes (public, API, authenticated), rate limits, and environment variables (`MONGODB_DATABASE`, `FROM_NAME`, `EMAIL_ENABLED`, `SLACK_WEBHOOK_URL`, `WEBHOOK_URL`).

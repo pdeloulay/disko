@@ -234,6 +234,27 @@ func main() {
 	// Health check endpoint
 	router.GET("/health", handlers.HealthCheck)
 
+	// Simple JSON healthz endpoint returning app metadata
+	router.GET("/healthz", func(c *gin.Context) {
+		appName := os.Getenv("APP_NAME")
+		if appName == "" {
+			appName = "Disko"
+		}
+
+		appOwner := os.Getenv("APP_OWNER")
+		if appOwner == "" {
+			appOwner = "Nomadis"
+		}
+
+		version := getAppVersion()
+
+		c.JSON(http.StatusOK, gin.H{
+			"app":     appName,
+			"owner":   appOwner,
+			"version": version,
+		})
+	})
+
 	// Test modal endpoint
 	router.GET("/test-modal", func(c *gin.Context) {
 		log.Printf("[Test] Modal test page accessed - IP: %s", c.ClientIP())
